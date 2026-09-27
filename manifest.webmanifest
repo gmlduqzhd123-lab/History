@@ -1,0 +1,14 @@
+{
+    "name": "역사 탐험 퀘스트",
+    "short_name": "역사 탐험",
+    "description": "초등학교 5학년 2학기 사회(역사) 자기주도 학습 웹앱",
+    "lang": "ko",
+    "start_url": "./",
+    "scope": "./",
+    "display": "standalone",
+    "background_color": "#fbf4e8",
+    "theme_color": "#c2410c",
+    "icons": [
+        { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+    ]
+}
