@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>조선톡 - 역사 타임슬립 SNS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+
+    <style>
+        body { background-color: #fce7f3; display: flex; justify-content: center; margin: 0; height: 100vh; height: 100dvh; overflow: hidden; font-family: 'Jua', sans-serif; touch-action: manipulation; }
+        
+        #app-container { width: 100%; max-width: 420px; height: 100vh; height: 100dvh; background-color: #ffffff; position: relative; display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(236, 72, 153, 0.2); }
+        
+        @media (min-width: 421px) {
+            #app-container { height: 90vh; margin-top: 5vh; border-radius: 36px; border: 8px solid #fbcfe8; overflow: hidden; }
+        }
+        
+        .pattern-dots { background-color: #fffbf2; background-image: radial-gradient(#fde047 2px, transparent 2px); background-size: 20px 20px; }
+        
+        .feed-scroll { flex: 1; overflow-y: auto; padding-bottom: 110px; scroll-behavior: smooth; -ms-overflow-style: none; scrollbar-width: none; }
+        .feed-scroll::-webkit-scrollbar { display: none; }
+        
+        .modal-overlay { background-color: rgba(255, 208, 225, 0.7); backdrop-filter: blur(4px); cursor: pointer; }
+        .modal-content { cursor: default; }
+        .hide { display: none !important; }
+        
+        button, a, select { touch-action: manipulation; outline: none; }
+
+        @keyframes bounce-in { 0% { transform: scale(0.9); opacity: 0; } 60% { transform: scale(1.05); } 100% { transform: scale(1); opacity: 1; } }
+        .animate-bounce-in { animation: bounce-in 0.4s cubic-bezier(0.68, -0.55, 0.26, 1.55) forwards; }
+        @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .animate-slide-up { animation: slide-up 0.4s cubic-bezier(0.68, -0.55, 0.26, 1.55) forwards; }
+        @keyframes pop { 50% { transform: scale(1.2); } }
+        .animate-pop { animation: pop 0.2s ease-in-out; }
+
+        .typing-dot { animation: typing 1.4s infinite ease-in-out both; }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes typing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+        .speech-bubble {
+            position: absolute; top: 15px; left: 15px; max-width: 90%;
+            background: rgba(255, 255, 255, 0.95); border: 3px solid #333; border-radius: 16px;
+            padding: 8px 12px; font-size: 16px; color: #333; box-shadow: 2px 2px 0px rgba(0,0,0,0.2);
+            word-wrap: break-word; overflow-wrap: break-word; line-height: 1.3; z-index: 10;
+        }
+        .speech-bubble::after { content: ''; position: absolute; bottom: -10px; left: 20px; border-width: 10px 10px 0; border-style: solid; border-color: #333 transparent transparent transparent; display: block; width: 0; z-index: 1; }
+        .speech-bubble::before { content: ''; position: absolute; bottom: -6px; left: 22px; border-width: 8px 8px 0; border-style: solid; border-color: white transparent transparent transparent; display: block; width: 0; z-index: 2; }
+        
+        .img-error { background-color: #f3f4f6; display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 0.875rem; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    <header class="bg-pink-400 text-white p-4 flex justify-between items-center z-20 sticky top-0 rounded-b-2xl border-b-4 border-pink-500 shadow-sm" data-html2canvas-ignore="true">
+        <h1 class="text-2xl tracking-wide cursor-pointer hover:text-pink-100 transition-transform hover:scale-105" onclick="resetApp()" title="클릭 시 초기화">
+            <i class="fa-solid fa-ghost mr-2 text-yellow-200"></i>조선톡
+        </h1>
+        <button onclick="triggerRandomEvent()" class="bg-yellow-300 text-yellow-900 hover:bg-yellow-200 px-4 py-2 rounded-2xl text-sm transition border-b-4 border-yellow-500 active:border-b-0 active:translate-y-1 disabled:opacity-50" id="btn-event">
+            🚨 깜짝 미션!
+        </button>
+    </header>
+
+    <div id="typing-indicator" class="absolute top-20 left-1/2 transform -translate-x-1/2 bg-white px-5 py-2 rounded-full shadow-lg border-2 border-indigo-200 z-10 flex items-center space-x-2 hide transition-all duration-300" data-html2canvas-ignore="true">
+        <span id="typing-name" class="text-indigo-600 text-sm font-bold truncate max-w-[100px]">누군가</span>
+        <span class="text-gray-500 text-sm whitespace-nowrap">님이 붓을 들었습니다</span>
+        <div class="flex space-x-1 ml-1">
+            <div class="w-1.5 h-1.5 bg-gray-400 rounded-full typing-dot"></div>
+            <div class="w-1.5 h-1.5 bg-gray-400 rounded-full typing-dot"></div>
+            <div class="w-1.5 h-1.5 bg-gray-400 rounded-full typing-dot"></div>
+        </div>
+    </div>
+
+    <main id="feed" class="feed-scroll pattern-dots p-4 space-y-5">
+        <!-- JS 렌더링 영역 -->
+    </main>
+
+    <button onclick="openWriteModal()" class="absolute bottom-20 right-4 bg-pink-500 text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center text-2xl hover:bg-pink-400 transition transform hover:-translate-y-1 active:translate-y-1 z-20 border-b-4 border-pink-700" data-html2canvas-ignore="true">
+        <i class="fa-solid fa-feather-pointed"></i>
+    </button>
+    
+    <footer class="bg-white border-t-4 border-pink-100 p-3 flex justify-between items-center px-5 absolute bottom-0 w-full z-20 rounded-t-2xl" data-html2canvas-ignore="true">
+        <div class="flex flex-col">
+            <span class="text-pink-400 text-[13px] font-bold tracking-wider">ⓒ 2026. 엽쌤 🌸</span>
+            <span class="text-pink-300 text-[10px] tracking-wider -mt-1">All rights reserved.</span>
+        </div>
+        <button onclick="exportToImage()" id="btn-capture" class="text-pink-600 text-sm bg-pink-50 px-4 py-2 rounded-xl hover:bg-pink-100 transition border-b-4 border-pink-200 active:border-b-0 active:translate-y-1">
+            <i class="fa-solid fa-camera-retro mr-1"></i> 찰칵! 캡처
+        </button>
+    </footer>
+
+    <div id="capture-overlay" data-html2canvas-ignore="true" class="absolute inset-0 bg-white/80 z-[9999] flex flex-col items-center justify-center hide backdrop-blur-sm">
+        <i class="fa-solid fa-camera fa-bounce text-5xl text-pink-500 mb-4"></i>
+        <p class="text-xl text-pink-600 font-bold">그림쇠(캡처)를 뜨는 중이오...</p>
+    </div>
+
+    <!-- 1. 프로필 설정 모달 -->
+    <div id="profile-modal" data-html2canvas-ignore="true" class="modal-overlay absolute inset-0 z-50 flex items-center justify-center hide" onclick="closeProfileIfPossible(event)">
+        <div class="modal-content bg-white p-7 rounded-3xl w-11/12 max-w-sm shadow-xl border-4 border-pink-200 animate-bounce-in" onclick="event.stopPropagation()">
+            <div class="text-center mb-5">
+                <div class="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-3 text-3xl text-pink-400">
+                    <i class="fa-solid fa-face-smile-wink"></i>
+                </div>
+                <h2 class="text-2xl text-gray-800">어떤 인물이 되어볼까?</h2>
+            </div>
+            <div class="space-y-4">
+                <input type="text" id="prof-name" placeholder="이름 (예: 세종대왕)" class="w-full border-4 border-pink-100 rounded-2xl p-3 bg-pink-50 focus:border-pink-300 outline-none text-lg text-gray-700" maxlength="10">
+                <input type="text" id="prof-handle" placeholder="아이디 (예: meat_lover)" class="w-full border-4 border-pink-100 rounded-2xl p-3 bg-pink-50 focus:border-pink-300 outline-none text-lg text-gray-700" maxlength="15">
+            </div>
+            <button onclick="saveProfile()" id="btn-save-prof" class="w-full bg-pink-400 text-white text-xl py-3 rounded-2xl mt-6 hover:bg-pink-500 transition border-b-4 border-pink-600 active:border-b-0 active:translate-y-1">조선으로 출발 🚀</button>
+        </div>
+    </div>
+
+    <!-- 2. 글쓰기 모달 -->
+    <div id="write-modal" data-html2canvas-ignore="true" class="modal-overlay absolute inset-0 z-50 flex items-end justify-center hide pb-0" onclick="closeWriteModal()">
+        <div class="modal-content bg-white w-full rounded-t-3xl p-6 shadow-2xl border-t-4 border-pink-200 transform transition-transform animate-slide-up flex flex-col max-h-[90vh]" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl text-gray-800"><i class="fa-solid fa-pen-nib text-pink-400 mr-2"></i>새로운 이야기 쓰기</h2>
+                <button onclick="closeWriteModal()" class="text-gray-400 hover:text-pink-500 transition bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <textarea id="post-content" rows="4" placeholder="조선 팔도에 무슨 소문이 돌고 있소? (최대 200자)" maxlength="200" class="w-full border-4 border-pink-100 rounded-2xl p-4 bg-pink-50 outline-none focus:border-pink-300 resize-none text-lg text-gray-700 flex-shrink-0"></textarea>
+            
+            <div class="mt-3 mb-4">
+                <button onclick="openMemeModal()" class="bg-purple-100 text-purple-600 px-4 py-2 rounded-xl text-sm hover:bg-purple-200 transition border-b-4 border-purple-300 active:border-b-0 active:translate-y-1">
+                    <i class="fa-solid fa-image mr-1"></i> 짤방(명화) 달기 🎨
+                </button>
+                <div id="meme-preview-container" class="hide mt-3 relative rounded-xl overflow-hidden border-2 border-purple-200 w-32 bg-gray-100">
+                    <img id="meme-preview-img" crossorigin="anonymous" src="" onerror="this.onerror=null; this.classList.add('hide'); this.nextElementSibling.classList.remove('hide');" class="w-full h-24 object-cover object-top">
+                    <div class="img-error w-full h-24 hide absolute top-0 left-0"><i class="fa-solid fa-image-slash mr-1"></i> 그림 오류</div>
+                    <div class="absolute top-0 left-0 w-full h-full bg-black/40 flex items-center justify-center pointer-events-none">
+                        <span class="text-white text-xs font-bold bg-black/50 px-2 py-1 rounded">첨부됨</span>
+                    </div>
+                    <button onclick="removeMeme()" class="absolute top-1 right-1 bg-white text-red-500 rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+
+            <button onclick="submitPost()" id="btn-submit-post" class="w-full bg-pink-400 text-white text-xl py-3 rounded-2xl hover:bg-pink-500 transition border-b-4 border-pink-600 active:border-b-0 active:translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed">기록 남기기 📝</button>
+        </div>
+    </div>
+
+    <!-- 3. 명화 밈 메이커 모달 -->
+    <div id="meme-modal" data-html2canvas-ignore="true" class="modal-overlay absolute inset-0 z-50 flex items-center justify-center hide" onclick="closeMemeModal()">
+        <div class="modal-content bg-white p-6 rounded-3xl w-11/12 max-w-sm shadow-xl border-4 border-purple-200 animate-bounce-in" onclick="event.stopPropagation()">
+            <h2 class="text-xl text-gray-800 mb-3"><i class="fa-solid fa-palette text-purple-400 mr-2"></i>조선 밈 메이커</h2>
+            <select id="meme-bg-select" onchange="updateMemePreview()" class="w-full border-4 border-purple-100 rounded-xl p-2 bg-purple-50 text-gray-700 mb-3 outline-none">
+                <option value="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Danwon-Seodang.jpg/400px-Danwon-Seodang.jpg">서당 (김홍도) - 혼나는 중</option>
+                <option value="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Danwon-Ssireum.jpg/400px-Danwon-Ssireum.jpg">씨름 (김홍도) - 구경꾼들</option>
+                <option value="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Hyewon-Miindo.jpg/300px-Hyewon-Miindo.jpg">미인도 (신윤복) - 우아함</option>
+            </select>
+            
+            <input type="text" id="meme-text-input" onkeyup="updateMemePreview()" placeholder="말풍선 대사 (입력 후 Enter)" class="w-full border-4 border-purple-100 rounded-xl p-2 bg-purple-50 focus:border-purple-300 outline-none text-md text-gray-700 mb-3" maxlength="30">
+            
+            <div class="relative rounded-xl overflow-hidden border-2 border-dashed border-purple-300 mb-4 bg-gray-50 flex justify-center">
+                <img id="live-meme-img" crossorigin="anonymous" src="" onerror="this.onerror=null; this.classList.add('hide'); this.nextElementSibling.classList.remove('hide');" class="h-40 w-full object-cover object-top">
+                <div class="img-error w-full h-40 hide absolute top-0 left-0"><i class="fa-solid fa-triangle-exclamation mr-1"></i>그림을 불러올 수 없사옵니다.</div>
+                <div class="speech-bubble" id="live-meme-text"></div>
+            </div>
+            
+            <div class="flex space-x-2">
+                <button onclick="closeMemeModal()" class="w-1/3 bg-gray-200 text-gray-600 text-lg py-2 rounded-xl border-b-4 border-gray-300 active:border-b-0 active:translate-y-1">취소</button>
+                <button onclick="applyMeme()" id="btn-apply-meme" class="w-2/3 bg-purple-400 text-white text-lg py-2 rounded-xl border-b-4 border-purple-500 active:border-b-0 active:translate-y-1">밈 달기 ✨</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 비속어 필터 배열
+    const badWords = ["바보", "멍청이", "씨발", "시발", "존나", "개새끼", "미친", "병신", "지랄", "새끼", "뒤져"];
+
+    function filterProfanity(text) {
+        let filteredText = text;
+        badWords.forEach(word => {
+            const regex = new RegExp(word, "gi");
+            filteredText = filteredText.replace(regex, "🌸예쁜말🌸");
+        });
+        return filteredText;
+    }
+
+    function escapeHTML(str) { 
+        return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)); 
+    }
+
+    function toggleBodyScroll(isLocked) {
+        const feed = document.getElementById('feed');
+        if(isLocked) feed.style.overflowY = 'hidden';
+        else feed.style.overflowY = 'auto';
+    }
+
+    function getFormattedTime() {
+        const now = new Date();
+        const month = now.getMonth() + 1;
+        const date = now.getDate();
+        const timeStr = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+        return `${month}/${date} ${timeStr}`;
+    }
+
+    let currentUser = null;
+    let posts = [];
+    let currentMeme = null; 
+    let isNpcTyping = false; 
+    let isCapturing = false;
+
+    // V10 데이터 마이그레이션 키 (가장 깨끗한 상태로 재시작)
+    const STORAGE_KEY_USER = 'chosun_user_v10';
+    const STORAGE_KEY_POSTS = 'chosun_posts_v10';
+
+    const npcDictionary = [
+        {
+            keywords: ["왜군", "일본", "바다", "거북선", "전쟁", "여수", "한려", "수영"], 
+            name: "이순신 장군 🐢", handle: "@turtle_power",
+            reply: ["{user} 공, 전라좌수영 앞바다는 우리 수영부가 지키고 있소! 🌊", "신에게는 아직 12척의 배가 남아있사옵니다!", "나의 죽음을 적에게 알리지 말라...!"],
+            icon: "fa-sailboat", bg: "bg-blue-50", border: "border-blue-300", text: "text-blue-800", iconBg: "bg-blue-500"
+        },
+        {
+            keywords: ["한글", "세종", "어려워", "책", "백성", "공부", "학교"], 
+            name: "세종대왕 👑", handle: "@king_sejong",
+            reply: ["{user} 백성이 글을 모르는 것이 안타까워 내 스물여덟 자를 만들었노라. 📝", "학문을 게을리 하지 말거라!", "고기 반찬이 없으면 수라를 들지 않겠다! 🍖"],
+            icon: "fa-crown", bg: "bg-amber-50", border: "border-amber-300", text: "text-amber-900", iconBg: "bg-amber-500"
+        },
+        {
+            keywords: ["배고파", "밥", "고기", "국밥", "장터", "돈"], 
+            name: "주막 주모 🍲", handle: "@korean_soup",
+            reply: ["아따 {user}야, 뜨끈한 국밥 한 그릇 말고 가시구려! 🍚", "외상값이나 갚고 고기를 찾으시오! 💢"],
+            icon: "fa-bowl-food", bg: "bg-orange-50", border: "border-orange-300", text: "text-orange-800", iconBg: "bg-orange-400"
+        }
+    ];
+
+    try {
+        currentUser = JSON.parse(localStorage.getItem(STORAGE_KEY_USER)) || null;
+        posts = JSON.parse(localStorage.getItem(STORAGE_KEY_POSTS)) || [];
+    } catch(e) { localStorage.clear(); }
+
+    const historicalEvents = [
+        "🚨 [속보] 전라좌수영 앞바다에 수영부 창설! 물개 같은 실력으로 왜군을 제압한다! 🐢💦",
+        "📜 [어명] 훈민정음 완성! 이제 우리말을 쉽게 쓸 수 있어요! 킹세종 최고👍",
+        "🐯 [마을방송] 뒷산에 호랑이가 나타났대요! 해지면 돌아다니지 마시오!"
+    ];
+
+    window.onload = () => {
+        if (!currentUser) {
+            document.getElementById('profile-modal').classList.remove('hide');
+            toggleBodyScroll(true);
+        }
+        else renderPosts();
+        updateMemePreview();
+    };
+
+    function resetApp() {
+        const userInput = prompt("모든 기록을 지우려면 정확히 '초기화'라고 입력해주세요. ⚠️");
+        if(userInput === "초기화") {
+            localStorage.removeItem(STORAGE_KEY_USER); 
+            localStorage.removeItem(STORAGE_KEY_POSTS); 
+            location.reload();
+        } else if (userInput !== null) {
+            alert("입력한 글자가 틀려 초기화가 취소되었습니다. 휴! 다행이네요. 😅");
+        }
+    }
+
+    function closeProfileIfPossible(event) {
+        if (currentUser) {
+            document.getElementById('profile-modal').classList.add('hide');
+            toggleBodyScroll(false);
+        }
+    }
+
+    function saveProfile() {
+        const btn = document.getElementById('btn-save-prof');
+        btn.disabled = true; 
+
+        let name = document.getElementById('prof-name').value.trim();
+        let handle = document.getElementById('prof-handle').value.trim();
+        
+        if(!name || !handle) {
+            alert('이름과 별명을 꼭 적어주세요! 🥺');
+            btn.disabled = false;
+            return;
+        }
+
+        name = filterProfanity(name);
+        handle = filterProfanity(handle);
+
+        if(!handle.startsWith('@')) handle = '@' + handle;
+
+        currentUser = { name: escapeHTML(name), handle: escapeHTML(handle) };
+        localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(currentUser));
+        document.getElementById('profile-modal').classList.add('hide');
+        toggleBodyScroll(false);
+        createPostObj("event", `🎉 [${currentUser.name}]님이 타임슬립에 성공했습니다!`);
+        btn.disabled = false;
+    }
+
+    function openWriteModal() { 
+        document.getElementById('write-modal').classList.remove('hide'); 
+        toggleBodyScroll(true);
+        document.getElementById('post-content').focus(); 
+    }
+    
+    function closeWriteModal() { 
+        document.getElementById('write-modal').classList.add('hide'); 
+        toggleBodyScroll(false);
+        document.getElementById('post-content').value = ''; 
+        document.getElementById('btn-submit-post').disabled = false; 
+        removeMeme(); 
+    }
+    
+    document.getElementById('post-content').addEventListener('keydown', e => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitPost(); } });
+    document.getElementById('meme-text-input').addEventListener('keydown', e => { if(e.key === 'Enter') { e.preventDefault(); applyMeme(); } });
+
+    function openMemeModal() { 
+        document.getElementById('meme-modal').classList.remove('hide'); 
+        toggleBodyScroll(true);
+        updateMemePreview(); 
+        document.getElementById('meme-text-input').focus(); 
+    }
+    
+    function closeMemeModal() { 
+        document.getElementById('meme-modal').classList.add('hide'); 
+    }
+
+    function updateMemePreview() {
+        const bgUrl = document.getElementById('meme-bg-select').value;
+        const text = escapeHTML(document.getElementById('meme-text-input').value) || "여기에 대사가 쏙!";
+        
+        const liveImg = document.getElementById('live-meme-img');
+        liveImg.classList.remove('hide');
+        liveImg.nextElementSibling.classList.add('hide');
+        liveImg.src = bgUrl;
+        
+        document.getElementById('live-meme-text').innerHTML = text;
+    }
+
+    // [버그 픽스] DOM 강제 주입 에러 방어
+    function applyMeme() {
+        const bgUrl = document.getElementById('meme-bg-select').value;
+        let text = document.getElementById('meme-text-input').value.trim();
+        if(!text) return alert("말풍선 대사를 적어주세요!");
+        
+        text = escapeHTML(filterProfanity(text));
+        currentMeme = { bgUrl, text };
+        
+        const previewContainer = document.getElementById('meme-preview-container');
+        const previewImg = document.getElementById('meme-preview-img');
+        
+        previewContainer.classList.remove('hide');
+        previewImg.classList.remove('hide');
+        if (previewImg.nextElementSibling.classList.contains('img-error')) {
+            previewImg.nextElementSibling.classList.add('hide');
+        }
+        previewImg.src = bgUrl;
+        
+        closeMemeModal();
+        document.getElementById('post-content').focus();
+    }
+
+    function removeMeme() {
+        currentMeme = null;
+        document.getElementById('meme-preview-container').classList.add('hide');
+        document.getElementById('meme-text-input').value = '';
+    }
+
+    function submitPost() {
+        const btn = document.getElementById('btn-submit-post');
+        if (btn.disabled) return; 
+        btn.disabled = true;
+
+        let content = document.getElementById('post-content').value.trim();
+        content = content.replace(/\n\s*\n/g, '\n\n'); 
+        content = filterProfanity(content);
+
+        if(!content && !currentMeme) {
+            btn.disabled = false;
+            return;
+        }
+        
+        createPostObj("user", content, currentMeme);
+        if(content) checkNPCResponse(content);
+        closeWriteModal();
+    }
+
+    function checkNPCResponse(content) {
+        if(isNpcTyping) return; 
+
+        for (let npc of npcDictionary) {
+            if (npc.keywords.some(kw => content.includes(kw))) {
+                isNpcTyping = true; 
+                const indicator = document.getElementById('typing-indicator');
+                document.getElementById('typing-name').innerText = npc.name;
+                indicator.classList.remove('hide');
+                
+                setTimeout(() => {
+                    indicator.classList.add('hide');
+                    let randomReply = npc.reply[Math.floor(Math.random() * npc.reply.length)];
+                    randomReply = randomReply.replace('{user}', `<span class="text-indigo-600 font-bold">${currentUser.handle}</span>`);
+                    
+                    const npcPost = {
+                        id: Date.now(), type: "npc", content: randomReply,
+                        authorName: npc.name, authorHandle: npc.handle,
+                        time: getFormattedTime(),
+                        likes: Math.floor(Math.random() * 100),
+                        style: { icon: npc.icon, bg: npc.bg, border: npc.border, text: npc.text, iconBg: npc.iconBg }
+                    };
+                    
+                    posts.unshift(npcPost);
+                    localStorage.setItem(STORAGE_KEY_POSTS, JSON.stringify(posts));
+                    renderPosts();
+                    document.getElementById('feed').scrollTop = 0;
+                    isNpcTyping = false; 
+                }, 2000);
+                break; 
+            }
+        }
+    }
+
+    function triggerRandomEvent() {
+        const btn = document.getElementById('btn-event');
+        if (btn.disabled) return;
+        btn.disabled = true;
+
+        const randomEvent = historicalEvents[Math.floor(Math.random() * historicalEvents.length)];
+        createPostObj("event", randomEvent);
+        
+        setTimeout(() => { btn.disabled = false; }, 1000);
+    }
+
+    function createPostObj(type, content, memeData = null) {
+        const newPost = {
+            id: Date.now(), type: type, content: escapeHTML(content),
+            meme: memeData,
+            authorName: type === "user" ? currentUser.name : "조선 마을이장",
+            authorHandle: type === "user" ? currentUser.handle : "@chosun_news",
+            time: getFormattedTime(),
+            likes: Math.floor(Math.random() * 50)
+        };
+        
+        posts.unshift(newPost);
+        localStorage.setItem(STORAGE_KEY_POSTS, JSON.stringify(posts));
+        renderPosts();
+        document.getElementById('feed').scrollTop = 0;
+    }
+
+    // [버그 픽스] 좋아요 캡처 동기화
+    function toggleLike(postId, btnElement) {
+        const postIndex = posts.findIndex(p => p.id === postId);
+        if(postIndex > -1) {
+            posts[postIndex].likes += 1;
+            localStorage.setItem(STORAGE_KEY_POSTS, JSON.stringify(posts));
+            
+            // 실제 버튼 안의 텍스트 업데이트
+            btnElement.querySelector('span').innerText = posts[postIndex].likes;
+            
+            // 캡처용 숨김 태그의 텍스트도 강제 업데이트 (버그 원인 해결)
+            const captureSpan = btnElement.nextElementSibling;
+            if(captureSpan && captureSpan.classList.contains('html2canvas-show')) {
+                captureSpan.innerHTML = `<i class="fa-solid fa-heart mr-1"></i>${posts[postIndex].likes}`;
+            }
+            
+            const icon = btnElement.querySelector('i');
+            icon.classList.remove('fa-regular', 'text-pink-300', 'text-gray-400');
+            icon.classList.add('fa-solid', 'text-red-500');
+            btnElement.classList.add('text-red-500', 'animate-pop');
+            setTimeout(() => btnElement.classList.remove('animate-pop'), 200);
+        }
+    }
+
+    function deletePost(postId) {
+        if(confirm("이 기록을 지우시겠습니까? 🗑️")) {
+            posts = posts.filter(p => p.id !== postId);
+            localStorage.setItem(STORAGE_KEY_POSTS, JSON.stringify(posts));
+            renderPosts();
+        }
+    }
+
+    function renderPosts() {
+        const feed = document.getElementById('feed');
+        feed.innerHTML = '';
+
+        if(posts.length === 0) {
+            feed.innerHTML = '<div class="text-center text-gray-500 mt-16 text-lg bg-white/60 p-4 rounded-3xl mx-4 border-2 border-dashed border-pink-300">오른쪽 아래 깃펜을 눌러<br>역사 이야기를 남겨보세요! 🪶</div>';
+            return;
+        }
+
+        posts.forEach(post => {
+            let bgClass = "bg-white border-4 border-pink-100";
+            let iconBg = "bg-pink-100 text-pink-500";
+            let iconClass = "fa-cat"; 
+            let nameColor = "text-pink-600";
+            let likeColor = "text-pink-300";
+            let isUserPost = false;
+
+            if (post.type === "npc") {
+                bgClass = `${post.style.bg} border-4 ${post.style.border}`;
+                iconBg = `${post.style.iconBg} text-white`;
+                iconClass = post.style.icon;
+                nameColor = post.style.text;
+                likeColor = "text-gray-400";
+            } else if (post.type === "event") {
+                bgClass = "bg-yellow-100 border-4 border-yellow-300";
+                iconBg = "bg-yellow-300 text-yellow-800";
+                iconClass = "fa-bell ring";
+                nameColor = "text-yellow-800";
+            } else {
+                isUserPost = true;
+            }
+
+            let memeHTML = '';
+            if (post.meme) {
+                memeHTML = `
+                <div class="relative mt-3 rounded-2xl overflow-hidden border-2 border-gray-200 bg-white">
+                    <img src="${post.meme.bgUrl}" crossorigin="anonymous" onerror="this.onerror=null; this.classList.add('hide'); this.nextElementSibling.classList.remove('hide');" class="w-full max-h-64 object-cover object-top">
+                    <div class="img-error w-full h-40 hide absolute top-0 left-0"><i class="fa-solid fa-image-slash mr-1"></i>그림 오류</div>
+                    <div class="speech-bubble">${post.meme.text}</div>
+                </div>`;
+            }
+
+            const postHTML = `
+                <div class="rounded-3xl p-5 ${bgClass} animate-bounce-in shadow-sm">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center space-x-3 w-full">
+                            <div class="w-12 h-12 rounded-full ${iconBg} flex-shrink-0 flex items-center justify-center text-xl shadow-inner border-2 border-white">
+                                <i class="fa-solid ${iconClass}"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h3 class="text-lg ${nameColor} leading-tight font-bold truncate pr-2">${post.authorName}</h3>
+                                <p class="text-xs text-gray-500 leading-tight truncate pr-2">${post.authorHandle} • ${post.time}</p>
+                            </div>
+                            ${isUserPost ? `
+                            <button onclick="deletePost(${post.id})" class="text-gray-300 hover:text-red-400 transition flex-shrink-0" title="삭제" data-html2canvas-ignore="true">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                    ${post.content ? `<p class="text-gray-800 text-lg leading-relaxed mt-2 whitespace-pre-wrap break-words break-all">${post.content}</p>` : ''}
+                    ${memeHTML}
+                    
+                    ${post.type === "event" ? '' : `
+                    <div class="mt-4 pt-3 border-t-2 border-dashed border-gray-200/50 flex items-center ${likeColor} text-lg">
+                        <button onclick="toggleLike(${post.id}, this)" class="flex items-center space-x-2 hover:text-red-400 transition bg-white/50 px-3 py-1.5 rounded-xl" data-html2canvas-ignore="true">
+                            <i class="fa-regular fa-heart"></i><span>${post.likes}</span>
+                        </button>
+                        <span class="hide html2canvas-show text-red-500"><i class="fa-solid fa-heart mr-1"></i>${post.likes}</span>
+                    </div>
+                    `}
+                </div>
+            `;
+            feed.insertAdjacentHTML('beforeend', postHTML);
+        });
+    }
+
+    function exportToImage() {
+        if (isCapturing) return; 
+        
+        const feed = document.getElementById('feed');
+        feed.scrollTop = 0; 
+        
+        isCapturing = true;
+        const appContainer = document.getElementById('app-container');
+        const overlay = document.getElementById('capture-overlay');
+        
+        overlay.classList.remove('hide');
+        toggleBodyScroll(true);
+        
+        setTimeout(() => {
+            html2canvas(appContainer, { scale: 2, useCORS: true, backgroundColor: "#ffffff" }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `조선톡_캡처_${new Date().getTime()}.png`;
+                link.href = canvas.toDataURL('image/png'); link.click();
+            }).catch(err => { 
+                console.error(err);
+                alert("캡처에 실패했어요 ㅠㅠ"); 
+            }).finally(() => {
+                overlay.classList.add('hide');
+                toggleBodyScroll(false);
+                isCapturing = false; 
+            });
+        }, 500); 
+    }
+</script>
+
+<style>
+    .html2canvas-show { display: none; }
+    [data-html2canvas-ignore] + .html2canvas-show { display: inline-block; }
+</style>
+
+</body>
+</html>
