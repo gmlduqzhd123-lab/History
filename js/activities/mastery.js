@@ -194,12 +194,11 @@ function renderQuestion(q, onAnswer, headRow) {
     return wrap;
 }
 
-// 분류 문제: 두 칸이 모두 들어가도록 show개를 고름
+// 분류 문제: 칸마다 적어도 하나씩 들어가도록 show개를 고름
 function pickSortItems(q) {
-    const n = q.show || q.items.length;
-    for (let tries = 0; tries < 20; tries++) {
-        const pick = shuffle(q.items).slice(0, n);
-        if (q.buckets.every((_, b) => pick.some(it => it.b === b))) return pick;
-    }
-    return shuffle(q.items).slice(0, n);
+    const n = Math.max(q.show || q.items.length, q.buckets.length);
+    const pool = shuffle(q.items);
+    const pick = q.buckets.map((_, b) => pool.find(it => it.b === b)).filter(Boolean);
+    pool.forEach(it => { if (pick.length < n && !pick.includes(it)) pick.push(it); });
+    return shuffle(pick);
 }
