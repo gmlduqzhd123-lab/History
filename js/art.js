@@ -117,4 +117,107 @@ export const art = {
         <rect x="80" y="94" width="14" height="12" rx="4" fill="#4f6a45" stroke="#2c3b25" stroke-width="2"/>
         <rect x="106" y="94" width="14" height="12" rx="4" fill="#4f6a45" stroke="#2c3b25" stroke-width="2"/>
     `, '청동 거울'),
+    // 고구려 무용총 수렵도: 말 탄 사람이 활을 쏘며 사슴을 쫓는 벽화 (간단히 다시 그린 그림)
+    huntingMural: svg(`
+        <rect x="6" y="6" width="188" height="188" rx="6" fill="#ecd7ae" stroke="#7a5a3a" stroke-width="4"/>
+        <g fill="none" stroke-linecap="round" stroke-width="7">
+            <path d="M10 176 Q30 146 50 176 Q70 146 90 176" stroke="#b84a34"/>
+            <path d="M10 176 Q30 156 50 176 Q70 156 90 176" stroke="#f5ecd9" stroke-width="4"/>
+            <path d="M110 180 Q130 150 150 180 Q170 150 190 180" stroke="#3f3a34"/>
+            <path d="M110 180 Q130 160 150 180 Q170 160 190 180" stroke="#f5ecd9" stroke-width="4"/>
+            <path d="M120 40 Q134 20 148 40" stroke="#b84a34" stroke-width="5"/>
+        </g>
+        <g stroke="#3f2a1e" stroke-width="2.5" stroke-linejoin="round">
+            <path d="M162 70 l-6 -14 m6 14 l6 -16 m-9 6 l-6 -2 m12 -2 l6 -3" fill="none" stroke-width="2.5"/>
+            <ellipse cx="160" cy="92" rx="18" ry="8" fill="#c77a45"/>
+            <path d="M174 88 L184 76 L188 80 L178 92 Z" fill="#c77a45"/>
+            <path d="M148 98 L136 110 M154 99 L150 114 M168 99 L180 110 M172 97 L188 104" fill="none"/>
+        </g>
+        <g stroke="#2e1d14" stroke-width="2.5" stroke-linejoin="round">
+            <path d="M52 120 L30 132 M58 124 L44 144 M104 120 L128 128 M100 124 L118 144" fill="none" stroke-width="4"/>
+            <ellipse cx="80" cy="116" rx="30" ry="13" fill="#8b3a2b"/>
+            <path d="M104 110 L122 92 L132 96 L126 104 L110 120 Z" fill="#8b3a2b"/>
+            <path d="M50 112 Q34 104 30 118" fill="none" stroke-width="4"/>
+            <path d="M80 104 L84 80" fill="none" stroke-width="5"/>
+            <circle cx="85" cy="72" r="8" fill="#f1d9b5"/>
+            <path d="M78 66 Q85 56 92 66" fill="#2e1d14"/>
+            <path d="M86 86 L104 80" fill="none" stroke-width="3"/>
+            <path d="M104 62 Q118 80 104 98" fill="none" stroke-width="3"/>
+            <path d="M104 62 L104 98" fill="none" stroke-width="1.5"/>
+            <path d="M104 80 L146 88" fill="none" stroke-width="2"/>
+            <path d="M146 88 l-7 -4 m7 4 l-7 3" fill="none" stroke-width="2"/>
+        </g>
+    `, '무용총 수렵도'),
+
+    // 백제 금동 대향로: 용 받침, 연꽃 몸통, 산 모양 뚜껑, 꼭대기 봉황
+    incenseBurner: svg(`
+        <defs><linearGradient id="ib" x1="0" x2="1"><stop offset="0" stop-color="#9c6b1f"/><stop offset="0.45" stop-color="#e8c25a"/><stop offset="1" stop-color="#8a5c18"/></linearGradient></defs>
+        ${ground}
+        <g stroke="#5c3d0e" stroke-width="2.5" stroke-linejoin="round" fill="url(#ib)">
+            <path d="M62 172 Q64 150 84 150 Q100 142 116 150 Q136 150 138 172 Q100 182 62 172 Z"/>
+            <path d="M84 150 Q76 140 86 134 Q96 140 94 150" fill="none"/>
+            <path d="M92 150 L92 136 L108 136 L108 150 Z"/>
+            <path d="M58 112 Q60 142 100 142 Q140 142 142 112 Z"/>
+            <path d="M66 114 Q74 132 84 138 M86 114 Q92 134 100 140 M114 114 Q108 134 100 140 M134 114 Q126 132 116 138" fill="none"/>
+            <path d="M56 112 Q56 56 100 50 Q144 56 144 112 Z"/>
+            <path d="M62 104 q8 -12 16 0 q8 -14 16 0 q8 -14 16 0 q8 -12 16 0 q6 -10 12 0" fill="none"/>
+            <path d="M66 86 q8 -12 16 0 q9 -14 18 0 q9 -14 18 0 q8 -12 14 0" fill="none"/>
+            <path d="M74 68 q8 -10 14 0 q6 -12 12 0 q6 -12 12 0 q6 -10 12 0" fill="none"/>
+            <path d="M100 50 L100 40"/>
+            <path d="M100 40 Q86 30 82 14 Q94 20 100 28 Q106 20 118 14 Q114 30 100 40 Z"/>
+            <path d="M100 28 Q104 14 96 8" fill="none"/>
+            <circle cx="96" cy="8" r="3"/>
+        </g>
+        <g fill="#5c3d0e"><circle cx="80" cy="96" r="2"/><circle cx="120" cy="96" r="2"/><circle cx="100" cy="78" r="2"/></g>
+    `, '백제 금동 대향로'),
+
+    // 신라 금관: 나뭇가지(出) 모양과 사슴뿔 모양 세움 장식, 곱은옥과 달개
+    goldCrown: svg(`
+        <defs><linearGradient id="gc" x1="0" x2="1"><stop offset="0" stop-color="#b8861b"/><stop offset="0.5" stop-color="#f3d36b"/><stop offset="1" stop-color="#a87814"/></linearGradient></defs>
+        <g fill="none" stroke="url(#gc)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+            ${[64, 100, 136].map(x => `<path d="M${x} 140 V40 M${x} 118 H${x - 14} V98 M${x} 118 H${x + 14} V98 M${x} 92 H${x - 14} V72 M${x} 92 H${x + 14} V72 M${x} 66 H${x - 12} V48 M${x} 66 H${x + 12} V48"/>`).join('')}
+            <path d="M38 140 Q34 110 44 88 Q38 76 30 70 M44 88 Q50 72 46 58 M40 112 Q28 104 24 92"/>
+            <path d="M162 140 Q166 110 156 88 Q162 76 170 70 M156 88 Q150 72 154 58 M160 112 Q172 104 176 92"/>
+        </g>
+        <path d="M28 136 Q100 124 172 136 L172 156 Q100 144 28 156 Z" fill="url(#gc)" stroke="#7a5510" stroke-width="2"/>
+        <g fill="#7a5510">${[40, 58, 76, 94, 112, 130, 148, 164].map(x => `<circle cx="${x}" cy="${x < 100 ? 146 - (x - 28) * 0.08 : 146 - (172 - x) * 0.08}" r="2"/>`).join('')}</g>
+        <g fill="#f7dc7a" stroke="#a87814" stroke-width="1">
+            ${[[64, 58], [100, 52], [136, 58], [64, 84], [136, 84], [100, 106], [50, 106], [150, 106]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="4"/>`).join('')}
+        </g>
+        <g fill="#3f8f5a" stroke="#1f5a34" stroke-width="1.5">
+            ${[[80, 74], [118, 74], [100, 90], [48, 90], [152, 90]].map(([x, y]) => `<path d="M${x} ${y} a6 6 0 1 1 6 6 q-2 6 -8 8 q4 -6 2 -14 z"/>`).join('')}
+        </g>
+        <g stroke="#b8861b" stroke-width="3" fill="none"><path d="M44 154 L40 182 M156 154 L160 182"/></g>
+        <g fill="#f3d36b" stroke="#a87814"><path d="M40 182 l-6 8 l6 6 l6 -6 z M160 182 l-6 8 l6 6 l6 -6 z"/></g>
+    `, '신라 금관'),
+
+    // 가야 덩이쇠: 가운데가 잘록한 납작한 쇳덩이 여러 장
+    ironIngot: svg(`
+        ${ground}
+        ${[0, 1, 2, 3].map(i => {
+            const y = 70 + i * 22, dx = i % 2 ? 6 : 0;
+            return `<path d="M${30 + dx} ${y} L${76 + dx} ${y + 8} L${124 + dx} ${y + 8} L${170 + dx} ${y} L${170 + dx} ${y + 16} L${124 + dx} ${y + 20} L${76 + dx} ${y + 20} L${30 + dx} ${y + 16} Z" fill="${['#6b6560', '#5d5752', '#716a63', '#57514c'][i]}" stroke="#2f2b28" stroke-width="2.5" stroke-linejoin="round"/>
+                    <path d="M${36 + dx} ${y + 4} L${76 + dx} ${y + 11} L${124 + dx} ${y + 11} L${164 + dx} ${y + 4}" stroke="#9a938b" stroke-width="2" fill="none" opacity="0.7"/>`;
+        }).join('')}
+        <g fill="#9a4f26" opacity="0.8"><circle cx="58" cy="82" r="4"/><circle cx="142" cy="108" r="5"/><circle cx="96" cy="140" r="4"/><circle cx="150" cy="148" r="3"/></g>
+        <path d="M20 118 Q14 100 22 86 M180 126 Q188 108 180 92" stroke="#c7a36b" stroke-width="4" fill="none" stroke-linecap="round"/>
+    `, '덩이쇠'),
+
+    // 신라 첨성대: 돌을 병 모양으로 쌓고 가운데에 네모난 창
+    cheomseongdae: svg(`
+        <rect x="0" y="160" width="200" height="40" fill="#b7cf8f"/>
+        <rect x="52" y="150" width="96" height="14" fill="#b9ae9c" stroke="#6b5f4f" stroke-width="2"/>
+        <path d="M56 150 C78 140 82 100 82 36 L118 36 C118 100 122 140 144 150 Z" fill="#d6cab5" stroke="#6b5f4f" stroke-width="3"/>
+        <g stroke="#8f8471" stroke-width="1.5">
+            ${Array.from({ length: 12 }, (_, i) => {
+                const y = 44 + i * 9;
+                const t = (y - 36) / 114;
+                const half = 18 + Math.pow(t, 3) * 26;
+                return `<line x1="${(100 - half).toFixed(1)}" y1="${y}" x2="${(100 + half).toFixed(1)}" y2="${y}"/>`;
+            }).join('')}
+        </g>
+        <rect x="92" y="86" width="16" height="16" fill="#4a3f33" stroke="#6b5f4f" stroke-width="2"/>
+        <path d="M72 36 H128 M72 28 H128 M78 24 V40 M122 24 V40" stroke="#8f8471" stroke-width="5" stroke-linecap="square"/>
+        <g fill="#fde68a"><path d="M40 30 l2 5 5 1 -4 3 1 5 -4 -3 -4 3 1 -5 -4 -3 5 -1z"/><path d="M160 20 l2 4 4 1 -3 3 1 4 -4 -2 -3 2 1 -4 -3 -3 4 -1z"/><circle cx="150" cy="60" r="2"/><circle cx="30" cy="70" r="2"/></g>
+    `, '첨성대'),
 };

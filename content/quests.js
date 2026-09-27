@@ -2,6 +2,7 @@
 // ready: true 인 정거장만 퀘스트가 들어 있음 (나머지는 '준비 중')
 import q1 from './q1-stone-age.js';
 import q2 from './q2-bronze-gojoseon.js';
+import q3 from './q3-three-kingdoms-gaya.js';
 
 export const units = [
     {
@@ -9,7 +10,7 @@ export const units = [
         stations: [
             { id: 'q1', emoji: '🪨', name: '구석기·신석기 시대', desc: '돌을 깨뜨리고 갈아서 도구를 만들다', quest: q1 },
             { id: 'q2', emoji: '🐻', name: '청동기 시대와 고조선', desc: '지배자가 나타나고 첫 나라가 세워지다', quest: q2 },
-            { id: 'q3', emoji: '⚔️', name: '삼국과 가야', desc: '고구려·백제·신라·가야 사람들의 생활' },
+            { id: 'q3', emoji: '⚔️', name: '삼국과 가야', desc: '고구려·백제·신라·가야 사람들의 생활', quest: q3 },
             { id: 'q4', emoji: '🏯', name: '통일 신라와 발해', desc: '삼국 통일과 남북국의 문화' },
             { id: 'q5', emoji: '🏺', name: '고려', desc: '벽란도, 고려청자, 금속 활자' },
         ],
