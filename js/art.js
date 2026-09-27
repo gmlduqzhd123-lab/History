@@ -220,4 +220,75 @@ export const art = {
         <path d="M72 36 H128 M72 28 H128 M78 24 V40 M122 24 V40" stroke="#8f8471" stroke-width="5" stroke-linecap="square"/>
         <g fill="#fde68a"><path d="M40 30 l2 5 5 1 -4 3 1 5 -4 -3 -4 3 1 -5 -4 -3 5 -1z"/><path d="M160 20 l2 4 4 1 -3 3 1 4 -4 -2 -3 2 1 -4 -3 -3 4 -1z"/><circle cx="150" cy="60" r="2"/><circle cx="30" cy="70" r="2"/></g>
     `, '첨성대'),
+    // 석굴암 본존불: 둥근 천장 굴 안에 앉은 불상 (간단히 다시 그린 그림)
+    seokguram: svg(`
+        <path d="M16 196 V92 Q16 14 100 14 Q184 14 184 92 V196 Z" fill="#5b544c"/>
+        <path d="M30 196 V96 Q30 30 100 30 Q170 30 170 96 V196 Z" fill="#7a7168"/>
+        <g stroke="#6a625a" stroke-width="1.5" fill="none">${[48, 66, 84].map(y => `<path d="M${40 + (y - 48) * 0.1} ${y + 30} Q100 ${y - 10} ${160 - (y - 48) * 0.1} ${y + 30}"/>`).join('')}</g>
+        <circle cx="100" cy="66" r="30" fill="#ece5d6" stroke="#b7ad9a" stroke-width="3"/>
+        <g stroke="#8f8574" stroke-width="2.5" stroke-linejoin="round">
+            <path d="M40 186 Q100 168 160 186 L160 196 L40 196 Z" fill="#d9d0bf"/>
+            <path d="M44 184 Q52 150 72 138 L128 138 Q148 150 156 184 Q100 170 44 184 Z" fill="#efe8da"/>
+            <path d="M74 140 Q72 110 84 96 L116 96 Q128 110 126 140 Z" fill="#f4eee2"/>
+            <path d="M84 98 Q92 118 88 138 M116 98 Q108 118 112 138" fill="none"/>
+            <path d="M80 164 Q100 150 122 164" fill="none"/>
+            <path d="M118 150 L128 172" fill="none"/>
+            <ellipse cx="100" cy="78" rx="15" ry="18" fill="#f4eee2"/>
+            <circle cx="100" cy="56" r="8" fill="#e2d9c8"/>
+            <path d="M92 76 q3 2 6 0 M102 76 q3 2 6 0 M97 88 q3 2 6 0" fill="none" stroke-width="1.8"/>
+            <path d="M85 80 v10 M115 80 v10" fill="none" stroke-width="2"/>
+        </g>
+    `, '석굴암 본존불'),
+
+    // 불국사 석가탑: 2층 기단 위에 올린 3층 석탑
+    seokgatap: svg(`
+        <rect x="0" y="176" width="200" height="24" fill="#d9c29c"/>
+        <g fill="#d8d1c4" stroke="#6b645a" stroke-width="2.5" stroke-linejoin="round">
+            <rect x="34" y="160" width="132" height="16"/>
+            <rect x="42" y="146" width="116" height="14"/>
+            <rect x="54" y="128" width="92" height="18"/>
+            <path d="M30 128 L170 128 L162 118 L38 118 Z"/>
+            <rect x="66" y="98" width="68" height="20"/>
+            <path d="M40 98 L160 98 L152 88 L48 88 Z"/>
+            <rect x="72" y="74" width="56" height="14"/>
+            <path d="M48 74 L152 74 L144 64 L56 64 Z"/>
+            <rect x="78" y="52" width="44" height="12"/>
+            <path d="M56 52 L144 52 L136 42 L64 42 Z"/>
+        </g>
+        <g stroke="#6b645a" stroke-width="2"><line x1="100" y1="128" x2="100" y2="146"/><line x1="100" y1="98" x2="100" y2="118"/><line x1="100" y1="74" x2="100" y2="88"/></g>
+        <g fill="#b9ad98" stroke="#6b645a" stroke-width="2"><rect x="94" y="32" width="12" height="10"/><circle cx="100" cy="26" r="6"/><path d="M100 20 V8"/></g>
+        <path d="M144 150 l14 -8" stroke="#b58b22" stroke-width="2"/>
+        <rect x="150" y="132" width="26" height="16" rx="3" fill="#f3e3b5" stroke="#b58b22" stroke-width="2" transform="rotate(-8 163 140)"/>
+        <path d="M154 138 h18 M154 142 h14" stroke="#b58b22" stroke-width="1.5" transform="rotate(-8 163 140)"/>
+    `, '석가탑'),
+
+    // 성덕대왕 신종: 용 모양 고리, 음통, 연꽃 무늬 당좌
+    divineBell: svg(`
+        <defs><linearGradient id="db" x1="0" x2="1"><stop offset="0" stop-color="#4f6a45"/><stop offset="0.5" stop-color="#8fa577"/><stop offset="1" stop-color="#435c3b"/></linearGradient></defs>
+        <path d="M60 14 L140 14" stroke="#6b5a3a" stroke-width="6" stroke-linecap="round"/>
+        <path d="M92 14 Q88 34 100 38 Q112 34 108 14" fill="none" stroke="#34482c" stroke-width="5"/>
+        <rect x="112" y="22" width="8" height="18" rx="2" fill="url(#db)" stroke="#2c3b25" stroke-width="2"/>
+        <path d="M62 44 Q100 32 138 44 L150 160 Q152 176 162 180 L38 180 Q48 176 50 160 Z" fill="url(#db)" stroke="#2c3b25" stroke-width="3"/>
+        <path d="M60 58 Q100 48 140 58" fill="none" stroke="#2c3b25" stroke-width="2"/>
+        <path d="M50 164 Q100 156 150 164" fill="none" stroke="#2c3b25" stroke-width="2"/>
+        <g stroke="#2c3b25" stroke-width="1.5" fill="#9bb07a">
+            <circle cx="72" cy="128" r="12"/>
+            ${Array.from({ length: 8 }, (_, i) => { const a = (i / 8) * Math.PI * 2; return `<ellipse cx="${(72 + Math.cos(a) * 7).toFixed(1)}" cy="${(128 + Math.sin(a) * 7).toFixed(1)}" rx="3" ry="5" transform="rotate(${(i * 45 + 90)} ${(72 + Math.cos(a) * 7).toFixed(1)} ${(128 + Math.sin(a) * 7).toFixed(1)})"/>`; }).join('')}
+        </g>
+        <g fill="none" stroke="#d9e4c3" stroke-width="2" opacity="0.8"><path d="M104 100 q10 -14 22 -6 q-6 10 -16 12 M112 104 q12 4 20 -2"/><circle cx="118" cy="90" r="4"/></g>
+        <g stroke="#9ca3af" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.8"><path d="M170 90 q8 10 0 20 M180 84 q12 16 0 32 M30 90 q-8 10 0 20 M20 84 q-12 16 0 32"/></g>
+    `, '성덕대왕 신종'),
+
+    // 발해 연꽃무늬 수막새: 지붕 기와 끝을 막는 둥근 기와
+    balhaeTile: svg(`
+        <circle cx="100" cy="100" r="82" fill="#8f877e" stroke="#4f4a44" stroke-width="4"/>
+        <circle cx="100" cy="100" r="68" fill="#a39b91" stroke="#4f4a44" stroke-width="2"/>
+        <g fill="#6f6860">${Array.from({ length: 24 }, (_, i) => { const a = (i / 24) * Math.PI * 2; return `<circle cx="${(100 + Math.cos(a) * 75).toFixed(1)}" cy="${(100 + Math.sin(a) * 75).toFixed(1)}" r="2.5"/>`; }).join('')}</g>
+        <g fill="#bdb5aa" stroke="#4f4a44" stroke-width="2">
+            ${Array.from({ length: 6 }, (_, i) => `<path d="M100 100 C88 80 88 50 100 40 C112 50 112 80 100 100 Z" transform="rotate(${i * 60} 100 100)"/>`).join('')}
+        </g>
+        <g fill="#7a736b">${Array.from({ length: 6 }, (_, i) => `<path d="M100 72 l-4 -14 l4 -4 l4 4 z" transform="rotate(${i * 60 + 30} 100 100)"/>`).join('')}</g>
+        <circle cx="100" cy="100" r="14" fill="#a39b91" stroke="#4f4a44" stroke-width="2"/>
+        <g fill="#4f4a44"><circle cx="100" cy="100" r="2.5"/>${Array.from({ length: 6 }, (_, i) => { const a = (i / 6) * Math.PI * 2; return `<circle cx="${(100 + Math.cos(a) * 8).toFixed(1)}" cy="${(100 + Math.sin(a) * 8).toFixed(1)}" r="2"/>`; }).join('')}</g>
+    `, '발해 연꽃무늬 수막새'),
 };
