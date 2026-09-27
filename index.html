@@ -79,7 +79,7 @@
         <!-- JS 렌더링 영역 -->
     </main>
 
-    <button onclick="openWriteModal()" class="absolute bottom-20 right-4 bg-pink-500 text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center text-2xl hover:bg-pink-400 transition transform hover:-translate-y-1 active:translate-y-1 z-20 border-b-4 border-pink-700" data-html2canvas-ignore="true">
+    <button onclick="openWriteModal()" aria-label="새 글 쓰기" class="absolute bottom-20 right-4 bg-pink-500 text-white w-16 h-16 rounded-full shadow-lg flex items-center justify-center text-2xl hover:bg-pink-400 transition transform hover:-translate-y-1 active:translate-y-1 z-20 border-b-4 border-pink-700" data-html2canvas-ignore="true">
         <i class="fa-solid fa-feather-pointed"></i>
     </button>
     
@@ -120,7 +120,7 @@
         <div class="modal-content bg-white w-full rounded-t-3xl p-6 shadow-2xl border-t-4 border-pink-200 transform transition-transform animate-slide-up flex flex-col max-h-[90vh]" onclick="event.stopPropagation()">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl text-gray-800"><i class="fa-solid fa-pen-nib text-pink-400 mr-2"></i>새로운 이야기 쓰기</h2>
-                <button onclick="closeWriteModal()" class="text-gray-400 hover:text-pink-500 transition bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <button onclick="closeWriteModal()" aria-label="닫기" class="text-gray-400 hover:text-pink-500 transition bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             
             <textarea id="post-content" rows="4" placeholder="조선 팔도에 무슨 소문이 돌고 있소? (최대 200자)" maxlength="200" class="w-full border-4 border-pink-100 rounded-2xl p-4 bg-pink-50 outline-none focus:border-pink-300 resize-none text-lg text-gray-700 flex-shrink-0"></textarea>
@@ -130,12 +130,12 @@
                     <i class="fa-solid fa-image mr-1"></i> 짤방(명화) 달기 🎨
                 </button>
                 <div id="meme-preview-container" class="hide mt-3 relative rounded-xl overflow-hidden border-2 border-purple-200 w-32 bg-gray-100">
-                    <img id="meme-preview-img" crossorigin="anonymous" src="" onerror="this.onerror=null; this.classList.add('hide'); this.nextElementSibling.classList.remove('hide');" class="w-full h-24 object-cover object-top">
-                    <div class="img-error w-full h-24 hide absolute top-0 left-0"><i class="fa-solid fa-image-slash mr-1"></i> 그림 오류</div>
+                    <img id="meme-preview-img" crossorigin="anonymous" alt="" onerror="handleMemeImgError(this)" class="w-full h-24 object-cover object-top">
+                    <div class="img-error w-full h-24 hide absolute top-0 left-0 text-xs"><span class="img-error-title">그림 오류</span></div>
                     <div class="absolute top-0 left-0 w-full h-full bg-black/40 flex items-center justify-center pointer-events-none">
                         <span class="text-white text-xs font-bold bg-black/50 px-2 py-1 rounded">첨부됨</span>
                     </div>
-                    <button onclick="removeMeme()" class="absolute top-1 right-1 bg-white text-red-500 rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md"><i class="fa-solid fa-xmark"></i></button>
+                    <button onclick="removeMeme()" aria-label="짤방 빼기" class="absolute top-1 right-1 bg-white text-red-500 rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-md"><i class="fa-solid fa-xmark"></i></button>
                 </div>
             </div>
 
@@ -148,16 +148,17 @@
         <div class="modal-content bg-white p-6 rounded-3xl w-11/12 max-w-sm shadow-xl border-4 border-purple-200 animate-bounce-in" onclick="event.stopPropagation()">
             <h2 class="text-xl text-gray-800 mb-3"><i class="fa-solid fa-palette text-purple-400 mr-2"></i>조선 밈 메이커</h2>
             <select id="meme-bg-select" onchange="updateMemePreview()" class="w-full border-4 border-purple-100 rounded-xl p-2 bg-purple-50 text-gray-700 mb-3 outline-none">
-                <option value="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Danwon-Seodang.jpg/400px-Danwon-Seodang.jpg">서당 (김홍도) - 혼나는 중</option>
-                <option value="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Danwon-Ssireum.jpg/400px-Danwon-Ssireum.jpg">씨름 (김홍도) - 구경꾼들</option>
-                <option value="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Hyewon-Miindo.jpg/300px-Hyewon-Miindo.jpg">미인도 (신윤복) - 우아함</option>
+                <option value="seodang">서당 (김홍도) - 혼나는 중</option>
+                <option value="ssireum">씨름 (김홍도) - 구경꾼들</option>
+                <option value="miindo">미인도 (신윤복) - 우아함</option>
             </select>
+            <p id="meme-caption" class="text-sm text-purple-700 bg-purple-50 rounded-xl px-3 py-2 mb-3 leading-snug"></p>
             
-            <input type="text" id="meme-text-input" onkeyup="updateMemePreview()" placeholder="말풍선 대사 (입력 후 Enter)" class="w-full border-4 border-purple-100 rounded-xl p-2 bg-purple-50 focus:border-purple-300 outline-none text-md text-gray-700 mb-3" maxlength="30">
+            <input type="text" id="meme-text-input" placeholder="말풍선 대사 (입력 후 Enter)" class="w-full border-4 border-purple-100 rounded-xl p-2 bg-purple-50 focus:border-purple-300 outline-none text-md text-gray-700 mb-3" maxlength="30">
             
             <div class="relative rounded-xl overflow-hidden border-2 border-dashed border-purple-300 mb-4 bg-gray-50 flex justify-center">
-                <img id="live-meme-img" crossorigin="anonymous" src="" onerror="this.onerror=null; this.classList.add('hide'); this.nextElementSibling.classList.remove('hide');" class="h-40 w-full object-cover object-top">
-                <div class="img-error w-full h-40 hide absolute top-0 left-0"><i class="fa-solid fa-triangle-exclamation mr-1"></i>그림을 불러올 수 없사옵니다.</div>
+                <img id="live-meme-img" crossorigin="anonymous" alt="" onerror="handleMemeImgError(this)" class="h-40 w-full object-cover object-top">
+                <div class="img-error w-full h-40 hide absolute top-0 left-0"><i class="fa-solid fa-image mr-1"></i><span class="img-error-title">그림을 불러올 수 없사옵니다.</span></div>
                 <div class="speech-bubble" id="live-meme-text"></div>
             </div>
             
@@ -170,16 +171,28 @@
 </div>
 
 <script>
-    // 비속어 필터 배열
-    const badWords = ["바보", "멍청이", "씨발", "시발", "존나", "개새끼", "미친", "병신", "지랄", "새끼", "뒤져"];
+    // 비속어 필터 배열 (초성 줄임말 포함)
+    const badWords = ["바보", "멍청이", "씨발", "시발", "씨빨", "존나", "졸라", "개새끼", "미친", "병신", "지랄", "새끼", "뒤져", "닥쳐",
+                      "ㅅㅂ", "ㅆㅂ", "ㅂㅅ", "ㅈㄹ", "ㅁㅊ", "ㅈㄴ", "ㄷㅊ"];
+    // 욕이 아닌 낱말 (새끼손가락, 강아지 새끼 등)
+    const safeWords = ["새끼손가락", "새끼발가락", "새끼줄"];
+
+    // 글자 사이에 기호를 끼워 넣어도(예: "시.발", "ㅅ*ㅂ") 걸러지도록 정규식 생성
+    // (띄어쓰기는 허용하지 않음: "재미 친구" 같은 평범한 문장이 걸리지 않게)
+    const badWordRegexes = badWords.map(word =>
+        new RegExp(word.split('').join('[.,\\-_*~!^@#0-9]*'), "gi")
+    );
 
     function filterProfanity(text) {
+        const placeholders = [];
         let filteredText = text;
-        badWords.forEach(word => {
-            const regex = new RegExp(word, "gi");
+        safeWords.forEach(word => {
+            filteredText = filteredText.split(word).join(`\u0000${placeholders.push(word) - 1}\u0000`);
+        });
+        badWordRegexes.forEach(regex => {
             filteredText = filteredText.replace(regex, "🌸예쁜말🌸");
         });
-        return filteredText;
+        return filteredText.replace(/\u0000(\d+)\u0000/g, (_, i) => placeholders[i]);
     }
 
     function escapeHTML(str) { 
@@ -203,30 +216,99 @@
     let currentUser = null;
     let posts = [];
     let currentMeme = null; 
-    let isNpcTyping = false; 
+    let npcTypingCount = 0; 
     let isCapturing = false;
 
     // V10 데이터 마이그레이션 키 (가장 깨끗한 상태로 재시작)
     const STORAGE_KEY_USER = 'chosun_user_v10';
     const STORAGE_KEY_POSTS = 'chosun_posts_v10';
 
+    function savePosts() {
+        try { localStorage.setItem(STORAGE_KEY_POSTS, JSON.stringify(posts)); }
+        catch(e) { console.error(e); alert("저장 공간이 가득 찼어요! 오래된 글을 지워주세요. 🗑️"); }
+    }
+
+    // 명화 짤방: 같은 폴더의 img/ 에 그림 파일을 넣으면 그 파일을 먼저 쓰고,
+    // 없으면 위키미디어 공용 이미지를, 그것도 안 되면 그림 제목 카드를 보여줌
+    const memeBackgrounds = {
+        seodang: {
+            title: "서당 (김홍도)",
+            caption: "📚 조선 후기 서당에서 훈장님께 공부하는 아이들의 모습이에요. 김홍도는 서민들의 생활을 그린 '풍속화'로 유명해요.",
+            srcs: ["img/seodang.jpg", "https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Danwon-Seodang.jpg/400px-Danwon-Seodang.jpg"]
+        },
+        ssireum: {
+            title: "씨름 (김홍도)",
+            caption: "📚 단옷날 같은 명절에 사람들이 둘러앉아 씨름을 구경하는 모습이에요. 조선 후기 서민들의 놀이 문화를 알 수 있어요.",
+            srcs: ["img/ssireum.jpg", "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Danwon-Ssireum.jpg/400px-Danwon-Ssireum.jpg"]
+        },
+        miindo: {
+            title: "미인도 (신윤복)",
+            caption: "📚 조선 후기 여인의 옷차림과 머리 모양을 섬세하게 그린 그림이에요. 신윤복도 김홍도와 함께 대표적인 풍속화가예요.",
+            srcs: ["img/miindo.jpg", "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Hyewon-Miindo.jpg/300px-Hyewon-Miindo.jpg"]
+        }
+    };
+
+    // 예전 버전에 저장된 글(bgUrl)도 그림 종류를 찾아서 보여줌
+    function getMemeBgKey(meme) {
+        if (meme.bgKey && memeBackgrounds[meme.bgKey]) return meme.bgKey;
+        const url = meme.bgUrl || '';
+        if (url.includes('Seodang')) return 'seodang';
+        if (url.includes('Ssireum')) return 'ssireum';
+        if (url.includes('Miindo')) return 'miindo';
+        return null;
+    }
+
+    function setMemeImg(img, bgKey) {
+        const bg = memeBackgrounds[bgKey];
+        img.dataset.bg = bgKey;
+        img.dataset.try = 0;
+        img.classList.remove('hide');
+        img.nextElementSibling.classList.add('hide');
+        img.nextElementSibling.querySelector('.img-error-title').textContent = `🖼️ ${bg.title}`;
+        img.src = bg.srcs[0];
+    }
+
+    // 그림을 못 불러오면 다음 주소로, 모두 실패하면 그림 제목 카드 표시
+    function handleMemeImgError(img) {
+        const bg = memeBackgrounds[img.dataset.bg];
+        const next = Number(img.dataset.try || 0) + 1;
+        if (bg && next < bg.srcs.length) {
+            img.dataset.try = next;
+            img.src = bg.srcs[next];
+            return;
+        }
+        img.classList.add('hide');
+        img.nextElementSibling.classList.remove('hide');
+    }
+
     const npcDictionary = [
         {
-            keywords: ["왜군", "일본", "바다", "거북선", "전쟁", "여수", "한려", "수영"], 
+            keywords: ["왜군", "왜적", "임진왜란", "이순신", "거북선", "수군", "전쟁", "여수", "한산도", "명량", "노량"], 
             name: "이순신 장군 🐢", handle: "@turtle_power",
-            reply: ["{user} 공, 전라좌수영 앞바다는 우리 수영부가 지키고 있소! 🌊", "신에게는 아직 12척의 배가 남아있사옵니다!", "나의 죽음을 적에게 알리지 말라...!"],
+            reply: [
+                "{user} 공, 전라좌수영 앞바다는 이 몸과 수군들이 지키고 있소! 🌊\n📚 수영(水營)은 '헤엄'이 아니라 조선 수군의 본부를 뜻해요.",
+                "신에게는 아직 12척의 배가 남아있사옵니다!\n📚 명량 해전을 앞두고 임금께 올린 글이에요. 이순신은 적은 배로 큰 승리를 거두었어요.",
+                "나의 죽음을 적에게 알리지 말라...!\n📚 노량 해전에서 적의 총에 맞은 이순신이 남긴 말로 전해져요."
+            ],
             icon: "fa-sailboat", bg: "bg-blue-50", border: "border-blue-300", text: "text-blue-800", iconBg: "bg-blue-500"
         },
         {
             keywords: ["한글", "세종", "어려워", "책", "백성", "공부", "학교"], 
             name: "세종대왕 👑", handle: "@king_sejong",
-            reply: ["{user} 백성이 글을 모르는 것이 안타까워 내 스물여덟 자를 만들었노라. 📝", "학문을 게을리 하지 말거라!", "고기 반찬이 없으면 수라를 들지 않겠다! 🍖"],
+            reply: [
+                "{user}야, 백성이 글을 모르는 것이 안타까워 내 스물여덟 자를 만들었노라. 📝\n📚 훈민정음은 1443년에 만들어 1446년에 널리 알렸어요.",
+                "{user}야, 학문을 게을리 하지 말거라! 집현전 학자들처럼 말이다.",
+                "고기 반찬이 없으니 수라가 허전하구나! 🍖\n📚 세종이 고기를 무척 좋아했다는 기록이 전해져요."
+            ],
             icon: "fa-crown", bg: "bg-amber-50", border: "border-amber-300", text: "text-amber-900", iconBg: "bg-amber-500"
         },
         {
-            keywords: ["배고파", "밥", "고기", "국밥", "장터", "돈"], 
+            keywords: ["배고파", "밥", "고기", "국밥", "장터", "주막", "엽전", "상평통보"], 
             name: "주막 주모 🍲", handle: "@korean_soup",
-            reply: ["아따 {user}야, 뜨끈한 국밥 한 그릇 말고 가시구려! 🍚", "외상값이나 갚고 고기를 찾으시오! 💢"],
+            reply: [
+                "아따 {user}님, 뜨끈한 국밥 한 그릇 말고 가시구려! 🍚\n📚 주막은 길 가는 나그네가 밥을 먹고 쉬어 가던 곳이에요.",
+                "외상값이나 갚고 고기를 찾으시오! 💢\n📚 조선 후기에는 '상평통보'라는 엽전이 널리 쓰였어요."
+            ],
             icon: "fa-bowl-food", bg: "bg-orange-50", border: "border-orange-300", text: "text-orange-800", iconBg: "bg-orange-400"
         }
     ];
@@ -234,11 +316,17 @@
     try {
         currentUser = JSON.parse(localStorage.getItem(STORAGE_KEY_USER)) || null;
         posts = JSON.parse(localStorage.getItem(STORAGE_KEY_POSTS)) || [];
-    } catch(e) { localStorage.clear(); }
+    } catch(e) {
+        // 같은 github.io 주소를 쓰는 다른 앱의 데이터까지 지우지 않도록 조선톡 데이터만 삭제
+        localStorage.removeItem(STORAGE_KEY_USER);
+        localStorage.removeItem(STORAGE_KEY_POSTS);
+        currentUser = null;
+        posts = [];
+    }
 
     const historicalEvents = [
-        "🚨 [속보] 전라좌수영 앞바다에 수영부 창설! 물개 같은 실력으로 왜군을 제압한다! 🐢💦",
-        "📜 [어명] 훈민정음 완성! 이제 우리말을 쉽게 쓸 수 있어요! 킹세종 최고👍",
+        "🚨 [속보] 전라좌수영의 거북선, 왜군을 향해 출동! 🐢⚓\n📚 수영(水營)은 '헤엄'이 아니라 조선 수군의 본부예요.",
+        "📜 [어명] 훈민정음 반포! 이제 백성 누구나 우리말을 쉽게 쓸 수 있어요! 킹세종 최고👍\n📚 1446년, 세종이 훈민정음을 널리 알렸어요.",
         "🐯 [마을방송] 뒷산에 호랑이가 나타났대요! 해지면 돌아다니지 마시오!"
     ];
 
@@ -291,7 +379,7 @@
         localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(currentUser));
         document.getElementById('profile-modal').classList.add('hide');
         toggleBodyScroll(false);
-        createPostObj("event", `🎉 [${currentUser.name}]님이 타임슬립에 성공했습니다!`);
+        createPostObj("event", `🎉 [${name}]님이 타임슬립에 성공했습니다!`); // createPostObj에서 한 번만 이스케이프
         btn.disabled = false;
     }
 
@@ -309,8 +397,19 @@
         removeMeme(); 
     }
     
-    document.getElementById('post-content').addEventListener('keydown', e => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitPost(); } });
-    document.getElementById('meme-text-input').addEventListener('keydown', e => { if(e.key === 'Enter') { e.preventDefault(); applyMeme(); } });
+    // 한글을 조합하는 중에 누른 Enter는 무시 (글이 두 번 올라가거나 마지막 글자가 남는 문제 방지)
+    const isImeEnter = e => e.isComposing || e.keyCode === 229;
+    // 태블릿·휴대폰은 Shift+Enter를 쓰기 어려우므로 Enter = 줄바꿈, 올리기는 버튼으로
+    const isTouchDevice = window.matchMedia('(pointer: coarse)').matches;
+    document.getElementById('post-content').addEventListener('keydown', e => {
+        if (e.key !== 'Enter' || e.shiftKey || isImeEnter(e) || isTouchDevice) return;
+        e.preventDefault(); submitPost();
+    });
+    document.getElementById('meme-text-input').addEventListener('keydown', e => {
+        if (e.key !== 'Enter' || isImeEnter(e)) return;
+        e.preventDefault(); applyMeme();
+    });
+    document.getElementById('meme-text-input').addEventListener('input', updateMemePreview);
 
     function openMemeModal() { 
         document.getElementById('meme-modal').classList.remove('hide'); 
@@ -324,35 +423,27 @@
     }
 
     function updateMemePreview() {
-        const bgUrl = document.getElementById('meme-bg-select').value;
-        const text = escapeHTML(document.getElementById('meme-text-input').value) || "여기에 대사가 쏙!";
+        const bgKey = document.getElementById('meme-bg-select').value;
+        const text = document.getElementById('meme-text-input').value || "여기에 대사가 쏙!";
         
         const liveImg = document.getElementById('live-meme-img');
-        liveImg.classList.remove('hide');
-        liveImg.nextElementSibling.classList.add('hide');
-        liveImg.src = bgUrl;
+        if (liveImg.dataset.bg !== bgKey) setMemeImg(liveImg, bgKey);
         
-        document.getElementById('live-meme-text').innerHTML = text;
+        document.getElementById('meme-caption').textContent = memeBackgrounds[bgKey].caption;
+        document.getElementById('live-meme-text').textContent = text;
     }
 
     // [버그 픽스] DOM 강제 주입 에러 방어
     function applyMeme() {
-        const bgUrl = document.getElementById('meme-bg-select').value;
+        const bgKey = document.getElementById('meme-bg-select').value;
         let text = document.getElementById('meme-text-input').value.trim();
         if(!text) return alert("말풍선 대사를 적어주세요!");
         
         text = escapeHTML(filterProfanity(text));
-        currentMeme = { bgUrl, text };
+        currentMeme = { bgKey, text };
         
-        const previewContainer = document.getElementById('meme-preview-container');
-        const previewImg = document.getElementById('meme-preview-img');
-        
-        previewContainer.classList.remove('hide');
-        previewImg.classList.remove('hide');
-        if (previewImg.nextElementSibling.classList.contains('img-error')) {
-            previewImg.nextElementSibling.classList.add('hide');
-        }
-        previewImg.src = bgUrl;
+        document.getElementById('meme-preview-container').classList.remove('hide');
+        setMemeImg(document.getElementById('meme-preview-img'), bgKey);
         
         closeMemeModal();
         document.getElementById('post-content').focus();
@@ -384,19 +475,19 @@
     }
 
     function checkNPCResponse(content) {
-        if(isNpcTyping) return; 
-
         for (let npc of npcDictionary) {
             if (npc.keywords.some(kw => content.includes(kw))) {
-                isNpcTyping = true; 
+                npcTypingCount++; 
                 const indicator = document.getElementById('typing-indicator');
                 document.getElementById('typing-name').innerText = npc.name;
                 indicator.classList.remove('hide');
                 
                 setTimeout(() => {
-                    indicator.classList.add('hide');
+                    npcTypingCount--;
+                    if (npcTypingCount === 0) indicator.classList.add('hide');
                     let randomReply = npc.reply[Math.floor(Math.random() * npc.reply.length)];
-                    randomReply = randomReply.replace('{user}', `<span class="text-indigo-600 font-bold">${currentUser.handle}</span>`);
+                    // currentUser.name은 저장할 때 이미 이스케이프됨
+                    randomReply = randomReply.replace('{user}', `<span class="text-indigo-600 font-bold">${currentUser.name}</span>`);
                     
                     const npcPost = {
                         id: Date.now(), type: "npc", content: randomReply,
@@ -407,10 +498,9 @@
                     };
                     
                     posts.unshift(npcPost);
-                    localStorage.setItem(STORAGE_KEY_POSTS, JSON.stringify(posts));
+                    savePosts();
                     renderPosts();
                     document.getElementById('feed').scrollTop = 0;
-                    isNpcTyping = false; 
                 }, 2000);
                 break; 
             }
@@ -435,35 +525,35 @@
             authorName: type === "user" ? currentUser.name : "조선 마을이장",
             authorHandle: type === "user" ? currentUser.handle : "@chosun_news",
             time: getFormattedTime(),
-            likes: Math.floor(Math.random() * 50)
+            likes: 0,
+            liked: false
         };
         
         posts.unshift(newPost);
-        localStorage.setItem(STORAGE_KEY_POSTS, JSON.stringify(posts));
+        savePosts();
         renderPosts();
         document.getElementById('feed').scrollTop = 0;
     }
 
-    // [버그 픽스] 좋아요 캡처 동기화
+    // 좋아요는 글 하나에 한 번만 (다시 누르면 취소) → 연타 경쟁 방지
     function toggleLike(postId, btnElement) {
-        const postIndex = posts.findIndex(p => p.id === postId);
-        if(postIndex > -1) {
-            posts[postIndex].likes += 1;
-            localStorage.setItem(STORAGE_KEY_POSTS, JSON.stringify(posts));
-            
-            // 실제 버튼 안의 텍스트 업데이트
-            btnElement.querySelector('span').innerText = posts[postIndex].likes;
-            
-            // 캡처용 숨김 태그의 텍스트도 강제 업데이트 (버그 원인 해결)
-            const captureSpan = btnElement.nextElementSibling;
-            if(captureSpan && captureSpan.classList.contains('html2canvas-show')) {
-                captureSpan.innerHTML = `<i class="fa-solid fa-heart mr-1"></i>${posts[postIndex].likes}`;
-            }
-            
-            const icon = btnElement.querySelector('i');
-            icon.classList.remove('fa-regular', 'text-pink-300', 'text-gray-400');
-            icon.classList.add('fa-solid', 'text-red-500');
-            btnElement.classList.add('text-red-500', 'animate-pop');
+        const post = posts.find(p => p.id === postId);
+        if(!post) return;
+
+        post.liked = !post.liked;
+        post.likes = Math.max(0, post.likes + (post.liked ? 1 : -1));
+        savePosts();
+
+        btnElement.querySelector('span').innerText = post.likes;
+        btnElement.setAttribute('aria-pressed', post.liked);
+        btnElement.nextElementSibling.lastChild.textContent = post.likes; // 캡처용 표시도 동기화
+
+        const icon = btnElement.querySelector('i');
+        icon.classList.toggle('fa-solid', post.liked);
+        icon.classList.toggle('fa-regular', !post.liked);
+        btnElement.classList.toggle('text-red-500', post.liked);
+        if (post.liked) {
+            btnElement.classList.add('animate-pop');
             setTimeout(() => btnElement.classList.remove('animate-pop'), 200);
         }
     }
@@ -471,7 +561,7 @@
     function deletePost(postId) {
         if(confirm("이 기록을 지우시겠습니까? 🗑️")) {
             posts = posts.filter(p => p.id !== postId);
-            localStorage.setItem(STORAGE_KEY_POSTS, JSON.stringify(posts));
+            savePosts();
             renderPosts();
         }
     }
@@ -511,12 +601,16 @@
             let memeHTML = '';
             if (post.meme) {
                 memeHTML = `
-                <div class="relative mt-3 rounded-2xl overflow-hidden border-2 border-gray-200 bg-white">
-                    <img src="${post.meme.bgUrl}" crossorigin="anonymous" onerror="this.onerror=null; this.classList.add('hide'); this.nextElementSibling.classList.remove('hide');" class="w-full max-h-64 object-cover object-top">
-                    <div class="img-error w-full h-40 hide absolute top-0 left-0"><i class="fa-solid fa-image-slash mr-1"></i>그림 오류</div>
+                <div class="relative mt-3 rounded-2xl overflow-hidden border-2 border-gray-200 bg-white min-h-[10rem]">
+                    <img data-meme-post="${post.id}" crossorigin="anonymous" alt="" onerror="handleMemeImgError(this)" class="w-full max-h-64 object-cover object-top">
+                    <div class="img-error w-full h-full hide absolute top-0 left-0 pt-10"><span class="img-error-title">그림 오류</span></div>
                     <div class="speech-bubble">${post.meme.text}</div>
                 </div>`;
             }
+
+            // "📚 ..." 줄은 역사 설명 상자로 표시
+            const contentHTML = (post.content || '').replace(/\n?📚 ([^\n]*)/g,
+                '<span class="block mt-2 text-sm leading-snug bg-white/70 border-2 border-dashed border-amber-300 text-amber-900 rounded-xl px-3 py-2">📚 $1</span>');
 
             const postHTML = `
                 <div class="rounded-3xl p-5 ${bgClass} animate-bounce-in shadow-sm">
@@ -530,26 +624,32 @@
                                 <p class="text-xs text-gray-500 leading-tight truncate pr-2">${post.authorHandle} • ${post.time}</p>
                             </div>
                             ${isUserPost ? `
-                            <button onclick="deletePost(${post.id})" class="text-gray-300 hover:text-red-400 transition flex-shrink-0" title="삭제" data-html2canvas-ignore="true">
+                            <button onclick="deletePost(${post.id})" aria-label="글 삭제" class="text-gray-300 hover:text-red-400 transition flex-shrink-0" title="삭제" data-html2canvas-ignore="true">
                                 <i class="fa-solid fa-trash-can"></i>
                             </button>
                             ` : ''}
                         </div>
                     </div>
-                    ${post.content ? `<p class="text-gray-800 text-lg leading-relaxed mt-2 whitespace-pre-wrap break-words break-all">${post.content}</p>` : ''}
+                    ${post.content ? `<p class="text-gray-800 text-lg leading-relaxed mt-2 whitespace-pre-wrap break-words break-all">${contentHTML}</p>` : ''}
                     ${memeHTML}
                     
                     ${post.type === "event" ? '' : `
                     <div class="mt-4 pt-3 border-t-2 border-dashed border-gray-200/50 flex items-center ${likeColor} text-lg">
-                        <button onclick="toggleLike(${post.id}, this)" class="flex items-center space-x-2 hover:text-red-400 transition bg-white/50 px-3 py-1.5 rounded-xl" data-html2canvas-ignore="true">
-                            <i class="fa-regular fa-heart"></i><span>${post.likes}</span>
+                        <button onclick="toggleLike(${post.id}, this)" aria-label="좋아요" aria-pressed="${!!post.liked}" class="flex items-center space-x-2 hover:text-red-400 transition bg-white/50 px-3 py-1.5 rounded-xl ${post.liked ? 'text-red-500' : ''}" data-html2canvas-ignore="true">
+                            <i class="${post.liked ? 'fa-solid' : 'fa-regular'} fa-heart"></i><span>${post.likes}</span>
                         </button>
-                        <span class="hide html2canvas-show text-red-500"><i class="fa-solid fa-heart mr-1"></i>${post.likes}</span>
+                        <span class="capture-only text-red-500"><i class="fa-solid fa-heart mr-1"></i>${post.likes}</span>
                     </div>
                     `}
                 </div>
             `;
             feed.insertAdjacentHTML('beforeend', postHTML);
+            if (post.meme) {
+                const img = feed.querySelector(`img[data-meme-post="${post.id}"]`);
+                const bgKey = getMemeBgKey(post.meme);
+                if (bgKey) setMemeImg(img, bgKey);
+                else handleMemeImgError(img);
+            }
         });
     }
 
@@ -566,8 +666,29 @@
         overlay.classList.remove('hide');
         toggleBodyScroll(true);
         
+        // 스크롤에 가려진 글까지 모두 찍히도록, 복제된 화면에서 높이 제한을 풀고 캡처
+        const fullHeight = feed.scrollHeight + 200;
         setTimeout(() => {
-            html2canvas(appContainer, { scale: 2, useCORS: true, backgroundColor: "#ffffff" }).then(canvas => {
+            html2canvas(appContainer, {
+                scale: 2, useCORS: true, backgroundColor: "#ffffff",
+                windowHeight: Math.max(window.innerHeight, fullHeight),
+                onclone: doc => {
+                    // 복제된 화면에서는 등장 애니메이션이 처음(투명한 상태)부터 다시 시작되어 글이 안 보이므로 끔
+                    const noAnim = doc.createElement('style');
+                    noAnim.textContent = '*, *::before, *::after { animation: none !important; transition: none !important; }';
+                    doc.head.appendChild(noAnim);
+                    doc.body.style.height = 'auto';
+                    doc.body.style.overflow = 'visible';
+                    const app = doc.getElementById('app-container');
+                    app.style.height = 'auto';
+                    app.style.marginTop = '0';
+                    const clonedFeed = doc.getElementById('feed');
+                    clonedFeed.style.overflow = 'visible';
+                    clonedFeed.style.flex = 'none';
+                    clonedFeed.style.paddingBottom = '16px';
+                    doc.querySelectorAll('.capture-only').forEach(el => el.style.display = 'inline-block');
+                }
+            }).then(canvas => {
                 const link = document.createElement('a');
                 link.download = `조선톡_캡처_${new Date().getTime()}.png`;
                 link.href = canvas.toDataURL('image/png'); link.click();
@@ -584,8 +705,8 @@
 </script>
 
 <style>
-    .html2canvas-show { display: none; }
-    [data-html2canvas-ignore] + .html2canvas-show { display: inline-block; }
+    /* 화면에서는 숨기고 캡처 이미지에만 보이는 요소 (좋아요 수) */
+    .capture-only { display: none; }
 </style>
 
 </body>
