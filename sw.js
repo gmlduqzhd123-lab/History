@@ -1,5 +1,5 @@
 // 오프라인 지원: 앱 파일을 저장해 두고, 인터넷이 되면 새 버전으로 조용히 바꿈
-const CACHE = 'history-quest-v3';
+const CACHE = 'history-quest-v4';
 const FILES = [
     './',
     'index.html',
@@ -24,6 +24,7 @@ const FILES = [
     'content/q2-bronze-gojoseon.js',
     'content/q3-three-kingdoms-gaya.js',
     'content/q4-unified-silla-balhae.js',
+    'content/q5-goryeo.js',
 ];
 
 self.addEventListener('install', event => {

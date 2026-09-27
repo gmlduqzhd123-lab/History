@@ -291,4 +291,46 @@ export const art = {
         <circle cx="100" cy="100" r="14" fill="#a39b91" stroke="#4f4a44" stroke-width="2"/>
         <g fill="#4f4a44"><circle cx="100" cy="100" r="2.5"/>${Array.from({ length: 6 }, (_, i) => { const a = (i / 6) * Math.PI * 2; return `<circle cx="${(100 + Math.cos(a) * 8).toFixed(1)}" cy="${(100 + Math.sin(a) * 8).toFixed(1)}" r="2"/>`; }).join('')}</g>
     `, '발해 연꽃무늬 수막새'),
+    // 고려청자(상감 매병): 옥빛 병에 흰 학과 구름을 상감으로 넣음
+    celadonVase: svg(`
+        <defs><linearGradient id="cv" x1="0" x2="1"><stop offset="0" stop-color="#6f9a8a"/><stop offset="0.45" stop-color="#b3d4c4"/><stop offset="1" stop-color="#5f8a7a"/></linearGradient></defs>
+        ${ground}
+        <path d="M86 22 L114 22 L112 34 Q150 44 152 86 Q154 130 124 168 L120 176 L80 176 L76 168 Q46 130 48 86 Q50 44 88 34 Z" fill="url(#cv)" stroke="#3f6457" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M84 22 L116 22 L116 16 L84 16 Z" fill="#8fb8a8" stroke="#3f6457" stroke-width="2.5"/>
+        <path d="M60 64 Q100 56 140 64" fill="none" stroke="#3f6457" stroke-width="2"/>
+        <g fill="#f8f5ec" stroke="#2f3b36" stroke-width="1.5">
+            <path d="M68 96 q10 -8 20 -2 l8 -6 l-2 8 q-8 8 -20 6 z"/><path d="M96 90 l6 -8" fill="none"/>
+            <path d="M112 126 q10 -8 20 -2 l8 -6 l-2 8 q-8 8 -20 6 z"/><path d="M140 120 l6 -8" fill="none"/>
+            <path d="M74 146 q8 -6 16 -2 l6 -5 l-2 6 q-6 6 -16 5 z"/>
+        </g>
+        <g fill="none" stroke="#f8f5ec" stroke-width="2.5" stroke-linecap="round">
+            <path d="M118 84 q6 -6 12 0 q6 -6 10 2"/><path d="M62 124 q6 -6 12 0 q6 -6 10 2"/><path d="M108 156 q5 -5 10 0 q5 -5 8 2"/>
+        </g>
+    `, '고려청자'),
+
+    // 팔만대장경판: 글자를 거꾸로 새긴 나무판, 양 끝에 마구리
+    tripitakaBlock: svg(`
+        ${ground}
+        <g transform="rotate(-6 100 100)">
+            <rect x="20" y="58" width="16" height="92" rx="3" fill="#6b4a2a" stroke="#3f2a16" stroke-width="2.5"/>
+            <rect x="164" y="58" width="16" height="92" rx="3" fill="#6b4a2a" stroke="#3f2a16" stroke-width="2.5"/>
+            <rect x="34" y="64" width="132" height="80" fill="#b98a55" stroke="#3f2a16" stroke-width="2.5"/>
+            <rect x="42" y="70" width="116" height="68" fill="#c99c64" stroke="#7a5530" stroke-width="1.5"/>
+            <g fill="#4a3018">${Array.from({ length: 13 }, (_, c) => Array.from({ length: 7 }, (_, r) => `<rect x="${48 + c * 8.4}" y="${74 + r * 9}" width="5.5" height="6" rx="1" opacity="${0.55 + ((c * 7 + r) % 3) * 0.15}"/>`).join('')).join('')}</g>
+        </g>
+    `, '팔만대장경판'),
+
+    // 직지: 금속 활자로 찍은 책 (펼친 모습)
+    jikjiBook: svg(`
+        ${ground}
+        <path d="M100 52 Q70 40 30 46 L30 160 Q70 154 100 166 Z" fill="#efe3c6" stroke="#6b5a3a" stroke-width="3"/>
+        <path d="M100 52 Q130 40 170 46 L170 160 Q130 154 100 166 Z" fill="#f5ebd2" stroke="#6b5a3a" stroke-width="3"/>
+        <g stroke="#9c8a66" stroke-width="1">${[0, 1, 2, 3, 4, 5].map(i => `<line x1="${40 + i * 10}" y1="58" x2="${40 + i * 10}" y2="150"/><line x1="${110 + i * 10}" y1="56" x2="${110 + i * 10}" y2="150"/>`).join('')}</g>
+        <g fill="#2f2a24">${[0, 1, 2, 3, 4].map(i => Array.from({ length: 8 }, (_, r) => `<rect x="${43 + i * 10}" y="${64 + r * 10.5}" width="5" height="6" rx="1"/><rect x="${113 + i * 10}" y="${62 + r * 10.5}" width="5" height="6" rx="1"/>`).join('')).join('')}</g>
+        <g transform="translate(140 150)">
+            <rect x="0" y="0" width="16" height="16" rx="2" fill="#8a8f96" stroke="#3f444a" stroke-width="2"/>
+            <rect x="20" y="4" width="16" height="16" rx="2" fill="#9aa0a8" stroke="#3f444a" stroke-width="2"/>
+            <path d="M4 5 h8 M8 5 v7 M24 9 h8 M28 9 v7" stroke="#3f444a" stroke-width="2"/>
+        </g>
+    `, '직지'),
 };
