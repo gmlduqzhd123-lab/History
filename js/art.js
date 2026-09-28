@@ -333,4 +333,65 @@ export const art = {
             <path d="M4 5 h8 M8 5 v7 M24 9 h8 M28 9 v7" stroke="#3f444a" stroke-width="2"/>
         </g>
     `, '직지'),
+    // 앙부일구: 솥 모양 해시계, 그림자로 시각을 읽음
+    angbuilgu: svg(`
+        <defs><linearGradient id="ab" x1="0" x2="1"><stop offset="0" stop-color="#4f6a45"/><stop offset="0.5" stop-color="#8fa577"/><stop offset="1" stop-color="#435c3b"/></linearGradient></defs>
+        ${ground}
+        <path d="M60 176 L72 132 M140 176 L128 132 M84 180 L90 136 M116 180 L110 136" stroke="#34482c" stroke-width="6" stroke-linecap="round"/>
+        <path d="M36 80 Q36 150 100 150 Q164 150 164 80 Z" fill="url(#ab)" stroke="#2c3b25" stroke-width="3"/>
+        <ellipse cx="100" cy="80" rx="64" ry="20" fill="#e9dfc4" stroke="#2c3b25" stroke-width="3"/>
+        <g stroke="#6b5a3a" stroke-width="1.2" fill="none">
+            ${[-48, -32, -16, 0, 16, 32, 48].map(dx => `<path d="M${100 + dx} ${80 - Math.sqrt(1 - (dx / 64) ** 2) * 20 + 2} Q${100 + dx * 0.8} 84 ${100 + dx} ${80 + Math.sqrt(1 - (dx / 64) ** 2) * 20 - 2}"/>`).join('')}
+            <ellipse cx="100" cy="80" rx="52" ry="14"/><ellipse cx="100" cy="80" rx="38" ry="10"/>
+        </g>
+        <path d="M100 80 L140 62" stroke="#2c3b25" stroke-width="3" stroke-linecap="round"/>
+        <path d="M100 80 L128 90" stroke="#6b5a3a" stroke-width="4" opacity="0.45" stroke-linecap="round"/>
+        <g font-size="12" text-anchor="middle">${[['🐭', 58, 76], ['🐯', 78, 68], ['🐍', 122, 68], ['🐴', 142, 76]].map(([e, x, y]) => `<text x="${x}" y="${y}">${e}</text>`).join('')}</g>
+        <circle cx="170" cy="30" r="12" fill="#fcd34d"/>
+    `, '앙부일구'),
+
+    // 측우기: 비의 양을 재는 원통과 돌 받침(측우대)
+    cheugugi: svg(`
+        ${ground}
+        <path d="M150 20 q-6 10 0 16 q6 -6 0 -16 M168 40 q-5 8 0 13 q5 -5 0 -13 M40 30 q-5 8 0 13 q5 -5 0 -13" fill="#93c5fd"/>
+        <rect x="52" y="132" width="96" height="40" fill="#c9c0b0" stroke="#6b645a" stroke-width="3"/>
+        <path d="M60 140 h80 M60 164 h80" stroke="#8f8574" stroke-width="1.5"/>
+        <g fill="none" stroke="#8f8574" stroke-width="1.5"><rect x="70" y="146" width="60" height="12"/></g>
+        <rect x="76" y="46" width="48" height="86" fill="#8a8f96" stroke="#3f444a" stroke-width="3"/>
+        <ellipse cx="100" cy="46" rx="24" ry="6" fill="#5f646a" stroke="#3f444a" stroke-width="3"/>
+        <g stroke="#3f444a" stroke-width="2"><line x1="76" y1="74" x2="124" y2="74"/><line x1="76" y1="104" x2="124" y2="104"/></g>
+        <g transform="translate(132 60)"><rect x="0" y="0" width="10" height="68" fill="#e9d8a6" stroke="#8a6d2a" stroke-width="2"/>
+            ${Array.from({ length: 9 }, (_, i) => `<line x1="0" y1="${6 + i * 7}" x2="${i % 2 ? 4 : 7}" y2="${6 + i * 7}" stroke="#8a6d2a" stroke-width="1.5"/>`).join('')}</g>
+    `, '측우기'),
+
+    // 훈민정음 해례본: 펼친 책에 우리 글자
+    hunminBook: svg(`
+        ${ground}
+        <path d="M100 44 Q70 32 28 38 L28 162 Q70 156 100 168 Z" fill="#efe3c6" stroke="#6b5a3a" stroke-width="3"/>
+        <path d="M100 44 Q130 32 172 38 L172 162 Q130 156 100 168 Z" fill="#f5ebd2" stroke="#6b5a3a" stroke-width="3"/>
+        <g font-family="'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif" fill="#2f2a24" text-anchor="middle" font-weight="bold">
+            ${['훈', '민', '정', '음'].map((c, i) => `<text x="154" y="${72 + i * 26}" font-size="22">${c}</text>`).join('')}
+            ${[['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ'], ['ㅁ', 'ㅂ', 'ㅅ', 'ㅇ']].map((col, i) => col.map((c, j) => `<text x="${130 - i * 20}" y="${70 + j * 26}" font-size="17">${c}</text>`).join('')).join('')}
+            ${[['ㆍ', 'ㅡ', 'ㅣ'], ['ㅏ', 'ㅓ', 'ㅗ']].map((col, i) => col.map((c, j) => `<text x="${84 - i * 22}" y="${72 + j * 30}" font-size="18">${c}</text>`).join('')).join('')}
+        </g>
+        <g stroke="#9c8a66" stroke-width="1.5">${[0, 1, 2].map(i => `<line x1="${44 - i * 0}" y1="${60 + i * 34}" x2="44" y2="${84 + i * 34}"/>`).join('')}</g>
+    `, '훈민정음 해례본'),
+
+    // 삼강행실도: 효자 이야기를 그림으로 그린 책의 한 장면
+    samgang: svg(`
+        <rect x="28" y="18" width="144" height="168" fill="#f3e7c9" stroke="#6b5a3a" stroke-width="3"/>
+        <rect x="38" y="28" width="124" height="96" fill="#fbf4e2" stroke="#9c8a66" stroke-width="1.5"/>
+        <path d="M44 118 Q70 108 100 116 T156 112" stroke="#8fa577" stroke-width="3" fill="none"/>
+        <path d="M130 50 q-12 10 -4 22 q-14 4 -6 18 h28 q8 -14 -6 -18 q8 -12 -12 -22 z" fill="#8fa577" stroke="#4f6a45" stroke-width="1.5"/>
+        <rect x="132" y="88" width="6" height="26" fill="#8a6d2a"/>
+        <g stroke="#3f2a1e" stroke-width="2" stroke-linejoin="round">
+            <circle cx="72" cy="62" r="7" fill="#f1d9b5"/><path d="M64 58 q8 -8 16 0" fill="#e5e7eb"/>
+            <path d="M62 70 L82 70 L86 104 L58 104 Z" fill="#c7a36b"/>
+            <circle cx="104" cy="82" r="6" fill="#f1d9b5"/><path d="M98 78 q6 -6 12 0" fill="#3f2a1e"/>
+            <path d="M98 88 L112 88 L116 104 L92 104 Z" fill="#7aa0c9"/>
+            <path d="M96 94 L86 88" fill="none"/>
+            <path d="M84 88 l-6 2 l2 4 z" fill="#b84a34"/>
+        </g>
+        <g stroke="#6b5a3a" stroke-width="2">${Array.from({ length: 9 }, (_, i) => `<line x1="${48 + i * 13}" y1="134" x2="${48 + i * 13}" y2="${170 - (i % 3) * 6}"/>`).join('')}</g>
+    `, '삼강행실도'),
 };
