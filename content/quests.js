@@ -8,6 +8,7 @@ import q5 from './q5-goryeo.js';
 import q6 from './q6-joseon-confucian.js';
 import q7 from './q7-late-joseon.js';
 import q8 from './q8-opening-modern.js';
+import q9 from './q9-colonial-independence.js';
 
 export const units = [
     {
@@ -31,7 +32,7 @@ export const units = [
     {
         title: '식민 통치와 저항, 전쟁이 바꾼 사회와 생활',
         stations: [
-            { id: 'q9', emoji: '🕯️', name: '일제 강점기와 독립운동', desc: '빼앗긴 나라를 되찾으려는 노력' },
+            { id: 'q9', emoji: '🕯️', name: '일제 강점기와 독립운동', desc: '빼앗긴 나라를 되찾으려는 노력', quest: q9 },
             { id: 'q10', emoji: '🕊️', name: '광복과 6·25 전쟁', desc: '광복, 전쟁, 그리고 달라진 생활' },
         ],
     },

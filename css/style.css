@@ -204,6 +204,7 @@ p { margin: 0 0 10px; }
 /* ---------- 생활 체험 ---------- */
 .scene { font-size: 19px; line-height: 1.75; }
 .scene-art { font-size: 56px; text-align: center; line-height: 1.2; }
+.scene-art svg { width: 150px; height: 150px; }
 .learned { list-style: none; padding: 0; margin: 0; }
 .learned li { padding: 10px 12px; border-radius: 12px; background: var(--good-soft); margin-top: 8px; }
 .learned li::before { content: '✅ '; }
@@ -289,3 +290,24 @@ p { margin: 0 0 10px; }
     .dex { grid-template-columns: repeat(4, 1fr); }
     .dex-item { break-inside: avoid; }
 }
+
+/* ---------- 차분한 모드: 아픈 역사를 다루는 퀘스트 ---------- */
+body.calm {
+    --bg: #f4f5f7;
+    --bg-dot: #e3e6eb;
+    --accent: #475569;
+    --accent-dark: #334155;
+    --accent-soft: #e2e8f0;
+    --line: #d9dee5;
+    --gold-soft: #f1f5f9;
+}
+body.calm .stamp {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: #f8fafc;
+    animation: none;
+    transform: none;
+}
+body.calm .shake { animation: none; }
+body.calm .card-accent { border-color: #cbd5e1; }
+body.calm .fact { border-color: #cbd5e1; }

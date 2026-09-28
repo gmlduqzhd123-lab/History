@@ -2,6 +2,7 @@
 import { h, rich, shuffle, scrollTop, modal } from '../dom.js';
 import { feedbackBox, questionHead, nextButton } from './common.js';
 import { readingReview } from './reading.js';
+import { tone } from '../tone.js';
 
 const FAST_MS = 2000;
 
@@ -44,7 +45,7 @@ export function renderMastery(root, stage, ctx) {
                 if (!retry) { firstTry.set(q.concept, correct); done++; }
                 if (correct) {
                     fastWrongs = 0;
-                    slot.append(feedbackBox('good', retry ? '👍 이번엔 맞혔어요!' : '🎉 정답!', q.explain));
+                    slot.append(feedbackBox('good', retry ? tone('retryCorrect') : tone('correct'), q.explain));
                 } else {
                     fastWrongs = quick ? fastWrongs + 1 : 0;
                     slot.append(feedbackBox('bad', '📚 이렇게 기억해요', q.explain));
@@ -78,8 +79,8 @@ export function renderMastery(root, stage, ctx) {
             root.replaceChildren(h('div', { class: 'card center' },
                 h('div', { class: 'score-big' }, `${score} / ${concepts.length}`),
                 passed
-                    ? h('div', {}, h('div', { class: 'stamp' }, h('span', { class: 'big' }, '🏆'), '개념 통과'),
-                        h('p', {}, '멋져요! 핵심 개념을 잘 알고 있어요.'))
+                    ? h('div', {}, h('div', { class: 'stamp' }, h('span', { class: 'big' }, tone('masteryIcon')), tone('masteryStamp')),
+                        h('p', {}, tone('masteryPraise')))
                     : h('div', {},
                         h('p', { style: 'font-size:20px' }, `${stage.pass}문제 이상 맞히면 통과예요. 조금만 더 힘내요! 💪`),
                         h('p', { class: 'muted' }, '틀린 개념을 다시 확인하고 새 문제로 도전해 보세요.')),

@@ -1,6 +1,7 @@
 // 여러 활동에서 함께 쓰는 선택형 문제
 import { h, rich, plain, shuffle } from '../dom.js';
 import { speakButton } from '../tts.js';
+import { tone } from '../tone.js';
 
 const FAST_MS = 2000; // 이보다 빨리 고른 오답은 "찍은" 것으로 봄
 
@@ -38,7 +39,7 @@ export function retryChoice({ question, choices, onSolved, twoCol = false }) {
                 btn.classList.add('correct');
                 btn.querySelector('.mark').textContent = '✅';
                 buttons.forEach(b => { b.disabled = true; });
-                feedbackSlot.replaceChildren(feedbackBox('good', wrongs === 0 ? '🎉 정답!' : '👍 찾았어요!', choice.fb));
+                feedbackSlot.replaceChildren(feedbackBox('good', wrongs === 0 ? tone('correct') : tone('found'), choice.fb));
                 onSolved(wrongs === 0, feedbackSlot);
                 return;
             }

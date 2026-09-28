@@ -25,7 +25,7 @@ export function renderReading(root, stage, ctx) {
                     question: card.check.q,
                     choices: card.check.choices,
                     onSolved: () => {
-                        checkSlot.append(nextButton(last ? '이야기 카드 완료! 다음 단계로 ▶' : '다음 카드 ▶', () => {
+                        checkSlot.append(nextButton(last ? `${stage.title} 완료! 다음 단계로 ▶` : '다음 카드 ▶', () => {
                             if (last) ctx.done();
                             else { index++; showCard(); }
                         }));

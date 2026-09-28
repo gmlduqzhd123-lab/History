@@ -3,6 +3,7 @@ import { h, shuffle, scrollTop } from '../dom.js';
 import { art } from '../art.js';
 import { retryChoice, feedbackBox, nextButton } from './common.js';
 import { speakButton } from '../tts.js';
+import { tone } from '../tone.js';
 
 export function renderDetective(root, stage, ctx) {
     let index = 0;
@@ -42,7 +43,7 @@ export function renderDetective(root, stage, ctx) {
             updateMoreBtn();
         });
 
-        const titleEl = h('h2', {}, '이 유물은 무엇일까?');
+        const titleEl = h('h2', {}, `이 ${tone('item')}은 무엇일까?`);
         const flow = h('div');
 
         const useQ = retryChoice({
@@ -52,7 +53,7 @@ export function renderDetective(root, stage, ctx) {
                 openTiles(9);
                 setTimeout(() => tiles.remove(), 600);
                 moreBtn.classList.add('hidden');
-                titleEl.textContent = `이 유물은 「${item.name}」!`;
+                titleEl.textContent = `이 ${tone('item')}은 「${item.name}」!`;
                 const eraQ = retryChoice({
                     question: item.eraQ.q,
                     choices: item.eraQ.choices,
@@ -60,7 +61,7 @@ export function renderDetective(root, stage, ctx) {
                         const last = index === stage.artifacts.length - 1;
                         flow.append(
                             feedbackBox('gold', `📌 알게 된 점`, item.fact),
-                            nextButton(last ? '유물 탐정 완료! 다음 단계로 ▶' : '다음 유물 조사하기 ▶', () => {
+                            nextButton(last ? `${stage.title} 완료! 다음 단계로 ▶` : '다음 유물 조사하기 ▶', () => {
                                 if (last) ctx.done();
                                 else { index++; showArtifact(); }
                             }),
@@ -76,7 +77,7 @@ export function renderDetective(root, stage, ctx) {
             h('div', { class: 'card' },
                 h('div', { class: 'row', style: 'margin-bottom:10px' },
                     titleEl, h('span', { class: 'spacer' }),
-                    h('span', { class: 'counter' }, `유물 ${index + 1} / ${stage.artifacts.length}`)),
+                    h('span', { class: 'counter' }, `${tone('item')} ${index + 1} / ${stage.artifacts.length}`)),
                 frame,
                 clueList,
                 h('div', { class: 'row', style: 'margin-top:10px' }, moreBtn,

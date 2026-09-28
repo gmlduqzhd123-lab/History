@@ -2,6 +2,7 @@
 import { h, scrollTop, toast } from '../dom.js';
 import { filterProfanity } from '../filter.js';
 import { feedbackBox, nextButton } from './common.js';
+import { tone } from '../tone.js';
 
 const normalize = s => s.replace(/\s+/g, '');
 
@@ -78,7 +79,7 @@ export function renderSummary(root, stage, ctx) {
         if (allOk) {
             checkBtn.classList.add('hidden');
             resultSlot.append(
-                feedbackBox('good', '🎉 훌륭한 정리예요!', '나의 역사 노트에 저장할게요.'),
+                feedbackBox('good', tone('summaryDone'), '나의 역사 노트에 저장할게요.'),
                 h('div', { class: 'card', style: 'margin-top:12px' }, ...stage.frames.map(f => h('div', { class: 'note-line' }, assembled(f)))),
                 nextButton('💾 저장하고 퀘스트 마치기', save),
             );

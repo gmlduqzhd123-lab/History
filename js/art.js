@@ -512,4 +512,59 @@ export const art = {
         <text x="100" y="72" text-anchor="middle" font-family="'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif" font-size="13" font-weight="bold" fill="#3f3a34">독립문</text>
         <rect x="18" y="156" width="20" height="14" fill="#c9c0b0" stroke="#6b645a" stroke-width="2"/><rect x="162" y="156" width="20" height="14" fill="#c9c0b0" stroke="#6b645a" stroke-width="2"/>
     `, '독립문'),
+    // 3·1 운동 독립 선언서: 세로로 쓴 글이 가득한 종이
+    declaration: svg(`
+        <rect x="24" y="22" width="152" height="160" fill="#f3ead2" stroke="#6b5a3a" stroke-width="3"/>
+        <g font-family="'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif" font-size="15" font-weight="bold" fill="#2f2a24" text-anchor="middle">
+            ${['선', '언', '서'].map((c, i) => `<text x="158" y="${52 + i * 20}">${c}</text>`).join('')}
+        </g>
+        <g fill="#3f3a34">${Array.from({ length: 11 }, (_, c) => Array.from({ length: 13 }, (_, r) => (c === 0 && r > 6) ? '' : `<rect x="${140 - c * 10.5}" y="${34 + r * 11}" width="5" height="6" rx="1" opacity="${0.6 + ((c + r) % 3) * 0.13}"/>`).join('')).join('')}</g>
+        <path d="M24 22 L176 22 L176 30 L24 30 Z" fill="#e6d8b4"/>
+    `, '독립 선언서'),
+
+    // 태극기
+    taegukgi: svg(`
+        <line x1="14" y1="30" x2="14" y2="190" stroke="#8a6d4a" stroke-width="5" stroke-linecap="round"/>
+        <rect x="16" y="36" width="168" height="112" fill="#ffffff" stroke="#9ca3af" stroke-width="1.5"/>
+        <g transform="translate(100 92) rotate(33.7)">
+            <path d="M-28 0 A28 28 0 0 1 28 0 A14 14 0 0 1 0 0 A14 14 0 0 0 -28 0 Z" fill="#cd2e3a"/>
+            <path d="M-28 0 A28 28 0 0 0 28 0 A14 14 0 0 1 0 0 A14 14 0 0 0 -28 0 Z" fill="#0047a0"/>
+        </g>
+        ${[
+            [56, 64, -56.3, ['s', 's', 's']],
+            [144, 64, 56.3, ['b', 's', 'b']],
+            [56, 120, 56.3, ['s', 'b', 's']],
+            [144, 120, -56.3, ['b', 'b', 'b']],
+        ].map(([x, y, a, bars]) => `<g transform="translate(${x} ${y}) rotate(${a})" fill="#111">${bars.map((b, i) => b === 's'
+            ? `<rect x="-12" y="${-9 + i * 7}" width="24" height="4.5"/>`
+            : `<rect x="-12" y="${-9 + i * 7}" width="10.5" height="4.5"/><rect x="1.5" y="${-9 + i * 7}" width="10.5" height="4.5"/>`).join('')}</g>`).join('')}
+    `, '태극기'),
+
+    // 말모이(우리말 사전) 원고: 우리말 낱말을 모아 적은 원고 뭉치
+    malmoi: svg(`
+        ${ground}
+        <rect x="46" y="40" width="120" height="136" fill="#e9dfc4" stroke="#8a7550" stroke-width="2" transform="rotate(6 106 108)"/>
+        <rect x="34" y="30" width="124" height="140" fill="#f5ecd6" stroke="#6b5a3a" stroke-width="3"/>
+        <g stroke="#c9a88a" stroke-width="1">${Array.from({ length: 9 }, (_, i) => `<line x1="44" y1="${52 + i * 13}" x2="148" y2="${52 + i * 13}"/>`).join('')}</g>
+        <g font-family="'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif" font-size="11" fill="#2f2a24">
+            ${['가람 : 강', '누리 : 세상', '마루 : 꼭대기', '미리내 : 은하수', '온 : 백(100)', '즈믄 : 천(1000)', '너나들이', '해밀'].map((w, i) => `<text x="48" y="${49 + i * 13}">${w}</text>`).join('')}
+        </g>
+        <path d="M120 88 l20 -6 M118 100 q10 6 22 0" stroke="#b84a34" stroke-width="2" fill="none"/>
+        <text x="96" y="162" text-anchor="middle" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="13" font-weight="bold" fill="#6b5a3a">말모이</text>
+    `, '우리말 사전 원고'),
+
+    // 대한민국 임시 정부 청사 (상하이): 벽돌로 지은 3층 건물
+    provisionalGov: svg(`
+        <rect x="0" y="176" width="200" height="24" fill="#cbd5e1"/>
+        <rect x="40" y="46" width="120" height="130" fill="#b45f45" stroke="#6b2f20" stroke-width="3"/>
+        <g stroke="#9a4a33" stroke-width="1" opacity="0.8">${Array.from({ length: 12 }, (_, i) => `<line x1="40" y1="${56 + i * 10}" x2="160" y2="${56 + i * 10}"/>`).join('')}</g>
+        <path d="M34 46 L166 46 L158 34 L42 34 Z" fill="#6b4a3a" stroke="#3f2a1e" stroke-width="2"/>
+        <g fill="#e2e8f0" stroke="#3f2a1e" stroke-width="2">${[[56, 60], [90, 60], [124, 60], [52, 128], [128, 128]].map(([x, y]) => `<rect x="${x}" y="${y}" width="20" height="24"/>`).join('')}</g>
+        <path d="M88 176 L88 132 Q100 120 112 132 L112 176 Z" fill="#3f2a1e"/>
+        <rect x="66" y="104" width="68" height="16" fill="#f8fafc" stroke="#3f2a1e" stroke-width="1.5"/>
+        <text x="100" y="116" text-anchor="middle" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="9" font-weight="bold" fill="#1f2937">대한민국 임시 정부</text>
+        <line x1="150" y1="34" x2="150" y2="10" stroke="#3f2a1e" stroke-width="2"/>
+        <rect x="150" y="10" width="24" height="16" fill="#fff" stroke="#9ca3af" stroke-width="1"/>
+        <circle cx="162" cy="18" r="4" fill="#cd2e3a"/><path d="M158 18 a4 4 0 0 0 8 0 z" fill="#0047a0"/>
+    `, '대한민국 임시 정부 청사'),
 };
