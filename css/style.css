@@ -264,7 +264,11 @@ p { margin: 0 0 10px; }
 .explorer-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
 .explorer-list button { background: #fff; border: 3px solid var(--line); border-radius: 16px; padding: 10px; font-family: var(--font-title); font-size: 18px; }
 .explorer-list .av { font-size: 34px; display: block; }
+.explorer-list .small { display: block; font-family: inherit; }
 .code-box { font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace; font-size: 28px; letter-spacing: 3px; text-align: center; padding: 14px; background: #fff; border: 3px dashed var(--accent); border-radius: 16px; user-select: all; }
+.name-input { width: 100%; font: inherit; font-size: 20px; padding: 10px 14px; border: 3px solid var(--line); border-radius: 14px; background: #fff; color: inherit; }
+.name-input:focus { outline: none; border-color: var(--accent, #c2410c); }
+.chip-name { display: inline-block; max-width: 7em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .code-input { width: 100%; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 22px; letter-spacing: 2px; text-transform: uppercase; padding: 10px 14px; border: 3px solid var(--line); border-radius: 14px; text-align: center; }
 
 /* ---------- 도감·노트 ---------- */
