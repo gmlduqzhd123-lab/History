@@ -567,4 +567,62 @@ export const art = {
         <rect x="150" y="10" width="24" height="16" fill="#fff" stroke="#9ca3af" stroke-width="1"/>
         <circle cx="162" cy="18" r="4" fill="#cd2e3a"/><path d="M158 18 a4 4 0 0 0 8 0 z" fill="#0047a0"/>
     `, '대한민국 임시 정부 청사'),
+    // 광복을 맞아 태극기를 흔들며 기뻐하는 사람들
+    liberation: svg(`
+        <rect x="0" y="0" width="200" height="200" fill="#eef2f7"/>
+        <circle cx="160" cy="36" r="16" fill="#fde68a"/>
+        <rect x="0" y="150" width="200" height="50" fill="#d6d3cb"/>
+        <g transform="translate(36 70) scale(1.1)"><line x1="0" y1="0" x2="0" y2="40" stroke="#6b4a2a" stroke-width="2"/><rect x="0" y="0" width="30" height="20" fill="#fff" stroke="#9ca3af" stroke-width="0.8"/><circle cx="15" cy="10" r="5" fill="#cd2e3a"/><path d="M10 10 a5 5 0 0 0 10 0 z" fill="#0047a0"/></g><g transform="translate(92 62) scale(1.2)"><line x1="0" y1="0" x2="0" y2="40" stroke="#6b4a2a" stroke-width="2"/><rect x="0" y="0" width="30" height="20" fill="#fff" stroke="#9ca3af" stroke-width="0.8"/><circle cx="15" cy="10" r="5" fill="#cd2e3a"/><path d="M10 10 a5 5 0 0 0 10 0 z" fill="#0047a0"/></g><g transform="translate(150 72) scale(1.1)"><line x1="0" y1="0" x2="0" y2="40" stroke="#6b4a2a" stroke-width="2"/><rect x="0" y="0" width="30" height="20" fill="#fff" stroke="#9ca3af" stroke-width="0.8"/><circle cx="15" cy="10" r="5" fill="#cd2e3a"/><path d="M10 10 a5 5 0 0 0 10 0 z" fill="#0047a0"/></g><g transform="translate(64 92) scale(0.9)"><line x1="0" y1="0" x2="0" y2="40" stroke="#6b4a2a" stroke-width="2"/><rect x="0" y="0" width="30" height="20" fill="#fff" stroke="#9ca3af" stroke-width="0.8"/><circle cx="15" cy="10" r="5" fill="#cd2e3a"/><path d="M10 10 a5 5 0 0 0 10 0 z" fill="#0047a0"/></g><g transform="translate(122 90) scale(0.9)"><line x1="0" y1="0" x2="0" y2="40" stroke="#6b4a2a" stroke-width="2"/><rect x="0" y="0" width="30" height="20" fill="#fff" stroke="#9ca3af" stroke-width="0.8"/><circle cx="15" cy="10" r="5" fill="#cd2e3a"/><path d="M10 10 a5 5 0 0 0 10 0 z" fill="#0047a0"/></g>
+        <g stroke="#374151" stroke-width="1.5">
+            ${[[30, 128], [58, 122], [86, 130], [114, 120], [142, 128], [170, 124], [44, 148], [100, 150], [156, 150]].map(([x, y], i) => `
+                <circle cx="${x}" cy="${y}" r="8" fill="#f1d9b5"/>
+                <path d="M${x - 12} ${y + 34} Q${x - 12} ${y + 10} ${x} ${y + 8} Q${x + 12} ${y + 10} ${x + 12} ${y + 34} Z" fill="${['#e5e7eb', '#cbd5e1', '#f8fafc', '#d6d3d1', '#e2e8f0'][i % 5]}"/>
+                <path d="M${x + 8} ${y + 14} L${x + 16} ${y - 4}" fill="none" stroke-width="3" stroke-linecap="round"/>`).join('')}
+        </g>
+    `, '광복을 맞은 사람들'),
+
+    // 1948년 5·10 총선거: 투표함과 투표용지
+    ballotBox: svg(`
+        ${ground}
+        <path d="M40 90 L160 90 L150 172 L50 172 Z" fill="#8a6d4a" stroke="#4a3620" stroke-width="3" stroke-linejoin="round"/>
+        <rect x="36" y="80" width="128" height="14" fill="#a47b50" stroke="#4a3620" stroke-width="3"/>
+        <rect x="80" y="84" width="40" height="5" fill="#2f2419"/>
+        <rect x="74" y="112" width="52" height="30" fill="#f5ecd6" stroke="#4a3620" stroke-width="2"/>
+        <text x="100" y="132" text-anchor="middle" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="13" font-weight="bold" fill="#2f2419">투표함</text>
+        <g transform="rotate(-12 100 46)">
+            <rect x="72" y="20" width="56" height="62" fill="#fff" stroke="#6b7280" stroke-width="2"/>
+            <g stroke="#9ca3af" stroke-width="1.5">${[34, 46, 58, 70].map(y => `<line x1="80" y1="${y}" x2="112" y2="${y}"/><circle cx="118" cy="${y}" r="3.5" fill="none"/>`).join('')}</g>
+            <circle cx="118" cy="46" r="4" fill="#cd2e3a"/>
+        </g>
+    `, '투표함과 투표용지'),
+
+    // 6·25 전쟁 때의 천막 학교
+    tentSchool: svg(`
+        <rect x="0" y="0" width="200" height="200" fill="#e8edf3"/>
+        <rect x="0" y="160" width="200" height="40" fill="#cfc8b8"/>
+        <path d="M20 160 L100 58 L180 160 Z" fill="#b8b09a" stroke="#6b6552" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M100 58 L100 160" stroke="#6b6552" stroke-width="2"/>
+        <path d="M52 160 L100 98 L148 160 Z" fill="#6b6552"/>
+        <rect x="80" y="108" width="40" height="24" fill="#2f4f3f" stroke="#1f3329" stroke-width="2"/>
+        <text x="100" y="124" text-anchor="middle" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="9" fill="#f8fafc">가 나 다</text>
+        <g stroke="#374151" stroke-width="1.5">
+            ${[[74, 150], [100, 152], [126, 150]].map(([x, y]) => `<circle cx="${x}" cy="${y - 10}" r="6" fill="#f1d9b5"/><path d="M${x - 8} ${y + 8} Q${x - 8} ${y - 4} ${x} ${y - 4} Q${x + 8} ${y - 4} ${x + 8} ${y + 8} Z" fill="#cbd5e1"/>`).join('')}
+        </g>
+        <path d="M10 160 L10 120 M190 160 L190 120" stroke="#6b6552" stroke-width="3"/>
+    `, '천막 학교'),
+
+    // 휴전선 철조망과 비무장 지대 표지판
+    dmzFence: svg(`
+        <rect x="0" y="0" width="200" height="200" fill="#e8edf3"/>
+        <path d="M0 140 Q60 120 120 134 T200 128 L200 200 L0 200 Z" fill="#9fb58a"/>
+        <g stroke="#4b5563" stroke-width="4">${[20, 70, 120, 170].map(x => `<line x1="${x}" y1="70" x2="${x}" y2="160"/>`).join('')}</g>
+        <g stroke="#6b7280" stroke-width="1.5" fill="none">
+            ${[82, 100, 118, 136].map(y => `<path d="M0 ${y} ${Array.from({ length: 20 }, (_, i) => `L${i * 10 + 5} ${y + (i % 2 ? 3 : -3)}`).join(' ')} L200 ${y}"/>`).join('')}
+        </g>
+        <g fill="#4b5563">${[82, 100, 118, 136].map(y => [10, 45, 95, 145, 185].map(x => `<path d="M${x} ${y - 4} l3 4 l-3 4 l-3 -4 z"/>`).join('')).join('')}</g>
+        <rect x="50" y="30" width="100" height="30" fill="#f3d36b" stroke="#6b5a1e" stroke-width="2"/>
+        <text x="100" y="51" text-anchor="middle" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif" font-size="14" font-weight="bold" fill="#3f3a1e">비무장 지대</text>
+        <line x1="100" y1="60" x2="100" y2="72" stroke="#6b5a1e" stroke-width="3"/>
+        <path d="M150 30 q6 -8 14 -2 q-6 2 -8 8 z M168 44 q4 -6 10 -2 q-4 2 -6 6 z" fill="#64748b"/>
+    `, '휴전선 철조망'),
 };

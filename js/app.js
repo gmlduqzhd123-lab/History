@@ -301,7 +301,13 @@ function renderQuestComplete(quest, rec) {
     const index = stations.findIndex(s => s.id === quest.id);
     const next = stations.slice(index + 1).find(s => s.quest);
     const found = questArtifacts(quest);
+    const readyStations = stations.filter(s => s.quest);
+    const allDone = readyStations.length === stations.length && readyStations.every(s => profile().quests[s.id]?.done);
     mount(
+        allDone ? h('div', { class: 'card card-accent center' },
+            h('h2', {}, '🎓 모든 정거장의 배움을 마쳤어요'),
+            h('p', { style: 'margin:8px 0 12px' }, `선사 시대부터 6·25 전쟁까지, ${stations.length}개 정거장을 모두 지나왔어요. 나의 역사 노트에서 지금까지 배운 것을 돌아보세요.`),
+            h('button', { class: 'btn btn-primary', type: 'button', onclick: () => go({ screen: 'notes' }) }, '📒 나의 역사 노트 보기')) : null,
         h('div', { class: 'card center' },
             h('div', { class: 'stamp' }, h('span', { class: 'big' }, quest.emoji), tone('questStamp')),
             h('h2', {}, ui.justFinished ? tone('questDone') : tone('questDoneAgain')),
