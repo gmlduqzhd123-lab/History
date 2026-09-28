@@ -1,5 +1,5 @@
 // 탐험 지도: 5학년 2학기 사회(역사) 세 단원을 시대 순서대로 10개 정거장으로 나눔
-// ready: true 인 정거장만 퀘스트가 들어 있음 (나머지는 '준비 중')
+// quest 가 연결된 정거장만 열리고, 없는 정거장은 '준비 중'으로 보임
 import q1 from './q1-stone-age.js';
 import q2 from './q2-bronze-gojoseon.js';
 import q3 from './q3-three-kingdoms-gaya.js';
@@ -9,6 +9,7 @@ import q6 from './q6-joseon-confucian.js';
 import q7 from './q7-late-joseon.js';
 import q8 from './q8-opening-modern.js';
 import q9 from './q9-colonial-independence.js';
+import q10 from './q10-liberation-korean-war.js';
 
 export const units = [
     {
@@ -33,7 +34,7 @@ export const units = [
         title: '식민 통치와 저항, 전쟁이 바꾼 사회와 생활',
         stations: [
             { id: 'q9', emoji: '🕯️', name: '일제 강점기와 독립운동', desc: '빼앗긴 나라를 되찾으려는 노력', quest: q9 },
-            { id: 'q10', emoji: '🕊️', name: '광복과 6·25 전쟁', desc: '광복, 전쟁, 그리고 달라진 생활' },
+            { id: 'q10', emoji: '🕊️', name: '광복과 6·25 전쟁', desc: '광복, 전쟁, 그리고 달라진 생활', quest: q10 },
         ],
     },
 ];
