@@ -3,7 +3,7 @@ import { h, rich, clear, modal, toast, scrollTop } from './dom.js';
 import { loadData, saveData, newProfile, questRecord } from './storage.js';
 import { encodeProgress, decodeProgress } from './code.js';
 import { stopSpeaking } from './tts.js';
-import { art } from './art.js';
+import { fillPicture, creditLine } from './picture.js';
 import { setCalm, tone } from './tone.js';
 import { units, stations, questOrder, avatars } from '../content/quests.js';
 import { renderDetective } from './activities/detective.js';
@@ -335,7 +335,7 @@ function questArtifacts(quest) {
 
 function dexGrid(items, known) {
     return h('div', { class: 'dex' }, ...items.map(item => (known
-        ? h('div', { class: 'dex-item' }, h('div', { class: 'art', html: art[item.art] || '' }), h('div', { class: 'nm' }, item.name), h('div', { class: 'small muted' }, rich(item.fact)))
+        ? h('div', { class: 'dex-item' }, fillPicture(h('div', { class: 'art' }), item.art, item.name), h('div', { class: 'nm' }, item.name), h('div', { class: 'small muted' }, rich(item.fact)), creditLine(item.art))
         : h('div', { class: 'dex-item unknown' }, h('div', { class: 'art' }, '?'), h('div', { class: 'nm muted' }, '???')))));
 }
 

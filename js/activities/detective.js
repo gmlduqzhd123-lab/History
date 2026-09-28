@@ -1,6 +1,6 @@
 // ① 유물 탐정: 조각조각 가려진 유물을 단서로 추리 → 쓰임 → 시대 → 알게 된 점
 import { h, shuffle, scrollTop } from '../dom.js';
-import { art } from '../art.js';
+import { fillPicture, creditLine } from '../picture.js';
 import { retryChoice, feedbackBox, nextButton } from './common.js';
 import { speakButton } from '../tts.js';
 import { tone } from '../tone.js';
@@ -21,7 +21,8 @@ export function renderDetective(root, stage, ctx) {
         const openTiles = n => order.slice(0, n).forEach(i => tileEls[i].classList.add('off'));
         openTiles(opened);
 
-        const frame = h('div', { class: 'artifact-frame', html: art[item.art] || '' });
+        const frame = fillPicture(h('div', { class: 'artifact-frame' }), item.art);
+        const credit = creditLine(item.art);
         frame.append(tiles);
 
         const clueList = h('ul', { class: 'clues' });
@@ -54,6 +55,7 @@ export function renderDetective(root, stage, ctx) {
                 setTimeout(() => tiles.remove(), 600);
                 moreBtn.classList.add('hidden');
                 titleEl.textContent = `이 ${tone('item')}은 「${item.name}」!`;
+                frame.querySelector('img')?.setAttribute('alt', item.name);
                 const eraQ = retryChoice({
                     question: item.eraQ.q,
                     choices: item.eraQ.choices,
@@ -79,6 +81,7 @@ export function renderDetective(root, stage, ctx) {
                     titleEl, h('span', { class: 'spacer' }),
                     h('span', { class: 'counter' }, `${tone('item')} ${index + 1} / ${stage.artifacts.length}`)),
                 frame,
+                credit,
                 clueList,
                 h('div', { class: 'row', style: 'margin-top:10px' }, moreBtn,
                     speakButton(() => item.clues.slice(0, cluesShown).join(' '), '단서 읽기')),
