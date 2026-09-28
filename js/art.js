@@ -461,4 +461,55 @@ export const art = {
         </g>
         <text x="20" y="30" font-size="12" fill="#8a7550" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">서당</text>
     `, '김홍도의 서당(다시 그린 그림)'),
+    // 척화비: 서양과 통상하지 말자는 뜻을 새긴 비석
+    cheokhwabi: svg(`
+        <rect x="0" y="170" width="200" height="30" fill="#b7cf8f"/>
+        <rect x="56" y="158" width="88" height="18" fill="#9a9187" stroke="#5f574f" stroke-width="3"/>
+        <path d="M68 158 L68 40 Q100 22 132 40 L132 158 Z" fill="#b9b1a5" stroke="#5f574f" stroke-width="3"/>
+        <path d="M74 48 Q100 34 126 48" fill="none" stroke="#8f877d" stroke-width="2"/>
+        <g font-family="'Apple SD Gothic Neo','Malgun Gothic','Noto Sans CJK KR','Noto Serif CJK KR',serif" font-size="13" font-weight="bold" fill="#3f3a34" text-anchor="middle">
+            ${[['洋', '夷', '侵', '犯'], ['非', '戰', '則', '和'], ['主', '和', '賣', '國']].map((col, i) => col.map((c, j) => `<text x="${118 - i * 18}" y="${72 + j * 18}">${c}</text>`).join('')).join('')}
+        </g>
+        <g fill="#8f877d"><circle cx="80" cy="146" r="2"/><circle cx="120" cy="140" r="1.5"/><circle cx="96" cy="150" r="1.5"/></g>
+    `, '척화비'),
+
+    // 전차: 전선에서 전기를 받아 선로를 달리는 차
+    streetcar: svg(`
+        <line x1="0" y1="30" x2="200" y2="30" stroke="#3f444a" stroke-width="2"/>
+        <line x1="98" y1="30" x2="112" y2="66" stroke="#3f444a" stroke-width="3"/>
+        <rect x="0" y="164" width="200" height="36" fill="#cbb892"/>
+        <g stroke="#6b645a" stroke-width="4"><line x1="0" y1="168" x2="200" y2="168"/><line x1="0" y1="180" x2="200" y2="180"/></g>
+        <g stroke="#8a6d4a" stroke-width="3">${[10, 40, 70, 100, 130, 160, 190].map(x => `<line x1="${x}" y1="166" x2="${x - 4}" y2="184"/>`).join('')}</g>
+        <path d="M30 70 L170 70 L176 80 L176 150 L24 150 L24 80 Z" fill="#b84a34" stroke="#5a1f14" stroke-width="3" stroke-linejoin="round"/>
+        <rect x="24" y="66" width="152" height="10" rx="4" fill="#7a2e22" stroke="#5a1f14" stroke-width="2"/>
+        <g fill="#f5ecd9" stroke="#5a1f14" stroke-width="2">${[36, 64, 92, 120, 148].map(x => `<rect x="${x}" y="88" width="20" height="24" rx="2"/>`).join('')}</g>
+        <rect x="24" y="124" width="152" height="8" fill="#f3d36b"/>
+        <g fill="#2f2f2f"><circle cx="54" cy="156" r="10"/><circle cx="146" cy="156" r="10"/></g>
+        <g fill="#9ca3af"><circle cx="54" cy="156" r="4"/><circle cx="146" cy="156" r="4"/></g>
+        <circle cx="180" cy="100" r="5" fill="#fde68a" stroke="#5a1f14" stroke-width="2"/>
+    `, '전차'),
+
+    // 독립신문: 한글로 쓴 신문의 첫 면
+    dongnipNews: svg(`
+        <rect x="30" y="16" width="140" height="172" fill="#f3ead2" stroke="#6b5a3a" stroke-width="3" transform="rotate(-3 100 100)"/>
+        <g transform="rotate(-3 100 100)">
+            <text x="100" y="48" text-anchor="middle" font-family="'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif" font-size="22" font-weight="bold" fill="#2f2a24">독립신문</text>
+            <line x1="40" y1="58" x2="160" y2="58" stroke="#2f2a24" stroke-width="3"/>
+            <line x1="40" y1="63" x2="160" y2="63" stroke="#2f2a24" stroke-width="1"/>
+            <g stroke="#6b5a3a" stroke-width="1">${[0, 1, 2].map(i => `<line x1="${70 + i * 30}" y1="70" x2="${70 + i * 30}" y2="178"/>`).join('')}</g>
+            <g fill="#3f3a34">${[0, 1, 2, 3].map(c => Array.from({ length: 12 }, (_, r) => `<rect x="${44 + c * 30 + (r % 3)}" y="${74 + r * 8.6}" width="${18 - (r % 4) * 2}" height="3.5" rx="1"/>`).join('')).join('')}</g>
+        </g>
+    `, '독립신문'),
+
+    // 독립문: 돌로 쌓은 아치 문
+    dongnipmun: svg(`
+        <rect x="0" y="168" width="200" height="32" fill="#cbb892"/>
+        <path d="M34 168 L34 50 L166 50 L166 168 L122 168 L122 112 Q100 84 78 112 L78 168 Z" fill="#d8d1c4" stroke="#6b645a" stroke-width="3" stroke-linejoin="round"/>
+        <g stroke="#b3a996" stroke-width="1.5">${Array.from({ length: 11 }, (_, i) => `<line x1="34" y1="${60 + i * 10}" x2="${i > 4 ? 78 : 166}" y2="${60 + i * 10}"/>`).join('')}${Array.from({ length: 6 }, (_, i) => `<line x1="122" y1="${120 + i * 10}" x2="166" y2="${120 + i * 10}"/>`).join('')}</g>
+        <path d="M28 50 L172 50 L172 40 L28 40 Z" fill="#c9c0b0" stroke="#6b645a" stroke-width="3"/>
+        <g fill="#c9c0b0" stroke="#6b645a" stroke-width="2">${[36, 56, 76, 96, 116, 136, 156].map(x => `<rect x="${x}" y="30" width="10" height="10"/>`).join('')}</g>
+        <rect x="76" y="58" width="48" height="18" fill="#f5ecd9" stroke="#6b645a" stroke-width="2"/>
+        <text x="100" y="72" text-anchor="middle" font-family="'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif" font-size="13" font-weight="bold" fill="#3f3a34">독립문</text>
+        <rect x="18" y="156" width="20" height="14" fill="#c9c0b0" stroke="#6b645a" stroke-width="2"/><rect x="162" y="156" width="20" height="14" fill="#c9c0b0" stroke="#6b645a" stroke-width="2"/>
+    `, '독립문'),
 };
