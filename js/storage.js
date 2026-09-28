@@ -1,4 +1,4 @@
-// 학습 기록은 이 기기의 브라우저에만 저장 (서버·로그인 없음, 이름 대신 번호만 사용)
+// 학습 기록은 이 기기의 브라우저에만 저장 (서버·로그인 없음). 이름은 이 기기에만 남고 이어하기 코드에는 담기지 않음
 const KEY = 'history-quest:v1';
 
 export function loadData() {
@@ -8,6 +8,7 @@ export function loadData() {
             // 기록이 일부 빠지거나 깨져 있어도 앱이 멈추지 않도록 모양을 맞춤
             for (const [key, p] of Object.entries(data.profiles)) {
                 if (!p || typeof p !== 'object' || !Number.isInteger(Number(p.number))) { delete data.profiles[key]; continue; }
+                p.name = cleanName(p.name);
                 if (!p.quests || typeof p.quests !== 'object') p.quests = {};
                 for (const q of Object.values(p.quests)) {
                     if (!q || typeof q !== 'object') continue;
@@ -31,8 +32,13 @@ export function saveData(data) {
     }
 }
 
-export function newProfile(number, avatar) {
-    return { number, avatar, quests: {}, createdAt: Date.now() };
+export const MAX_NAME = 10;
+export function cleanName(name) {
+    return typeof name === 'string' ? name.replace(/\s+/g, ' ').trim().slice(0, MAX_NAME) : '';
+}
+
+export function newProfile(number, avatar, name = '') {
+    return { number, avatar, name: cleanName(name), quests: {}, createdAt: Date.now() };
 }
 
 // 퀘스트 기록: stage = 끝낸 단계 수, done = 퀘스트 완료

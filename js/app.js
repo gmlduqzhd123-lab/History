@@ -1,6 +1,6 @@
 // 역사 탐험 퀘스트 — 화면 전환과 학습 기록 관리
 import { h, rich, clear, modal, toast, scrollTop } from './dom.js';
-import { loadData, saveData, newProfile, questRecord } from './storage.js';
+import { loadData, saveData, newProfile, questRecord, cleanName, MAX_NAME } from './storage.js';
 import { encodeProgress, decodeProgress } from './code.js';
 import { stopSpeaking } from './tts.js';
 import { fillPicture, creditLine } from './picture.js';
@@ -30,6 +30,12 @@ let ui = { screen: 'welcome' };
 
 // null·false 는 건너뛰고 붙임 (append는 null을 "null" 글자로 넣어 버림)
 function mount(...nodes) { app.append(...nodes.filter(n => n !== null && n !== undefined && n !== false)); }
+
+// 화면에 보일 이름: 이름이 있으면 이름, 없으면(예전 기록) 번호
+function whoName(p) { return p.name || `${p.number}번`; }
+function nameInput(value = '') {
+    return h('input', { class: 'name-input', type: 'text', value, maxlength: String(MAX_NAME), placeholder: '예) 김하늘', autocomplete: 'off', 'aria-label': '이름' });
+}
 
 function profile() { return data.current != null ? data.profiles[data.current] : null; }
 function persist() { if (!saveData(data)) toast('⚠️ 이 기기에 저장하지 못했어요. 이어하기 코드를 적어 두세요.'); }
@@ -71,7 +77,7 @@ function renderWelcome() {
             h('div', { class: 'explorer-list' }, ...saved.map(p => h('button', {
                 type: 'button',
                 onclick: () => { data.current = p.number; persist(); go({ screen: 'map' }); },
-            }, h('span', { class: 'av' }, p.avatar), `${p.number}번`)))) : null,
+            }, h('span', { class: 'av' }, p.avatar), whoName(p), p.name ? h('span', { class: 'small muted' }, `${p.number}번`) : null)))) : null,
         h('div', { class: 'card stack' },
             h('button', { class: 'btn btn-primary btn-block', type: 'button', onclick: () => go({ screen: 'register' }) }, '🙋 새 탐험가로 시작하기'),
             h('button', { class: 'btn btn-block', type: 'button', onclick: () => go({ screen: 'code' }) }, '💾 이어하기 코드로 계속하기'),
@@ -85,6 +91,10 @@ function renderWelcome() {
 function renderRegister() {
     let number = null;
     let avatar = avatars[0];
+    const nameEl = nameInput();
+    const updateStart = () => { startBtn.disabled = !number || !cleanName(nameEl.value); };
+    nameEl.addEventListener('input', () => updateStart());
+    nameEl.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) nameEl.blur(); });
     const numGrid = h('div', { class: 'num-grid' });
     for (let n = 1; n <= MAX_NUMBER; n++) {
         numGrid.append(h('button', {
@@ -94,7 +104,7 @@ function renderRegister() {
                 [...numGrid.children].forEach(b => { b.classList.remove('on'); b.setAttribute('aria-pressed', 'false'); });
                 e.currentTarget.classList.add('on');
                 e.currentTarget.setAttribute('aria-pressed', 'true');
-                startBtn.disabled = false;
+                updateStart();
             },
         }, n));
     }
@@ -108,10 +118,12 @@ function renderRegister() {
     }, a)));
     const startBtn = h('button', { class: 'btn btn-primary btn-block', type: 'button', disabled: true }, '🚀 탐험 시작!');
     startBtn.addEventListener('click', () => {
-        if (!number) return;
+        const name = cleanName(nameEl.value);
+        if (!number || !name) return;
         const existing = data.profiles[number];
-        if (existing && !confirm(`${number}번 탐험가가 이미 이 기기에 있어요.\n그 기록으로 이어서 할까요? (취소를 누르면 번호를 다시 고를 수 있어요)`)) return;
-        if (!existing) data.profiles[number] = newProfile(number, avatar);
+        if (existing && !confirm(`${number}번${existing.name ? `(${existing.name})` : ''} 탐험가가 이미 이 기기에 있어요.\n그 기록으로 이어서 할까요? (취소를 누르면 번호를 다시 고를 수 있어요)`)) return;
+        if (existing) existing.name = name;
+        else data.profiles[number] = newProfile(number, avatar, name);
         data.current = number;
         persist();
         go({ screen: 'map' });
@@ -119,15 +131,18 @@ function renderRegister() {
     });
     mount(
         topbar('🙋 새 탐험가', () => go({ screen: 'welcome' })),
-        h('div', { class: 'card' }, h('h2', { style: 'margin-bottom:6px' }, '1. 내 번호를 골라요'),
-            h('p', { class: 'muted small' }, '이름 대신 우리 반 번호를 써요.'), numGrid),
-        h('div', { class: 'card' }, h('h2', { style: 'margin-bottom:12px' }, '2. 탐험가 캐릭터를 골라요'), avGrid),
+        h('div', { class: 'card' }, h('h2', { style: 'margin-bottom:10px' }, '1. 내 이름을 써요'), nameEl,
+            h('p', { class: 'muted small', style: 'margin-top:6px' }, '이름은 이 기기에만 저장되고 다른 곳으로 보내지 않아요.')),
+        h('div', { class: 'card' }, h('h2', { style: 'margin-bottom:6px' }, '2. 내 번호를 골라요'),
+            h('p', { class: 'muted small' }, '우리 반 번호예요. 이어하기 코드에 쓰여요.'), numGrid),
+        h('div', { class: 'card' }, h('h2', { style: 'margin-bottom:12px' }, '3. 탐험가 캐릭터를 골라요'), avGrid),
         h('div', { style: 'margin-top:16px' }, startBtn),
     );
 }
 
 function renderCodeEntry() {
     const input = h('input', { class: 'code-input', type: 'text', placeholder: 'XXXXX-XXXXX', maxlength: '14', autocomplete: 'off', 'aria-label': '이어하기 코드' });
+    const nameEl = nameInput();
     const msg = h('div');
     const submit = () => {
         const result = decodeProgress(input.value, questOrder, avatars);
@@ -138,6 +153,8 @@ function renderCodeEntry() {
         const existing = data.profiles[result.number];
         const merged = existing || newProfile(result.number, result.avatar);
         merged.avatar = result.avatar;
+        const name = cleanName(nameEl.value);
+        if (name) merged.name = name;
         // 코드에 담긴 진도가 더 앞서 있을 때만 덮어씀
         Object.entries(result.quests).forEach(([id, q]) => {
             const cur = merged.quests[id];
@@ -146,7 +163,7 @@ function renderCodeEntry() {
         data.profiles[result.number] = merged;
         data.current = result.number;
         persist();
-        toast(`${result.avatar} ${result.number}번 탐험가, 다시 만나서 반가워요!`);
+        toast(`${result.avatar} ${whoName(merged)} 탐험가, 다시 만나서 반가워요!`);
         go({ screen: 'map' });
     };
     input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) submit(); });
@@ -155,6 +172,8 @@ function renderCodeEntry() {
         h('div', { class: 'card stack' },
             h('p', {}, '다른 기기에서 받은 ', h('b', {}, '이어하기 코드'), '를 입력하세요.'),
             input,
+            h('p', { class: 'small', style: 'margin-top:6px' }, '내 이름 ', h('span', { class: 'muted' }, '(코드에는 이름이 없어서 다시 써 줘요)')),
+            nameEl,
             h('button', { class: 'btn btn-primary btn-block', type: 'button', onclick: submit }, '계속하기'),
             msg),
     );
@@ -169,15 +188,16 @@ function topbar(title, onBack, backLabel = '← 뒤로') {
         p ? h('button', { class: 'btn btn-small home-btn', type: 'button', onclick: () => go({ screen: 'welcome' }), 'aria-label': '홈으로', title: '홈으로' }, '🏠') : null,
         onBack ? h('button', { class: 'btn btn-small', type: 'button', onclick: onBack }, backLabel) : null,
         h('div', { class: 'title' }, title),
-        p ? h('button', { class: 'chip', type: 'button', onclick: showMenu, 'aria-label': '탐험가 메뉴' }, p.avatar, ` ${p.number}번`) : null,
+        p ? h('button', { class: 'chip', type: 'button', onclick: showMenu, 'aria-label': '탐험가 메뉴' }, p.avatar, h('span', { class: 'chip-name' }, whoName(p))) : null,
     );
 }
 
 function showMenu() {
     const p = profile();
     const close = modal(
-        h('h2', { style: 'margin-bottom:12px' }, `${p.avatar} ${p.number}번 탐험가`),
+        h('h2', { style: 'margin-bottom:12px' }, `${p.avatar} ${p.name ? `${p.name} (${p.number}번)` : `${p.number}번`} 탐험가`),
         h('div', { class: 'stack' },
+            h('button', { class: 'btn btn-block', type: 'button', onclick: () => { close(); showRename(); } }, '✏️ 이름 바꾸기'),
             h('button', { class: 'btn btn-block', type: 'button', onclick: () => { close(); showCode(); } }, '💾 이어하기 코드 보기'),
             h('button', { class: 'btn btn-block', type: 'button', onclick: () => { close(); go({ screen: 'notes' }); } }, '📒 나의 역사 노트'),
             h('button', { class: 'btn btn-block', type: 'button', onclick: () => { close(); showGuide(); } }, '❓ 탐험 방법'),
@@ -186,13 +206,34 @@ function showMenu() {
     );
 }
 
+function showRename() {
+    const p = profile();
+    const nameEl = nameInput(p.name);
+    const save = () => {
+        const name = cleanName(nameEl.value);
+        if (!name) return nameEl.focus();
+        p.name = name;
+        persist();
+        close();
+        render();
+    };
+    nameEl.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) save(); });
+    const close = modal(
+        h('h2', { style: 'margin-bottom:12px' }, '✏️ 이름 바꾸기'),
+        nameEl,
+        h('button', { class: 'btn btn-primary btn-block', type: 'button', style: 'margin-top:12px', onclick: save }, '저장하기'),
+        h('button', { class: 'btn btn-block', type: 'button', style: 'margin-top:8px', onclick: () => close() }, '닫기'),
+    );
+    nameEl.focus();
+}
+
 function showCode() {
     const code = encodeProgress(profile(), questOrder, avatars);
     const close = modal(
         h('h2', {}, '💾 이어하기 코드'),
         h('p', { class: 'muted small', style: 'margin-top:6px' }, '다른 기기나 다음 시간에 이 코드를 입력하면 지금까지의 진도를 이어서 할 수 있어요. 공책에 적어 두세요!'),
         h('div', { class: 'code-box' }, code),
-        h('p', { class: 'small muted', style: 'margin-top:10px' }, '※ 한 줄 정리 글은 코드에 담기지 않고 이 기기에만 남아요.'),
+        h('p', { class: 'small muted', style: 'margin-top:10px' }, '※ 이름과 한 줄 정리 글은 코드에 담기지 않고 이 기기에만 남아요.'),
         h('button', { class: 'btn btn-primary btn-block', type: 'button', onclick: () => close() }, '다 적었어요'),
     );
 }
@@ -224,7 +265,7 @@ function renderMap() {
     mount(
         topbar('🧭 역사 탐험 퀘스트'),
         h('div', { class: 'card card-accent' },
-            h('h2', {}, `안녕, ${p.number}번 탐험가! ${p.avatar}`),
+            h('h2', {}, `안녕, ${whoName(p)} 탐험가! ${p.avatar}`),
             h('p', { style: 'margin:6px 0 12px' }, doneCount ? `지금까지 도장 ${doneCount}개를 모았어요. 다음 정거장으로 떠나 볼까요?` : '첫 번째 정거장부터 시간 여행을 떠나 볼까요?'),
             h('div', { class: 'row' },
                 h('button', { class: 'btn btn-small', type: 'button', onclick: () => go({ screen: 'notes' }) }, '📒 나의 역사 노트'),
@@ -350,7 +391,7 @@ function renderNotes() {
     mount(
         topbar('📒 나의 역사 노트', () => go({ screen: 'map' }), '🗺️ 지도'),
         h('div', { class: 'card card-accent' },
-            h('h2', {}, `${p.avatar} ${p.number}번 탐험가의 역사 노트`),
+            h('h2', {}, `${p.avatar} ${p.name ? `${p.number}번 ${p.name}` : `${p.number}번 탐험가`}의 역사 노트`),
             h('p', { class: 'small muted', style: 'margin:6px 0 10px' }, '모은 유물과 내가 쓴 정리가 여기에 쌓여요.'),
             h('button', { class: 'btn btn-small no-print', type: 'button', onclick: () => window.print() }, '🖨️ 인쇄하기 / PDF로 저장')),
         ...ready.map(station => {
