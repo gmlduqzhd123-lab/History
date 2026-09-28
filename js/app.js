@@ -74,7 +74,8 @@ function renderWelcome() {
             }, h('span', { class: 'av' }, p.avatar), `${p.number}번`)))) : null,
         h('div', { class: 'card stack' },
             h('button', { class: 'btn btn-primary btn-block', type: 'button', onclick: () => go({ screen: 'register' }) }, '🙋 새 탐험가로 시작하기'),
-            h('button', { class: 'btn btn-block', type: 'button', onclick: () => go({ screen: 'code' }) }, '💾 이어하기 코드로 계속하기')),
+            h('button', { class: 'btn btn-block', type: 'button', onclick: () => go({ screen: 'code' }) }, '💾 이어하기 코드로 계속하기'),
+            installButton('btn btn-block')),
         h('p', { class: 'site-foot' },
             '© 2026 엽쌤 · 수업에는 자유롭게 사용하세요 🙌 · ',
             h('a', { href: 'https://gmlduqzhd123-lab.github.io/YScode/' }, '엽쌤의 다른 앱 보기 →')),
@@ -161,9 +162,11 @@ function renderCodeEntry() {
 }
 
 // ---------- 공통 상단 막대 ----------
+// 탐험가가 있는 화면(지도·퀘스트·노트)에는 🏠 버튼으로 시작 화면에 갈 수 있음
 function topbar(title, onBack, backLabel = '← 뒤로') {
     const p = profile();
     return h('div', { class: 'topbar' },
+        p ? h('button', { class: 'btn btn-small home-btn', type: 'button', onclick: () => go({ screen: 'welcome' }), 'aria-label': '홈으로', title: '홈으로' }, '🏠') : null,
         onBack ? h('button', { class: 'btn btn-small', type: 'button', onclick: onBack }, backLabel) : null,
         h('div', { class: 'title' }, title),
         p ? h('button', { class: 'chip', type: 'button', onclick: showMenu, 'aria-label': '탐험가 메뉴' }, p.avatar, ` ${p.number}번`) : null,
@@ -226,7 +229,8 @@ function renderMap() {
             h('div', { class: 'row' },
                 h('button', { class: 'btn btn-small', type: 'button', onclick: () => go({ screen: 'notes' }) }, '📒 나의 역사 노트'),
                 h('button', { class: 'btn btn-small', type: 'button', onclick: showCode }, '💾 이어하기 코드'),
-                h('button', { class: 'btn btn-small', type: 'button', onclick: showGuide }, '❓ 탐험 방법'))),
+                h('button', { class: 'btn btn-small', type: 'button', onclick: showGuide }, '❓ 탐험 방법'),
+                installButton('btn btn-small'))),
         ...units.map(unit => h('section', { class: 'unit' },
             h('h2', { class: 'unit-title' }, `📚 ${unit.title}`),
             h('div', { class: 'path' }, ...unit.stations.map(station => stationButton(station)))),
@@ -359,6 +363,60 @@ function renderNotes() {
                     ? h('div', { style: 'margin-top:10px' }, ...rec.notes.map(n => h('div', { class: 'note-line' }, n)))
                     : h('p', { class: 'small muted', style: 'margin-top:10px' }, '아직 한 줄 정리를 쓰지 않았어요.'));
         }),
+    );
+}
+
+// ---------- 앱 설치 (홈 화면에 추가) ----------
+let installPrompt = null;
+const isStandalone = () => window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true;
+
+window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    installPrompt = e;
+});
+window.addEventListener('appinstalled', () => {
+    installPrompt = null;
+    toast('📲 앱이 설치되었어요! 홈 화면에서 바로 열 수 있어요.');
+});
+
+// 이미 앱으로 열었으면 버튼을 보이지 않음
+function installButton(cls) {
+    if (isStandalone()) return null;
+    return h('button', { class: cls, type: 'button', onclick: installApp }, '📲 앱 설치');
+}
+
+async function installApp() {
+    if (installPrompt) {
+        const promptEvent = installPrompt;
+        installPrompt = null; // 한 번만 쓸 수 있음
+        promptEvent.prompt();
+        try {
+            const { outcome } = await promptEvent.userChoice;
+            if (outcome !== 'accepted') toast('나중에 다시 설치할 수 있어요.');
+        } catch { /* 무시 */ }
+        return;
+    }
+    showInstallGuide();
+}
+
+function showInstallGuide() {
+    const ua = navigator.userAgent;
+    const ios = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    let steps;
+    if (/KAKAOTALK/i.test(ua)) {
+        steps = ['카카오톡 안에서는 설치할 수 없어요.', '오른쪽 아래(또는 위) **⋮ 메뉴**를 눌러요.', '**다른 브라우저로 열기**(아이폰은 **Safari로 열기**)를 고른 뒤, 다시 **📲 앱 설치**를 눌러요.'];
+    } else if (ios) {
+        steps = ['**Safari**로 이 페이지를 열어요. (다른 앱에서는 설치가 안 돼요)', '아래쪽 **공유 버튼 ⬆︎**을 눌러요.', '**홈 화면에 추가** → 오른쪽 위 **추가**를 눌러요.'];
+    } else if (/Android/i.test(ua)) {
+        steps = ['**Chrome** 또는 **삼성 인터넷**으로 열어요.', '오른쪽 위(또는 아래) **⋮ / ≡ 메뉴**를 눌러요.', '**앱 설치** 또는 **홈 화면에 추가**를 눌러요.'];
+    } else {
+        steps = ['**Chrome**이나 **Edge**로 열어요.', '주소창 오른쪽의 **설치 아이콘**을 누르거나, **⋮ 메뉴 → 앱 설치**를 눌러요.', 'Edge는 **⋯ 메뉴 → 앱 → 이 사이트를 앱으로 설치**예요.'];
+    }
+    const close = modal(
+        h('h2', {}, '📲 앱으로 설치하기'),
+        h('p', { class: 'muted small', style: 'margin:6px 0 10px' }, '설치하면 홈 화면 아이콘으로 바로 열리고, 인터넷이 없어도 탐험할 수 있어요.'),
+        ...steps.map((t, i) => h('div', { class: 'note-line' }, h('b', {}, `${i + 1}. `), rich(t))),
+        h('button', { class: 'btn btn-primary btn-block', type: 'button', style: 'margin-top:14px', onclick: () => close() }, '알겠어요!'),
     );
 }
 

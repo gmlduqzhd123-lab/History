@@ -68,6 +68,7 @@ p { margin: 0 0 10px; }
     background: linear-gradient(var(--bg) 80%, transparent);
 }
 .topbar .title { font-family: var(--font-title); font-size: 20px; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.topbar .home-btn { padding-left: 10px; padding-right: 10px; font-size: 18px; flex: none; }
 .chip {
     display: inline-flex; align-items: center; gap: 6px;
     background: var(--card); border: 2px solid var(--line); border-radius: 999px;

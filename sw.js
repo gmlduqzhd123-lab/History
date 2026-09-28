@@ -1,11 +1,15 @@
 // 오프라인 지원: 인터넷이 되면 항상 최신 파일을 받고(옛 파일과 새 파일이 섞이지 않게),
 // 인터넷이 끊기면 저장해 둔 파일로 동작함
-const CACHE = 'history-quest-v12';
+const CACHE = 'history-quest-v13';
 const FILES = [
     './',
     'index.html',
     'manifest.webmanifest',
     'icons/icon.svg',
+    'icons/icon-192.png',
+    'icons/icon-512.png',
+    'icons/icon-maskable-512.png',
+    'icons/apple-touch-icon.png',
     'css/style.css',
     'js/app.js',
     'js/dom.js',
