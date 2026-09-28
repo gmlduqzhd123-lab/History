@@ -257,7 +257,7 @@ export default {
             type: 'mastery',
             title: '개념 도전',
             emoji: '🏆',
-            goal: '5문제 중 4문제 이상 한 번에 맞히면 도장을 받아요. 틀린 문제는 비슷한 문제로 다시 도전해요.',
+            goal: '5문제 중 4문제 이상 한 번에 맞히면 도장을 받아요. 틀린 개념은 한 번 더 확인해요.',
             pick: 5,
             pass: 4,
             always: ['compare'],

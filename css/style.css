@@ -198,7 +198,7 @@ p { margin: 0 0 10px; }
 /* ---------- 이야기 카드 ---------- */
 .story-art { font-size: 64px; text-align: center; line-height: 1.2; margin-bottom: 8px; }
 .story-art svg { width: 180px; height: 180px; }
-.story-text p { font-size: 19px; line-height: 1.75; }
+.story-text p { font-size: 19px; line-height: 1.75; white-space: pre-line; }
 .story-text b, .kw { background: linear-gradient(transparent 55%, #fde68a 55%); font-weight: bold; }
 
 /* ---------- 생활 체험 ---------- */

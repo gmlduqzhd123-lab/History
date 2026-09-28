@@ -1,4 +1,4 @@
-// ④ 개념 도전: 개념마다 한 문제씩, 틀린 개념은 비슷한 문제로 한 번 더 (점수는 첫 시도만 셈)
+// ④ 개념 도전: 개념마다 한 문제씩, 틀린 개념은 한 번 더 확인 (비슷한 문제가 있으면 그 문제로, 점수는 첫 시도만 셈)
 import { h, rich, shuffle, scrollTop, modal } from '../dom.js';
 import { feedbackBox, questionHead, nextButton } from './common.js';
 import { readingReview } from './reading.js';
@@ -34,11 +34,11 @@ export function renderMastery(root, stage, ctx) {
 
         function showNext() {
             if (!queue.length) return showResult();
-            const { q, retry } = queue.shift();
+            const { q, retry, same } = queue.shift();
             const total = concepts.length;
             const slot = h('div');
             const headRow = h('div', { class: 'row', style: 'margin-bottom:8px' },
-                h('span', { class: 'counter' }, retry ? '🔁 다시 도전 문제' : `문제 ${Math.min(done + 1, total)} / ${total}`),
+                h('span', { class: 'counter' }, retry ? (same ? '🔁 해설을 떠올리며 한 번 더' : '🔁 비슷한 문제로 다시 도전') : `문제 ${Math.min(done + 1, total)} / ${total}`),
                 h('span', { class: 'spacer' }));
 
             const onAnswer = (correct, quick) => {
@@ -49,7 +49,10 @@ export function renderMastery(root, stage, ctx) {
                 } else {
                     fastWrongs = quick ? fastWrongs + 1 : 0;
                     slot.append(feedbackBox('bad', '📚 이렇게 기억해요', q.explain));
-                    if (!retry) queue.push({ q: pickQuestion(q.concept, q), retry: true });
+                    if (!retry) {
+                        const again = pickQuestion(q.concept, q);
+                        queue.push({ q: again, retry: true, same: again === q });
+                    }
                     else missed.push(q);
                 }
                 const btn = nextButton(queue.length ? '다음 문제 ▶' : '결과 보기 ▶', showNext);
@@ -70,7 +73,8 @@ export function renderMastery(root, stage, ctx) {
 
         function showResult() {
             const score = concepts.filter(c => firstTry.get(c)).length;
-            const passed = score >= stage.pass;
+            const passMark = Math.min(stage.pass, concepts.length);
+            const passed = score >= passMark;
             const wrongConcepts = concepts.filter(c => !firstTry.get(c));
             ctx.record.mastery = { passed: passed || !!ctx.record.mastery?.passed, best: Math.max(score, ctx.record.mastery?.best || 0), total: concepts.length };
             ctx.save();
@@ -82,7 +86,7 @@ export function renderMastery(root, stage, ctx) {
                     ? h('div', {}, h('div', { class: 'stamp' }, h('span', { class: 'big' }, tone('masteryIcon')), tone('masteryStamp')),
                         h('p', {}, tone('masteryPraise')))
                     : h('div', {},
-                        h('p', { style: 'font-size:20px' }, `${stage.pass}문제 이상 맞히면 통과예요. 조금만 더 힘내요! 💪`),
+                        h('p', { style: 'font-size:20px' }, `${passMark}문제 이상 맞히면 통과예요. 조금만 더 힘내요! 💪`),
                         h('p', { class: 'muted' }, '틀린 개념을 다시 확인하고 새 문제로 도전해 보세요.')),
                 tips.length ? h('div', { style: 'text-align:left' },
                     h('h3', { style: 'margin-top:12px' }, '📌 다시 기억할 것'),
