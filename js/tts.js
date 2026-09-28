@@ -27,20 +27,30 @@ export function stopSpeaking() {
     activeButton = null;
 }
 
+// 크롬은 긴 글을 한 번에 읽히면 15초쯤에서 멈추는 문제가 있어 문장 단위로 나눠 읽음
+function splitSentences(text) {
+    const parts = text.match(/[^.!?。]+[.!?。]*/g) || [text];
+    return parts.map(p => p.trim()).filter(Boolean);
+}
+
 export function speak(text, button) {
     if (!ttsSupported) return;
     const wasActive = activeButton === button;
     stopSpeaking();
     if (wasActive) return; // 읽는 중에 다시 누르면 멈춤
-    const utterance = new SpeechSynthesisUtterance(cleanForSpeech(text));
-    utterance.lang = 'ko-KR';
-    if (koVoice) utterance.voice = koVoice;
-    utterance.rate = 0.95;
-    utterance.onend = utterance.onerror = () => {
-        if (activeButton === button) stopSpeaking();
-    };
+    const sentences = splitSentences(cleanForSpeech(text));
+    if (!sentences.length) return;
     if (button) { button.classList.add('speaking'); activeButton = button; }
-    window.speechSynthesis.speak(utterance);
+    const mine = activeButton;
+    sentences.forEach((sentence, i) => {
+        const utterance = new SpeechSynthesisUtterance(sentence);
+        utterance.lang = 'ko-KR';
+        if (koVoice) utterance.voice = koVoice;
+        utterance.rate = 0.95;
+        if (i === sentences.length - 1) utterance.onend = () => { if (activeButton === mine) stopSpeaking(); };
+        utterance.onerror = e => { if (e.error !== 'interrupted' && e.error !== 'canceled' && activeButton === mine) stopSpeaking(); };
+        window.speechSynthesis.speak(utterance);
+    });
 }
 
 // 🔊 읽어 주기 버튼 (지원하지 않는 기기에서는 만들지 않음)

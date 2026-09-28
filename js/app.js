@@ -262,6 +262,7 @@ function renderQuest() {
     if (!quest) return go({ screen: 'map' });
     const rec = questRecord(profile(), quest.id);
     setCalm(quest.calm);
+    if (!rec.done && rec.stage >= quest.stages.length) { rec.done = true; persist(); }
     const stageIndex = ui.replay ? ui.stageIndex ?? 0 : Math.min(rec.stage, quest.stages.length);
 
     const stepsBar = h('div', { class: 'steps', 'aria-label': '퀘스트 단계' }, ...quest.stages.map((s, i) => h('span', {
@@ -362,7 +363,8 @@ function renderNotes() {
 }
 
 // ---------- 시작 ----------
-if (profile()) ui = { screen: 'map' };
+// 이 기기에 탐험가가 한 명뿐이면 바로 지도로, 여러 명이면(공용 태블릿) 시작 화면에서 자기 번호를 고름
+if (profile() && Object.keys(data.profiles).length === 1) ui = { screen: 'map' };
 render();
 
 // 한 번 열면 인터넷이 끊겨도 쓸 수 있도록 서비스 워커 등록

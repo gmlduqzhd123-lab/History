@@ -4,7 +4,8 @@ import { filterProfanity } from '../filter.js';
 import { feedbackBox, nextButton } from './common.js';
 import { tone } from '../tone.js';
 
-const normalize = s => s.replace(/\s+/g, '');
+// 띄어쓰기를 무시하고, 가운뎃점(·)을 ㆍ . ‧ • ・ 로 입력해도 같은 것으로 봄 (예: 3ㆍ1 운동)
+const normalize = s => s.replace(/\s+/g, '').replace(/[ㆍ.‧•・･]/g, '·');
 
 export function renderSummary(root, stage, ctx) {
     let checks = 0;

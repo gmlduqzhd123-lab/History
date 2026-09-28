@@ -52,11 +52,13 @@ export function toast(message) {
 export function modal(...children) {
     const back = h('div', { class: 'modal-back' });
     const box = h('div', { class: 'modal', role: 'dialog', 'aria-modal': 'true' }, ...children);
-    const close = () => back.remove();
+    const onKey = e => { if (e.key === 'Escape') close(); };
+    const close = () => { back.remove(); document.removeEventListener('keydown', onKey); };
     back.addEventListener('click', e => { if (e.target === back) close(); });
+    document.addEventListener('keydown', onKey);
     back.append(box);
     document.body.append(back);
     return close;
 }
 
-export function scrollTop() { window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' }); }
+export function scrollTop() { window.scrollTo(0, 0); }

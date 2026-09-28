@@ -1,5 +1,6 @@
-// 오프라인 지원: 앱 파일을 저장해 두고, 인터넷이 되면 새 버전으로 조용히 바꿈
-const CACHE = 'history-quest-v10';
+// 오프라인 지원: 인터넷이 되면 항상 최신 파일을 받고(옛 파일과 새 파일이 섞이지 않게),
+// 인터넷이 끊기면 저장해 둔 파일로 동작함
+const CACHE = 'history-quest-v11';
 const FILES = [
     './',
     'index.html',
@@ -34,7 +35,10 @@ const FILES = [
 ];
 
 self.addEventListener('install', event => {
-    event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)).then(() => self.skipWaiting()));
+    // 브라우저의 HTTP 캐시를 거치지 않고 새로 받아 저장 (새 버전 설치 때 옛 파일이 끼어들지 않게)
+    event.waitUntil(caches.open(CACHE)
+        .then(cache => cache.addAll(FILES.map(f => new Request(f, { cache: 'reload' }))))
+        .then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', event => {
@@ -43,7 +47,8 @@ self.addEventListener('activate', event => {
         .then(() => self.clients.claim()));
 });
 
-// 저장해 둔 파일을 먼저 보여 주고, 뒤에서 새로 받아 저장 (글꼴 포함)
+// 같은 사이트의 파일: 인터넷 먼저(서버에 바뀐 것이 있는지 확인), 실패하면 저장본
+// 글꼴: 저장본 먼저(잘 바뀌지 않으므로)
 self.addEventListener('fetch', event => {
     const { request } = event;
     if (request.method !== 'GET') return;
@@ -52,12 +57,26 @@ self.addEventListener('fetch', event => {
     const isFont = url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
     if (!sameOrigin && !isFont) return;
 
+    if (sameOrigin) {
+        event.respondWith((async () => {
+            const cache = await caches.open(CACHE);
+            try {
+                const response = await fetch(request.url, { cache: 'no-cache', credentials: 'same-origin' });
+                if (response.ok) cache.put(request, response.clone());
+                return response;
+            } catch (e) {
+                const cached = await cache.match(request, { ignoreSearch: true });
+                return cached || (request.mode === 'navigate' ? cache.match('./') : Response.error());
+            }
+        })());
+        return;
+    }
+
     event.respondWith(caches.open(CACHE).then(async cache => {
-        const cached = await cache.match(request, { ignoreSearch: sameOrigin });
-        const network = fetch(request).then(response => {
-            if (response && (response.ok || response.type === 'opaque')) cache.put(request, response.clone());
-            return response;
-        }).catch(() => cached);
-        return cached || network;
+        const cached = await cache.match(request);
+        if (cached) return cached;
+        const response = await fetch(request);
+        if (response && (response.ok || response.type === 'opaque')) cache.put(request, response.clone());
+        return response;
     }));
 });
