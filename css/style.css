@@ -311,3 +311,7 @@ body.calm .stamp {
 body.calm .shake { animation: none; }
 body.calm .card-accent { border-color: #cbd5e1; }
 body.calm .fact { border-color: #cbd5e1; }
+
+/* 시작 화면 하단: 저작권·엽쌤 앱 모음 링크 (다른 앱들과 같은 문구) */
+.site-foot { margin: 28px 0 8px; text-align: center; font-size: 13px; line-height: 1.6; color: var(--muted, #8a8580); }
+.site-foot a { color: inherit; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
