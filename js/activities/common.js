@@ -2,6 +2,7 @@
 import { h, rich, plain, shuffle } from '../dom.js';
 import { speakButton } from '../tts.js';
 import { tone } from '../tone.js';
+import { hasPicture, fillPicture, creditLine } from '../picture.js';
 
 const FAST_MS = 2000; // 이보다 빨리 고른 오답은 "찍은" 것으로 봄
 
@@ -77,9 +78,13 @@ export function nextButton(label, onClick, primary = true) {
     return btn;
 }
 
-// 이야기 카드·장면 그림: 그림 이름이면 SVG, 아니면 이모지
-export function artBlock(artName, arts, className = 'story-art') {
-    if (arts[artName]) return h('div', { class: className, html: arts[artName] });
+// 이야기 카드·장면 그림: 등록된 사진이나 그림 이름이면 그것을, 아니면 이모지
+export function artBlock(artName, _arts, className = 'story-art') {
+    if (hasPicture(artName)) {
+        const box = fillPicture(h('div', { class: className }), artName);
+        const credit = creditLine(artName);
+        return credit ? h('div', {}, box, credit) : box;
+    }
     return h('div', { class: className, 'aria-hidden': 'true' }, artName || '');
 }
 

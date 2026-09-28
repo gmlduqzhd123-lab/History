@@ -197,14 +197,17 @@ p { margin: 0 0 10px; }
 
 /* ---------- 이야기 카드 ---------- */
 .story-art { font-size: 64px; text-align: center; line-height: 1.2; margin-bottom: 8px; }
-.story-art svg { width: 180px; height: 180px; }
+.story-art svg, .story-art img { width: 180px; height: 180px; }
+.story-art img, .scene-art img { object-fit: contain; border-radius: 12px; background: #f7efe2; }
+.photo-credit { font-size: 12px; color: var(--muted); text-align: right; margin-top: 4px; line-height: 1.3; }
+.story-art + .photo-credit { text-align: center; }
 .story-text p { font-size: 19px; line-height: 1.75; white-space: pre-line; }
 .story-text b, .kw { background: linear-gradient(transparent 55%, #fde68a 55%); font-weight: bold; }
 
 /* ---------- 생활 체험 ---------- */
 .scene { font-size: 19px; line-height: 1.75; }
 .scene-art { font-size: 56px; text-align: center; line-height: 1.2; }
-.scene-art svg { width: 150px; height: 150px; }
+.scene-art svg, .scene-art img { width: 150px; height: 150px; }
 .learned { list-style: none; padding: 0; margin: 0; }
 .learned li { padding: 10px 12px; border-radius: 12px; background: var(--good-soft); margin-top: 8px; }
 .learned li::before { content: '✅ '; }
@@ -267,7 +270,8 @@ p { margin: 0 0 10px; }
 .dex { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
 .dex-item { background: #fff; border: 3px solid var(--line); border-radius: 16px; padding: 10px; text-align: center; }
 .dex-item .art { width: 100%; aspect-ratio: 1/1; background: #f7efe2; border-radius: 12px; overflow: hidden; }
-.dex-item .art svg { width: 100%; height: 100%; }
+.dex-item .art svg, .dex-item .art img { width: 100%; height: 100%; display: block; }
+.dex-item .art img { object-fit: contain; }
 .dex-item .nm { font-family: var(--font-title); font-size: 18px; margin-top: 6px; }
 .dex-item.unknown .art { display: flex; align-items: center; justify-content: center; font-size: 40px; color: var(--muted); }
 .note-line { background: #fff; border-left: 6px solid var(--accent); border-radius: 10px; padding: 10px 14px; margin-top: 10px; }
