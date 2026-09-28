@@ -75,6 +75,9 @@ function renderWelcome() {
         h('div', { class: 'card stack' },
             h('button', { class: 'btn btn-primary btn-block', type: 'button', onclick: () => go({ screen: 'register' }) }, '🙋 새 탐험가로 시작하기'),
             h('button', { class: 'btn btn-block', type: 'button', onclick: () => go({ screen: 'code' }) }, '💾 이어하기 코드로 계속하기')),
+        h('p', { class: 'site-foot' },
+            '© 2026 엽쌤 · 수업에는 자유롭게 사용하세요 🙌 · ',
+            h('a', { href: 'https://gmlduqzhd123-lab.github.io/YScode/' }, '엽쌤의 다른 앱 보기 →')),
     );
 }
 

@@ -1,5 +1,5 @@
 // 오프라인 지원: 앱 파일을 저장해 두고, 인터넷이 되면 새 버전으로 조용히 바꿈
-const CACHE = 'history-quest-v9';
+const CACHE = 'history-quest-v10';
 const FILES = [
     './',
     'index.html',
