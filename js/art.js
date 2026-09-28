@@ -394,4 +394,71 @@ export const art = {
         </g>
         <g stroke="#6b5a3a" stroke-width="2">${Array.from({ length: 9 }, (_, i) => `<line x1="${48 + i * 13}" y1="134" x2="${48 + i * 13}" y2="${170 - (i % 3) * 6}"/>`).join('')}</g>
     `, '삼강행실도'),
+    // 거북선: 용머리, 쇠못이 박힌 덮개, 노
+    turtleShip: svg(`
+        <rect x="0" y="140" width="200" height="60" fill="#9cc3e0"/>
+        <path d="M0 150 q12 -8 24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0" fill="none" stroke="#e8f3fb" stroke-width="3"/>
+        <g transform="translate(-14 0)">
+        <g stroke="#5a3a1e" stroke-width="3" stroke-linecap="round">${[48, 66, 84, 102, 120, 138].map(x => `<line x1="${x}" y1="134" x2="${x - 10}" y2="166"/>`).join('')}</g>
+        <path d="M24 108 L176 108 L166 140 L36 140 Z" fill="#8a5a30" stroke="#4a2e14" stroke-width="3" stroke-linejoin="round"/>
+        <g fill="#f3e3b5" stroke="#4a2e14" stroke-width="1.5">${[44, 62, 80, 98, 116, 134, 152].map(x => `<rect x="${x}" y="116" width="10" height="8"/>`).join('')}</g>
+        <path d="M30 108 Q100 52 170 108 Z" fill="#6b7a5a" stroke="#34402a" stroke-width="3"/>
+        <g stroke="#34402a" stroke-width="1.2" fill="none">${[0, 1, 2].map(r => `<path d="M${46 + r * 14} ${104 - r * 12} Q100 ${74 - r * 10 + 16} ${154 - r * 14} ${104 - r * 12}"/>`).join('')}</g>
+        <g stroke="#2f2f2f" stroke-width="2" stroke-linecap="round">${Array.from({ length: 11 }, (_, i) => { const x = 44 + i * 11.2; const y = 108 - Math.sin(Math.PI * (x - 30) / 140) * 28; return `<line x1="${x.toFixed(1)}" y1="${(y + 2).toFixed(1)}" x2="${x.toFixed(1)}" y2="${(y - 6).toFixed(1)}"/>`; }).join('')}</g>
+        <path d="M170 104 Q182 86 196 90 L194 102 L184 104 Q186 112 176 116 Z" fill="#b84a34" stroke="#5a1f14" stroke-width="2.5" stroke-linejoin="round"/>
+        <circle cx="186" cy="94" r="2" fill="#fde68a"/>
+        <path d="M196 94 q6 -6 2 -14 q8 2 2 -10" fill="none" stroke="#9ca3af" stroke-width="3" stroke-linecap="round"/>
+        <path d="M100 80 V54" stroke="#4a2e14" stroke-width="3"/><path d="M100 54 L120 60 L100 66 Z" fill="#b84a34"/>
+        </g>
+    `, '거북선'),
+
+    // 상평통보: 가운데 네모 구멍이 뚫린 엽전과 엽전 꾸러미
+    sangpyeong: svg(`
+        ${ground}
+        <path d="M24 150 Q60 128 100 140 T176 138" fill="none" stroke="#c7a36b" stroke-width="4"/>
+        <g fill="#a47b3a" stroke="#5c4418" stroke-width="2">${[40, 58, 76, 94, 112, 130, 148, 166].map((x, i) => `<ellipse cx="${x}" cy="${140 - Math.sin(i / 1.3) * 8}" rx="6" ry="14"/>`).join('')}</g>
+        <circle cx="100" cy="76" r="54" fill="#c49a4f" stroke="#5c4418" stroke-width="4"/>
+        <circle cx="100" cy="76" r="46" fill="none" stroke="#8a6526" stroke-width="2"/>
+        <rect x="86" y="62" width="28" height="28" fill="#f7efe2" stroke="#5c4418" stroke-width="3"/>
+        <g font-family="'Apple SD Gothic Neo','Malgun Gothic','Noto Sans CJK KR','Noto Serif CJK KR',serif" font-size="20" font-weight="bold" fill="#4a3412" text-anchor="middle">
+            <text x="100" y="52">常</text><text x="100" y="116">平</text><text x="132" y="84">通</text><text x="68" y="84">寶</text>
+        </g>
+    `, '상평통보'),
+
+    // 거중기: 도르래와 밧줄로 무거운 돌을 들어 올리는 기계
+    geojunggi: svg(`
+        ${ground}
+        <g stroke="#6b4a2a" stroke-width="7" stroke-linecap="round"><line x1="40" y1="176" x2="52" y2="34"/><line x1="160" y1="176" x2="148" y2="34"/><line x1="40" y1="34" x2="160" y2="34"/><line x1="46" y1="100" x2="154" y2="100"/></g>
+        <g stroke="#6b4a2a" stroke-width="4"><line x1="30" y1="176" x2="52" y2="140"/><line x1="170" y1="176" x2="148" y2="140"/></g>
+        <g fill="#c7a36b" stroke="#4a2e14" stroke-width="2.5">
+            <circle cx="84" cy="46" r="9"/><circle cx="116" cy="46" r="9"/><circle cx="100" cy="72" r="9"/><circle cx="90" cy="96" r="7"/><circle cx="110" cy="96" r="7"/>
+        </g>
+        <g stroke="#8a6d2a" stroke-width="2" fill="none"><path d="M75 46 L91 96 M125 46 L109 96 M84 37 H116 M100 81 L100 124"/><path d="M84 55 L28 150 M116 55 L172 150"/></g>
+        <g fill="#8a5a30" stroke="#4a2e14" stroke-width="2"><circle cx="24" cy="152" r="10"/><circle cx="176" cy="152" r="10"/></g>
+        <g stroke="#4a2e14" stroke-width="2"><path d="M14 152 h20 M24 142 v20 M166 152 h20 M176 142 v20"/></g>
+        <path d="M72 124 L128 124 L134 156 L66 156 Z" fill="#aaa298" stroke="#5f574f" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M78 132 L122 132" stroke="#c9c2b8" stroke-width="3"/>
+    `, '거중기'),
+
+    // 김홍도 「서당」을 간단히 다시 그린 풍속화 장면
+    seodangPainting: svg(`
+        <rect x="8" y="8" width="184" height="184" fill="#efe2c4" stroke="#8a7550" stroke-width="3"/>
+        <g stroke="#3f2a1e" stroke-width="2" stroke-linejoin="round">
+            <path d="M138 110 Q140 84 156 80 Q172 84 174 110 Q158 120 138 110 Z" fill="#e8e0cc"/>
+            <circle cx="156" cy="70" r="10" fill="#f1d9b5"/>
+            <path d="M144 64 h24 M150 64 v-10 h12 v10" fill="#2f2a24"/>
+            <path d="M152 78 q4 6 8 0" fill="none"/>
+            <path d="M136 112 L176 112 L180 118 L132 118 Z" fill="#b89a6a"/>
+            <path d="M96 118 Q96 96 108 92 Q120 96 120 118 Z" fill="#9cb4c9"/>
+            <circle cx="108" cy="84" r="9" fill="#f1d9b5"/>
+            <path d="M101 80 q7 -9 14 0" fill="#3f2a1e"/>
+            <path d="M112 88 q4 2 6 -2 M104 88 l-2 4" fill="none" stroke-width="1.5"/>
+            <path d="M112 100 L126 94" fill="none"/>
+            ${[[40, 70], [60, 64], [34, 124], [58, 134], [84, 150], [120, 154], [150, 150]].map(([x, y], i) => `
+                <path d="M${x - 12} ${y + 26} Q${x - 12} ${y + 8} ${x} ${y + 6} Q${x + 12} ${y + 8} ${x + 12} ${y + 26} Z" fill="${['#e8e0cc', '#c9d7b5', '#e8e0cc', '#dcc9a6', '#c9d7b5', '#e8e0cc', '#dcc9a6'][i]}"/>
+                <circle cx="${x}" cy="${y}" r="8" fill="#f1d9b5"/>
+                <path d="M${x - 4} ${y + 2} q4 ${i % 2 ? 3 : 4} 8 0" fill="none" stroke-width="1.5"/>`).join('')}
+        </g>
+        <text x="20" y="30" font-size="12" fill="#8a7550" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">서당</text>
+    `, '김홍도의 서당(다시 그린 그림)'),
 };

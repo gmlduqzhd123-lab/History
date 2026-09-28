@@ -6,6 +6,7 @@ import q3 from './q3-three-kingdoms-gaya.js';
 import q4 from './q4-unified-silla-balhae.js';
 import q5 from './q5-goryeo.js';
 import q6 from './q6-joseon-confucian.js';
+import q7 from './q7-late-joseon.js';
 
 export const units = [
     {
@@ -22,7 +23,7 @@ export const units = [
         title: '달라지는 시대, 변화하는 생활 모습',
         stations: [
             { id: 'q6', emoji: '📜', name: '조선의 유교 문화', desc: '유교가 바꾼 생각과 생활', quest: q6 },
-            { id: 'q7', emoji: '🎨', name: '조선 후기의 변화', desc: '장터, 실학, 서민 문화' },
+            { id: 'q7', emoji: '🎨', name: '조선 후기의 변화', desc: '장터, 실학, 서민 문화', quest: q7 },
             { id: 'q8', emoji: '🚋', name: '개항과 근대 문물', desc: '전차, 전등, 신문이 들어오다' },
         ],
     },
