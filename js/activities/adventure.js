@@ -33,7 +33,7 @@ export function renderAdventure(root, stage, ctx) {
                 choices: step.choices,
                 onSolved: () => {
                     learned.push(step.learned);
-                    after.append(nextButton(last ? '하루 마무리 ▶' : '다음 장면 ▶', () => (last ? showEnding() : showStep(i + 1))));
+                    after.append(nextButton(last ? '이야기 마무리 ▶' : '다음 장면 ▶', () => (last ? showEnding() : showStep(i + 1))));
                 },
             }),
             after,
@@ -43,10 +43,10 @@ export function renderAdventure(root, stage, ctx) {
 
     function showEnding() {
         root.replaceChildren(h('div', { class: 'card' },
-            h('h2', { class: 'center' }, '🌟 오늘 체험으로 알게 된 것'),
+            h('h2', { class: 'center' }, '📌 이야기로 알게 된 것'),
             h('ul', { class: 'learned' }, ...learned.map(t => h('li', {}, t))),
             h('p', { class: 'scene', style: 'margin-top:14px' }, rich(stage.ending)),
-            nextButton('생활 체험 완료! 다음 단계로 ▶', () => ctx.done()),
+            nextButton(`${stage.title} 완료! 다음 단계로 ▶`, () => ctx.done()),
         ));
         scrollTop();
     }

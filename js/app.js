@@ -4,6 +4,7 @@ import { loadData, saveData, newProfile, questRecord } from './storage.js';
 import { encodeProgress, decodeProgress } from './code.js';
 import { stopSpeaking } from './tts.js';
 import { art } from './art.js';
+import { setCalm, tone } from './tone.js';
 import { units, stations, questOrder, avatars } from '../content/quests.js';
 import { renderDetective } from './activities/detective.js';
 import { renderReading } from './activities/reading.js';
@@ -42,6 +43,7 @@ function go(next) {
 
 function render() {
     clear(app);
+    setCalm(false);
     if (!profile()) ui = ui.screen === 'register' || ui.screen === 'code' ? ui : { screen: 'welcome' };
     ({ welcome: renderWelcome, register: renderRegister, code: renderCodeEntry, map: renderMap, quest: renderQuest, notes: renderNotes }[ui.screen] || renderWelcome)();
 }
@@ -256,6 +258,7 @@ function renderQuest() {
     const quest = station?.quest;
     if (!quest) return go({ screen: 'map' });
     const rec = questRecord(profile(), quest.id);
+    setCalm(quest.calm);
     const stageIndex = ui.replay ? ui.stageIndex ?? 0 : Math.min(rec.stage, quest.stages.length);
 
     const stepsBar = h('div', { class: 'steps', 'aria-label': '퀘스트 단계' }, ...quest.stages.map((s, i) => h('span', {
@@ -300,13 +303,13 @@ function renderQuestComplete(quest, rec) {
     const found = questArtifacts(quest);
     mount(
         h('div', { class: 'card center' },
-            h('div', { class: 'stamp' }, h('span', { class: 'big' }, quest.emoji), '탐험 완료'),
-            h('h2', {}, ui.justFinished ? '🎉 정거장 탐험을 마쳤어요!' : '🏅 도장을 받은 정거장이에요'),
+            h('div', { class: 'stamp' }, h('span', { class: 'big' }, quest.emoji), tone('questStamp')),
+            h('h2', {}, ui.justFinished ? tone('questDone') : tone('questDoneAgain')),
             h('p', { class: 'muted', style: 'margin-top:6px' }, `탐험 질문: ${quest.question}`)),
         rec.notes?.length ? h('div', { class: 'card' },
             h('h3', {}, '📝 나의 한 줄 정리'),
             ...rec.notes.map(n => h('div', { class: 'note-line' }, n))) : null,
-        h('div', { class: 'card' }, h('h3', { style: 'margin-bottom:10px' }, '🏺 도감에 모은 유물'), dexGrid(found, true)),
+        h('div', { class: 'card' }, h('h3', { style: 'margin-bottom:10px' }, tone('dexTitle')), dexGrid(found, true)),
         h('div', { class: 'stack', style: 'margin-top:16px' },
             next && stationState(next, stations.indexOf(next)) === 'open'
                 ? h('button', { class: 'btn btn-primary btn-block', type: 'button', onclick: () => go({ screen: 'quest', questId: next.id, replay: false }) }, `다음 정거장: ${next.emoji} ${next.name} ▶`)
