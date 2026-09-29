@@ -15,9 +15,14 @@ if (ttsSupported) {
 
 let activeButton = null;
 
+// 가운뎃점이 든 역사 이름은 기계가 "삼 점 일"처럼 읽지 않도록 부르는 말로 바꿔 읽음
+const SPOKEN = [['3·1', '삼일'], ['6·25', '육이오'], ['5·10', '오일공'], ['1·4', '일사'], ['8·15', '팔일오']];
+
 function cleanForSpeech(text) {
     // 이모지와 기호는 읽지 않게 제거
-    return plain(text).replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu, '').replace(/\s+/g, ' ').trim();
+    let t = plain(text).replace(/[ㆍ‧•・･]/g, '·');
+    SPOKEN.forEach(([from, to]) => { t = t.split(from).join(to); });
+    return t.replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu, '').replace(/\s+/g, ' ').trim();
 }
 
 export function stopSpeaking() {
