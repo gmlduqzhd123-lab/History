@@ -69,6 +69,7 @@ p { margin: 0 0 10px; }
 }
 .topbar .title { font-family: var(--font-title); font-size: 20px; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .topbar .home-btn { padding-left: 10px; padding-right: 10px; font-size: 18px; flex: none; }
+.topbar > .btn, .topbar > .chip { flex: none; white-space: nowrap; }
 .chip {
     display: inline-flex; align-items: center; gap: 6px;
     background: var(--card); border: 2px solid var(--line); border-radius: 999px;
@@ -269,6 +270,14 @@ p { margin: 0 0 10px; }
 .name-input { width: 100%; font: inherit; font-size: 20px; padding: 10px 14px; border: 3px solid var(--line); border-radius: 14px; background: #fff; color: inherit; }
 .name-input:focus { outline: none; border-color: var(--accent, #c2410c); }
 .chip-name { display: inline-block; max-width: 5.5em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 아주 작은 휴대폰: 상단 막대 버튼이 두 줄로 꺾이지 않게 */
+@media (max-width: 380px) {
+    .topbar { gap: 6px; }
+    .topbar > .btn { padding-left: 10px; padding-right: 10px; }
+    .topbar .title { font-size: 17px; }
+    .chip { padding: 4px 8px; }
+    .chip-name { max-width: 3.5em; }
+}
 .code-input { width: 100%; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 22px; letter-spacing: 2px; text-transform: uppercase; padding: 10px 14px; border: 3px solid var(--line); border-radius: 14px; text-align: center; }
 
 /* ---------- 도감·노트 ---------- */
