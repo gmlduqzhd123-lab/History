@@ -376,6 +376,7 @@ function renderQuestComplete(quest, rec) {
             next && stationState(next, stations.indexOf(next)) === 'open'
                 ? h('button', { class: 'btn btn-primary btn-block', type: 'button', onclick: () => go({ screen: 'quest', questId: next.id, replay: false }) }, `다음 정거장: ${next.emoji} ${next.name} ▶`)
                 : null,
+            h('button', { class: 'btn btn-block', type: 'button', onclick: showCode }, '💾 이어하기 코드 보기 (공책에 적어 두기)'),
             h('button', { class: 'btn btn-block', type: 'button', onclick: () => go({ screen: 'quest', questId: quest.id, replay: true, stageIndex: 0 }) }, '🔁 처음부터 다시 복습하기'),
             h('button', { class: 'btn btn-block', type: 'button', onclick: () => go({ screen: 'map' }) }, '🗺️ 지도로 돌아가기')),
     );
@@ -472,6 +473,10 @@ function showInstallGuide() {
 // 이 기기에 탐험가가 한 명뿐이면 바로 지도로, 여러 명이면(공용 태블릿) 시작 화면에서 자기 번호를 고름
 if (profile() && Object.keys(data.profiles).length === 1) ui = { screen: 'map' };
 render();
+
+// 브라우저가 공간이 모자랄 때나 오래 안 쓴 사이트를 정리할 때 기록을 지우지 않도록 요청
+// (사파리는 7일 넘게 안 연 사이트의 기록을 지울 수 있음 → 홈 화면에 설치하면 안전)
+if (navigator.storage?.persist) navigator.storage.persisted().then(p => p || navigator.storage.persist()).catch(() => {});
 
 // 한 번 열면 인터넷이 끊겨도 쓸 수 있도록 서비스 워커 등록
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
