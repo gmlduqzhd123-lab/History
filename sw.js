@@ -1,6 +1,6 @@
 // 오프라인 지원: 인터넷이 되면 항상 최신 파일을 받고(옛 파일과 새 파일이 섞이지 않게),
 // 인터넷이 끊기면 저장해 둔 파일로 동작함
-const CACHE = 'history-quest-v18';
+const CACHE = 'history-quest-v19';
 const FILES = [
     './',
     'index.html',
