@@ -255,6 +255,16 @@ p { margin: 0 0 10px; }
 .hero { text-align: center; padding: 36px 0 12px; }
 .hero .logo { font-size: 72px; line-height: 1; }
 .hero h1 { font-size: 36px; margin-top: 8px; color: var(--accent-dark); }
+/* 시작 화면 탭: 시작하기 / 사용법 */
+.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: #fff; border: 2px solid var(--line); border-radius: 16px; padding: 5px; margin: 8px 0 16px; }
+.tabs button { border: none; background: transparent; border-radius: 12px; min-height: 48px; font-family: var(--font-title); font-size: 18px; color: inherit; cursor: pointer; }
+.tabs button.on { background: var(--accent); color: #fff; }
+.help-card h2 { font-size: 21px; margin-bottom: 8px; }
+.help-card p { line-height: 1.7; }
+.help-list { margin: 0; padding-left: 1.4em; line-height: 1.7; }
+.help-list li + li { margin-top: 4px; }
+.help-card.teacher summary { font-family: var(--font-title); font-size: 19px; cursor: pointer; }
+.help-card.teacher[open] summary { margin-bottom: 8px; }
 .num-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); gap: 8px; }
 .num-grid button, .avatar-grid button {
     min-height: 56px; border-radius: 14px; border: 3px solid var(--line); background: #fff; font-size: 20px; font-family: var(--font-title);
