@@ -3,6 +3,7 @@
     "short_name": "역사 탐험",
     "description": "초등학교 5학년 2학기 사회(역사) 자기주도 학습 웹앱",
     "lang": "ko",
+    "id": "./",
     "start_url": "./",
     "scope": "./",
     "display": "standalone",
