@@ -79,9 +79,12 @@ export function renderSummary(root, stage, ctx) {
         resultSlot.replaceChildren();
         if (allOk) {
             checkBtn.classList.add('hidden');
+            // 확인이 끝난 뒤 빈칸을 지우거나 바꿔 저장하지 않도록 잠금
+            blanks.forEach(({ input }) => { input.readOnly = true; });
+            bankSlot.replaceChildren();
             resultSlot.append(
                 feedbackBox('good', tone('summaryDone'), '나의 역사 노트에 저장할게요.'),
-                h('div', { class: 'card', style: 'margin-top:12px' }, ...stage.frames.map(f => h('div', { class: 'note-line' }, assembled(f)))),
+                h('div', { class: 'card', style: 'margin-top:12px' }, ...stage.frames.map(f => h('div', { class: 'note-line' }, filterProfanity(assembled(f))))),
                 nextButton('💾 저장하고 퀘스트 마치기', save),
             );
             return;
