@@ -151,9 +151,15 @@ function renderCodeEntry() {
             return;
         }
         const existing = data.profiles[result.number];
+        const name = cleanName(nameEl.value);
+        // 코드에는 이름이 없으므로, 이 기기에 이름이 없는 번호라면 이름을 꼭 써야 함
+        if (!name && !existing?.name) {
+            msg.replaceChildren(h('div', { class: 'feedback bad' }, '내 이름도 써 주세요.'));
+            nameEl.focus();
+            return;
+        }
         const merged = existing || newProfile(result.number, result.avatar);
         merged.avatar = result.avatar;
-        const name = cleanName(nameEl.value);
         if (name) merged.name = name;
         // 코드에 담긴 진도가 더 앞서 있을 때만 덮어씀
         Object.entries(result.quests).forEach(([id, q]) => {
@@ -172,7 +178,7 @@ function renderCodeEntry() {
         h('div', { class: 'card stack' },
             h('p', {}, '다른 기기에서 받은 ', h('b', {}, '이어하기 코드'), '를 입력하세요.'),
             input,
-            h('p', { class: 'small', style: 'margin-top:6px' }, '내 이름 ', h('span', { class: 'muted' }, '(코드에는 이름이 없어서 다시 써 줘요)')),
+            h('p', { class: 'small', style: 'margin-top:6px' }, '내 이름 ', h('span', { class: 'muted' }, '(코드에는 이름이 담기지 않아서 다시 써요)')),
             nameEl,
             h('button', { class: 'btn btn-primary btn-block', type: 'button', onclick: submit }, '계속하기'),
             msg),
@@ -445,7 +451,7 @@ function showInstallGuide() {
     const ios = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     let steps;
     if (/KAKAOTALK/i.test(ua)) {
-        steps = ['카카오톡 안에서는 설치할 수 없어요.', '오른쪽 아래(또는 위) **⋮ 메뉴**를 눌러요.', '**다른 브라우저로 열기**(아이폰은 **Safari로 열기**)를 고른 뒤, 다시 **📲 앱 설치**를 눌러요.'];
+        steps = ['카카오톡 화면의 **⋮ 메뉴**(오른쪽 아래 또는 위)를 눌러요. (카카오톡 안에서는 설치가 안 돼요)', '**다른 브라우저로 열기**(아이폰은 **Safari로 열기**)를 골라요.', '새로 열린 화면에서 다시 **📲 앱 설치**를 눌러요.'];
     } else if (ios) {
         steps = ['**Safari**로 이 페이지를 열어요. (다른 앱에서는 설치가 안 돼요)', '아래쪽 **공유 버튼 ⬆︎**을 눌러요.', '**홈 화면에 추가** → 오른쪽 위 **추가**를 눌러요.'];
     } else if (/Android/i.test(ua)) {
