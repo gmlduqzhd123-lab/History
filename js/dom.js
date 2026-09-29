@@ -52,12 +52,20 @@ export function toast(message) {
 export function modal(...children) {
     const back = h('div', { class: 'modal-back' });
     const box = h('div', { class: 'modal', role: 'dialog', 'aria-modal': 'true' }, ...children);
+    const opener = document.activeElement;
     const onKey = e => { if (e.key === 'Escape') close(); };
-    const close = () => { back.remove(); document.removeEventListener('keydown', onKey); };
+    const close = () => {
+        back.remove();
+        document.removeEventListener('keydown', onKey);
+        // 창을 연 버튼이 아직 화면에 있으면 키보드 초점을 되돌려 줌
+        if (opener && opener.isConnected && typeof opener.focus === 'function') opener.focus();
+    };
     back.addEventListener('click', e => { if (e.target === back) close(); });
     document.addEventListener('keydown', onKey);
     back.append(box);
     document.body.append(back);
+    // 키보드·스크린 리더 사용자가 바로 창 안에서 시작하도록 첫 버튼에 초점
+    box.querySelector('input, button')?.focus({ preventScroll: true });
     return close;
 }
 

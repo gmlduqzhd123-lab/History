@@ -146,7 +146,8 @@ function renderCodeEntry() {
     const msg = h('div');
     const submit = () => {
         const result = decodeProgress(input.value, questOrder, avatars);
-        if (!result) {
+        // 글자를 잘못 옮겨 적어 우연히 맞는 코드가 되어도 없는 번호(41번 이상)면 받지 않음
+        if (!result || result.number > MAX_NUMBER) {
             msg.replaceChildren(h('div', { class: 'feedback bad' }, '코드가 맞지 않아요. 글자를 다시 확인해 주세요.'));
             return;
         }
