@@ -50,7 +50,7 @@ function go(next) {
 function render() {
     clear(app);
     setCalm(false);
-    if (!profile()) ui = ui.screen === 'register' || ui.screen === 'code' ? ui : { screen: 'welcome' };
+    if (!profile()) ui = ['welcome', 'register', 'code'].includes(ui.screen) ? ui : { screen: 'welcome' };
     ({ welcome: renderWelcome, register: renderRegister, code: renderCodeEntry, map: renderMap, quest: renderQuest, notes: renderNotes }[ui.screen] || renderWelcome)();
 }
 
@@ -67,11 +67,13 @@ function stationState(station, index) {
 // ---------- 시작 화면 ----------
 function renderWelcome() {
     const saved = Object.values(data.profiles).sort((a, b) => a.number - b.number);
-    mount(
-        h('div', { class: 'hero' },
-            h('div', { class: 'logo', 'aria-hidden': 'true' }, '🧭'),
-            h('h1', {}, '역사 탐험 퀘스트'),
-            h('p', { class: 'muted' }, '5학년 2학기 사회 · 유물과 이야기로 떠나는 시간 여행')),
+    const tab = ui.tab === 'help' ? 'help' : 'start';
+    const tabButton = (id, label) => h('button', {
+        type: 'button', role: 'tab', id: `tab-${id}`, 'aria-controls': 'welcome-panel',
+        'aria-selected': String(tab === id), class: tab === id ? 'on' : '',
+        onclick: () => { if (tab !== id) go({ screen: 'welcome', tab: id }); },
+    }, label);
+    const startPanel = [
         saved.length ? h('div', { class: 'card' },
             h('h2', { style: 'margin-bottom:12px' }, '이 기기의 탐험가'),
             h('div', { class: 'explorer-list' }, ...saved.map(p => h('button', {
@@ -82,10 +84,68 @@ function renderWelcome() {
             h('button', { class: 'btn btn-primary btn-block', type: 'button', onclick: () => go({ screen: 'register' }) }, '🙋 새 탐험가로 시작하기'),
             h('button', { class: 'btn btn-block', type: 'button', onclick: () => go({ screen: 'code' }) }, '💾 이어하기 코드로 계속하기'),
             installButton('btn btn-block')),
+    ];
+    mount(
+        h('div', { class: 'hero' },
+            h('div', { class: 'logo', 'aria-hidden': 'true' }, '🧭'),
+            h('h1', {}, '역사 탐험 퀘스트'),
+            h('p', { class: 'muted' }, '5학년 2학기 사회 · 유물과 이야기로 떠나는 시간 여행')),
+        h('div', { class: 'tabs', role: 'tablist', 'aria-label': '시작 화면' },
+            tabButton('start', '🚀 시작하기'),
+            tabButton('help', '📖 사용법')),
+        h('div', { id: 'welcome-panel', role: 'tabpanel', 'aria-labelledby': `tab-${tab}` },
+            ...(tab === 'help' ? helpPanel() : startPanel)),
         h('p', { class: 'site-foot' },
             '© 2026 엽쌤 · 수업에는 자유롭게 사용하세요 🙌 · ',
             h('a', { href: 'https://gmlduqzhd123-lab.github.io/YScode/' }, '엽쌤의 다른 앱 보기 →')),
     );
+}
+
+// 정거장 하나의 다섯 단계 (사용법 탭과 "탐험 방법" 창에서 함께 씀)
+const GUIDE_STEPS = [
+    ['🔍', '유물 탐정', '가려진 유물을 단서로 추리해요.'],
+    ['📖', '이야기 카드', '짧은 글을 읽고 확인 문제를 풀어요.'],
+    ['🎲', '생활 체험', '그 시대 아이가 되어 선택해요.'],
+    ['🏆', '개념 도전', '4문제 이상 맞히면 도장!'],
+    ['📝', '한 줄 정리', '배운 것을 내 말로 정리해요.'],
+];
+
+// ---------- 시작 화면 "사용법" 탭 ----------
+function helpPanel() {
+    const section = (title, ...body) => h('div', { class: 'card help-card' }, h('h2', {}, title), ...body);
+    const list = items => h('ol', { class: 'help-list' }, ...items.map(t => h('li', {}, rich(t))));
+    return [
+        section('🙋 처음 시작할 때',
+            list(['**🚀 시작하기** 탭에서 **새 탐험가로 시작하기**를 눌러요.',
+                '**내 이름**을 쓰고, 우리 반 **번호**와 **캐릭터**를 골라요.',
+                '**🚀 탐험 시작!** 을 누르면 탐험 지도가 나와요.'])),
+        section('🗺️ 탐험 지도',
+            h('p', {}, rich('구석기 시대부터 6·25 전쟁까지 **정거장 10개**가 있어요. 정거장을 끝내고 **도장**을 받으면 다음 정거장이 열려요. 하던 곳은 **▶ 이어서**로 다시 시작해요.'))),
+        section('🧭 정거장 하나는 다섯 단계',
+            ...GUIDE_STEPS.map(([e, t, d]) => h('div', { class: 'note-line' }, h('b', {}, `${e} ${t}`), ` — ${d}`))),
+        section('💡 막힐 때는',
+            list(['**🔎 단서 더 보기** — 유물 그림이 더 드러나요.',
+                '**🙋 힌트** — 도움말이 나오고 틀린 보기 하나가 지워져요.',
+                '**🔊 읽어 주기** — 글을 소리 내어 읽어 줘요.',
+                '**🧺 낱말 상자** — 한 줄 정리가 어려우면 낱말을 골라 넣어요.'])),
+        section('💾 수업이 끝나면',
+            list(['정거장을 마치면 나오는 **💾 이어하기 코드**를 **공책에 적어** 둬요.',
+                '다른 기기나 다음 시간에는 **이어하기 코드로 계속하기**에 코드와 이름을 넣으면 이어서 할 수 있어요.',
+                '**📒 나의 역사 노트**에는 모은 유물과 내가 쓴 한 줄 정리가 쌓여요. 인쇄도 할 수 있어요.'])),
+        section('🔘 버튼 알아보기',
+            list(['**🏠** — 시작 화면으로 가요.',
+                '**🗺️ 지도** — 탐험 지도로 돌아가요.',
+                '**오른쪽 위 내 이름** — 이름 바꾸기, 이어하기 코드, 다른 탐험가로 바꾸기',
+                '**📲 앱 설치** — 홈 화면에 아이콘을 만들어 바로 열어요. 인터넷이 끊겨도 탐험할 수 있어요.'])),
+        h('details', { class: 'card help-card teacher' },
+            h('summary', {}, '👩‍🏫 선생님께'),
+            list(['앱 주소를 QR 코드로 보여 주기만 하면 돼요. 진행·채점·피드백은 앱이 해요.',
+                '기록은 **그 기기에만** 저장되고 어디로도 보내지 않아요.',
+                '공용 태블릿은 학생마다 시작 화면에서 **자기 이름**을 눌러 들어가면 기록이 섞이지 않아요.',
+                '아이패드·아이폰은 7일 넘게 안 열면 기록이 지워질 수 있어요. **📲 앱 설치**를 해 두고, 수업 끝에 **이어하기 코드**를 적게 해 주세요.',
+                '결석한 학생 등을 위해 모든 정거장을 한꺼번에 열려면 주소 끝에 **?open=all** 을 붙여요.'])),
+        h('button', { class: 'btn btn-primary btn-block', type: 'button', style: 'margin-top:16px', onclick: () => go({ screen: 'welcome', tab: 'start' }) }, '🚀 이제 시작하러 가기'),
+    ];
 }
 
 function renderRegister() {
@@ -246,13 +306,7 @@ function showCode() {
 }
 
 function showGuide() {
-    const steps = [
-        ['🔍', '유물 탐정', '가려진 유물을 단서로 추리해요.'],
-        ['📖', '이야기 카드', '짧은 글을 읽고 확인 문제를 풀어요.'],
-        ['🎲', '생활 체험', '그 시대 아이가 되어 선택해요.'],
-        ['🏆', '개념 도전', '4문제 이상 맞히면 도장!'],
-        ['📝', '한 줄 정리', '배운 것을 내 말로 정리해요.'],
-    ];
+    const steps = GUIDE_STEPS;
     const close = modal(
         h('h2', {}, '🧭 이렇게 탐험해요'),
         h('p', { class: 'muted small', style: 'margin:6px 0 10px' }, '정거장 하나는 다섯 단계로 되어 있어요. 내 속도에 맞춰 차근차근!'),
