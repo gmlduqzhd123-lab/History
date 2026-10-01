@@ -12,8 +12,10 @@ import { renderAdventure } from './activities/adventure.js';
 import { renderMastery } from './activities/mastery.js';
 import { renderSummary } from './activities/summary.js';
 import { timelines } from '../content/timeline.js';
+import { people } from '../content/people.js';
 import { renderTimeline } from './extras/timeline.js';
 import { updateReview, dueItems, waitingCount, renderReview } from './extras/review.js';
+import { renderPeople, renderPerson, peopleCount, collectedCount } from './extras/people.js';
 
 const renderers = {
     detective: renderDetective,
@@ -54,11 +56,14 @@ function render() {
     clear(app);
     setCalm(false);
     if (!profile()) ui = ['welcome', 'register', 'code'].includes(ui.screen) ? ui : { screen: 'welcome' };
-    ({ welcome: renderWelcome, register: renderRegister, code: renderCodeEntry, map: renderMap, quest: renderQuest, notes: renderNotes, timeline: renderTimelineScreen, review: () => renderReview(env, stations) }[ui.screen] || renderWelcome)();
+    ({ welcome: renderWelcome, register: renderRegister, code: renderCodeEntry, map: renderMap, quest: renderQuest, notes: renderNotes, timeline: renderTimelineScreen, review: () => renderReview(env, stations), people: () => renderPeople(env, stations), person: () => renderPerson(env, stations, ui.id) }[ui.screen] || renderWelcome)();
 }
 
 // 더 탐험하기 활동이 쓰는 공통 도구
-const env = { mount, topbar: (...a) => topbar(...a), go: next => go(next), profile, persist };
+const env = {
+    mount, topbar: (...a) => topbar(...a), go: next => go(next), profile, persist, toast,
+    stationDone: id => openAll || !!profile().quests[id]?.done,
+};
 
 // ---------- 퀘스트 상태 ----------
 function stationState(station, index) {
@@ -148,6 +153,7 @@ function helpPanel() {
                 '**📒 나의 역사 노트**에는 모은 유물과 내가 쓴 한 줄 정리가 쌓여요. 인쇄도 할 수 있어요.'])),
         section('🎒 더 탐험하기',
             list(['**🔁 복습 상자** — 개념 도전에서 헷갈린 개념은 다음 날 지도 위쪽에 나와요. 하루 지나 다시 풀면 오래 기억해요.',
+                '**🧑‍🤝‍🧑 인물 도감** — 정거장을 마치면 그 시대 인물이 "나는 누구일까요?" 단서를 들려줘요. 맞히면 인물 카드를 모아요.',
                 '**⏳ 연표 잇기** — 단원의 정거장을 모두 마치면 열려요. 사건 카드를 일어난 순서대로 눌러 연표를 만들어요. 10개 정거장을 다 마치면 **큰 연표**도 열려요.'])),
         section('🔘 버튼 알아보기',
             list(['**🏠** — 시작 화면으로 가요.',
@@ -385,6 +391,8 @@ function moreCard() {
         h('h2', { class: 'unit-title' }, '🎒 더 탐험하기'),
         h('div', { class: 'unit-extras' },
             reviewButton(),
+            extraButton('🧑‍🤝‍🧑', `인물 도감 (${collectedCount(profile())}/${peopleCount()})`, openAll || stations.some(s => profile().quests[s.id]?.done),
+                collectedCount(profile()) === peopleCount(), () => go({ screen: 'people' }), '정거장을 마치면 그 시대 인물을 만날 수 있어요.'),
             extraButton('⏳', '10개 정거장 큰 연표', allDone(), !!extrasOf(profile()).timeline[big.key]?.done,
                 () => go({ screen: 'timeline', key: big.key }), '10개 정거장을 모두 마치면 열려요.')));
 }
@@ -529,6 +537,9 @@ function renderNotes() {
             h('h2', {}, `${p.avatar} ${p.name ? `${p.number}번 ${p.name}` : `${p.number}번 탐험가`}의 역사 노트`),
             h('p', { class: 'small muted', style: 'margin:6px 0 10px' }, '모은 유물과 내가 쓴 정리가 여기에 쌓여요.'),
             h('button', { class: 'btn btn-small no-print', type: 'button', onclick: () => window.print() }, '🖨️ 인쇄하기 / PDF로 저장')),
+        collectedCount(p) ? h('div', { class: 'card' },
+            h('h2', { style: 'margin-bottom:10px' }, `🧑‍🤝‍🧑 내가 만난 인물 (${collectedCount(p)} / ${peopleCount()})`),
+            h('p', {}, people.filter(x => extrasOf(p).people[x.id]).map(x => `${x.emoji} ${x.name}`).join(' · '))) : null,
         ...ready.map(station => {
             const rec = p.quests[station.id];
             const detectiveDone = rec && (rec.done || rec.stage >= 1);

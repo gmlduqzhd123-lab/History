@@ -187,6 +187,21 @@ p { margin: 0 0 10px; }
 .extra-btn.open { border-color: #fdba74; }
 .extra-btn.done { border-color: #86efac; }
 .extra-btn.locked { opacity: 0.6; cursor: default; }
+/* 인물 도감 */
+.people-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+.person-card { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 8px; background: #fff; border: 3px solid var(--line); border-radius: 16px; color: inherit; cursor: pointer; min-height: 130px; }
+.person-card .pc-emoji { font-size: 40px; line-height: 1.2; }
+.person-card .pc-name { font-family: var(--font-title); font-size: 18px; }
+.person-card .pc-station { font-size: 13px; color: var(--muted); text-align: center; }
+.person-card.collected { border-color: #fcd34d; background: #fffbeb; }
+.person-card.open { border-color: #fdba74; border-style: dashed; }
+.person-card.locked { opacity: 0.55; cursor: default; }
+.person-portrait { width: 110px; height: 110px; margin: 10px auto; border-radius: 50%; background: #f7efe2; border: 4px dashed #e2cfb2; display: flex; align-items: center; justify-content: center; font-size: 56px; }
+.person-portrait.revealed { border-style: solid; border-color: #fcd34d; background: #fffbeb; animation: pop-in 0.3s; }
+.speech { position: relative; background: #fff; border: 3px solid var(--line); border-radius: 18px; padding: 12px 16px; margin-top: 12px; }
+.speech::before { content: ''; position: absolute; top: -12px; left: 50%; margin-left: -10px; border: 10px solid transparent; border-top: 0; border-bottom-color: var(--line); }
+.speech p { margin: 4px 0; font-size: 18px; }
+.speech p + p { border-top: 1px dashed var(--line); padding-top: 6px; }
 /* 복습 상자 */
 .review-card { border-color: #93c5fd; background: #eff6ff; }
 /* 연표 잇기 */
