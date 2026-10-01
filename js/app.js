@@ -50,7 +50,12 @@ function profile() { return data.current != null ? data.profiles[data.current] :
 // (예전 기록은 번호만 열쇠로 쓰고 이름이 비어 있을 수 있어, 이름 없는 같은 번호 기록은 그 학생 것으로 이어 줌)
 function findProfileKey(number, name) {
     const entries = Object.entries(data.profiles).filter(([, p]) => p.number === number);
-    return (entries.find(([, p]) => p.name === name) || entries.find(([, p]) => !p.name))?.[0] ?? null;
+    const exact = entries.find(([, p]) => p.name === name);
+    if (exact) return exact[0];
+    // 이름 없는 예전 기록은 다른 반 같은 번호 학생 것일 수도 있으니 물어보고 이어 줌
+    const legacy = entries.find(([, p]) => !p.name);
+    if (legacy && confirm(`이 기기에 이름이 없는 ${number}번 기록(예전에 쓰던 기록)이 있어요.\n내 기록이 맞으면 [확인], 아니면 [취소]를 눌러 새로 시작해요.`)) return legacy[0];
+    return null;
 }
 function newProfileKey(number, name) {
     let key = `${number}:${name}`;
@@ -254,7 +259,7 @@ function renderRegister() {
         if (!number || !name) return;
         const key = findProfileKey(number, name);
         const existing = key && data.profiles[key];
-        if (existing && !confirm(`${number}번 ${existing.name || ''} 탐험가가 이미 이 기기에 있어요.\n그 기록으로 이어서 할까요? (취소를 누르면 이름이나 번호를 다시 고를 수 있어요)`)) return;
+        if (existing && existing.name && !confirm(`${number}번 ${existing.name} 탐험가가 이미 이 기기에 있어요.\n그 기록으로 이어서 할까요? (취소를 누르면 이름이나 번호를 다시 고를 수 있어요)`)) return;
         if (existing) { existing.name = name; data.current = key; }
         else { data.current = newProfileKey(number, name); data.profiles[data.current] = newProfile(number, avatar, name); }
         persist();

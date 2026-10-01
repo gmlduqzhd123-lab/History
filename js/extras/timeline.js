@@ -1,7 +1,7 @@
 // ⏳ 연표 잇기: 섞인 사건 카드를 가장 먼저 일어난 일부터 눌러 연표에 붙임
 import { h, shuffle, scrollTop } from '../dom.js';
 import { feedbackBox, nextButton } from '../activities/common.js';
-import { setCalm, tone } from '../tone.js';
+import { setCalm } from '../tone.js';
 import { extrasOf } from '../storage.js';
 
 // env: { mount, topbar, go, profile, persist }
@@ -48,7 +48,8 @@ export function renderTimeline(env, timeline, { calm = false } = {}) {
         btn.addEventListener('click', () => {
             if (i === placed.length) {
                 btn.remove();
-                feedback.replaceChildren(feedbackBox('good', tone('correct'), `${ev.year} — ${ev.t}`));
+                // 연표에는 전쟁 같은 아픈 사건도 있어 축하 대신 차분한 말로 알려 줌
+                feedback.replaceChildren(feedbackBox('good', '✔ 순서가 맞아요', `${ev.year} — ${ev.t}`));
                 place(i);
                 return;
             }

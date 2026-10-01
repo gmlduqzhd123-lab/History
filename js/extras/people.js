@@ -89,11 +89,12 @@ export function renderPerson(env, stations, id) {
             title.textContent = `나는 ${person.name}${hasBatchim(person.name.slice(-1)) ? '이에요' : '예요'}`;
             shown = person.clues.length; showClues(); updateMore(); moreBtn.classList.add('hidden');
             const next = people.find(p => stateOf(env, p) === 'open');
-            after.append(
+            // h() 로 감싸 null 을 건너뜀 (append 는 null 을 "null" 글자로 넣어 버림)
+            after.append(h('div', {},
                 firstTime ? h('p', { class: 'center', style: 'margin-top:12px' }, `${station.quest?.calm ? '인물 카드에 담았어요.' : '🧑‍🤝‍🧑 인물 카드를 모았어요!'} (${collectedCount(env.profile())} / ${people.length})`) : null,
                 next ? nextButton(`다음 인물 만나기 ▶`, () => env.go({ screen: 'person', id: next.id })) : null,
-                nextButton('🧑‍🤝‍🧑 인물 도감으로', () => env.go({ screen: 'people' }), !next),
-            );
+                !next && collectedCount(env.profile()) === people.length ? h('p', { class: 'center', style: 'margin-top:8px' }, '20명의 인물을 모두 만나 인물 도감을 완성했어요.') : null,
+                nextButton('🧑‍🤝‍🧑 인물 도감으로', () => env.go({ screen: 'people' }), !next)));
         },
     });
     env.mount(

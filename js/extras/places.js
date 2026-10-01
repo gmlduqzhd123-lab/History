@@ -83,7 +83,7 @@ export function renderPlaces(env, stations, { selected = null, mode = 'explore' 
             h('button', {
                 class: 'btn btn-primary btn-small', type: 'button',
                 onclick: () => (quizReady ? env.go({ screen: 'places', mode: 'quiz' }) : env.toast('🔒 지도에 세 곳 이상 나타나면 열려요. 정거장을 더 마쳐 보세요.')),
-            }, `🎯 지도에서 찾기${store.quizBest != null ? ` (최고 ${store.quizBest}/${QUIZ_COUNT})` : ''}`)),
+            }, `🎯 지도에서 찾기${store.quizBest != null ? ` (최고 ${store.quizBest}/${store.quizTotal || QUIZ_COUNT})` : ''}`)),
         h('div', { class: 'map-layout' },
             h('div', { class: 'card map-card' }, mapBlock(env, store.visited, selected, pick), legend()),
             h('div', { class: 'map-side' }, panel, h('div', { class: 'card' }, h('h3', { style: 'margin-bottom:8px' }, '곳 이름으로 찾기'), placeList(env, store.visited, selected, pick)))),
@@ -145,7 +145,12 @@ function renderQuiz(env, stations) {
     }
 
     function finish() {
-        store.quizBest = Math.max(store.quizBest ?? 0, score);
+        // 열린 곳이 적으면 문제 수도 적으므로, 맞힌 비율이 가장 높았던 기록을 문제 수와 함께 남김
+        const total = questions.length;
+        if (store.quizBest == null || score / total > store.quizBest / (store.quizTotal || QUIZ_COUNT)) {
+            store.quizBest = score;
+            store.quizTotal = total;
+        }
         env.persist();
         content.replaceChildren(h('div', { class: 'card center' },
             h('div', { class: 'stamp' }, h('span', { class: 'big' }, '🎯'), '지도 탐험가'),
