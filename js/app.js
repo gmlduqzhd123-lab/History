@@ -96,7 +96,7 @@ function renderWelcome() {
         h('div', { id: 'welcome-panel', role: 'tabpanel', 'aria-labelledby': `tab-${tab}` },
             ...(tab === 'help' ? helpPanel() : startPanel)),
         h('p', { class: 'site-foot' },
-            '© 2026 엽쌤 · 수업에는 자유롭게 사용하세요 🙌 · ',
+            '© 2026 엽쌤. All rights reserved. · ',
             h('a', { href: 'https://gmlduqzhd123-lab.github.io/YScode/' }, '엽쌤의 다른 앱 보기 →')),
     );
 }
