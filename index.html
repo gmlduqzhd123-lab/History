@@ -6,6 +6,7 @@
     <title>역사 탐험 퀘스트</title>
     <meta name="description" content="초등학교 5학년 2학기 사회(역사) 자기주도 학습 웹앱">
     <meta name="theme-color" content="#c2410c">
+    <meta name="color-scheme" content="light">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="엽쌤스쿨">
     <meta property="og:title" content="역사 탐험 퀘스트">
@@ -34,5 +35,24 @@
         <noscript>이 앱을 쓰려면 자바스크립트를 켜 주세요.</noscript>
     </div>
     <script type="module" src="js/app.js"></script>
+    <script>
+        // 앱이 쓰는 문법·기능을 모르는 오래된 브라우저에서는 빈 화면 대신 안내를 보여 줌 (iOS 14·크롬 86 이상 필요)
+        (function () {
+            var ok = true;
+            try { new Function('var a = {}; return a?.b ?? 1n;'); } catch (e) { ok = false; }
+            if (!('noModule' in HTMLScriptElement.prototype) || !Element.prototype.replaceChildren) ok = false;
+            function show(title) {
+                var app = document.getElementById('app');
+                if (!app || app.querySelector('.hero, .topbar')) return;
+                app.innerHTML = '<div class="card" style="margin-top:40px"><h2>' + title + '</h2>'
+                    + '<p style="margin-top:10px">이 기기의 브라우저가 오래되어 앱을 열지 못했을 수 있어요.</p>'
+                    + '<div class="note-line">📱 <b>아이패드·아이폰</b>: 설정 → 일반 → 소프트웨어 업데이트 (iOS 14 이상)</div>'
+                    + '<div class="note-line">💻 <b>안드로이드·웨일북·PC</b>: 크롬, 웨일, 삼성 인터넷, 엣지를 최신 버전으로 업데이트한 뒤 다시 열어 주세요.</div>'
+                    + '<p class="small muted" style="margin-top:10px">인터넷이 느리면 열리는 데 시간이 걸릴 수 있어요. 잠시 뒤 새로고침해 보세요.</p></div>';
+            }
+            if (!ok) show('앱을 열 수 없는 브라우저예요 😢');
+            else setTimeout(function () { show('앱이 열리지 않고 있어요 😢'); }, 20000);
+        })();
+    </script>
 </body>
 </html>

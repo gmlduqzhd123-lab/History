@@ -1,5 +1,5 @@
 // 브라우저 내장 음성으로 읽어 주기 (인터넷 없이도 동작하는 기기가 많음)
-import { h, plain } from './dom.js';
+import { h, plain, toast } from './dom.js';
 
 export const ttsSupported = typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
 
@@ -14,6 +14,7 @@ if (ttsSupported) {
 }
 
 let activeButton = null;
+let warnedNoVoice = false;
 
 // 가운뎃점이 든 역사 이름은 기계가 "삼 점 일"처럼 읽지 않도록 부르는 말로 바꿔 읽음
 const SPOKEN = [['3·1', '삼일'], ['6·25', '육이오'], ['5·10', '오일공'], ['1·4', '일사'], ['8·15', '팔일오']];
@@ -43,6 +44,11 @@ export function speak(text, button) {
     const wasActive = activeButton === button;
     stopSpeaking();
     if (wasActive) return; // 읽는 중에 다시 누르면 멈춤
+    // 한국어 음성이 없는 기기(일부 크롬북·윈도 PC)는 다른 나라 목소리로 읽으므로 한 번 알려 줌
+    if (!koVoice && !warnedNoVoice && window.speechSynthesis.getVoices().length) {
+        warnedNoVoice = true;
+        toast('🔈 이 기기에는 한국어 읽어 주기 목소리가 없어 어색하게 들릴 수 있어요.');
+    }
     const sentences = splitSentences(cleanForSpeech(text));
     if (!sentences.length) return;
     if (button) { button.classList.add('speaking'); activeButton = button; }

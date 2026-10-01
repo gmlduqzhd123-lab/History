@@ -49,7 +49,7 @@ function placeList(env, visited, selected, onPick) {
 
 export function renderPlaces(env, stations, { selected = null, mode = 'explore' } = {}) {
     const store = extrasOf(env.profile()).places;
-    store.visited ||= {};
+    if (!store.visited) store.visited = {};
     if (mode === 'quiz') return renderQuiz(env, stations);
 
     const pick = place => {
@@ -166,7 +166,7 @@ function hintFor(place) {
     return `우리나라 ${ns}${ew ? `, ${ew}` : ''}에 있어요.`;
 }
 
-const ieyo = name => (hasBatchim(name.at(-1)) ? '이에요' : '예요');
+const ieyo = name => (hasBatchim(name.slice(-1)) ? '이에요' : '예요');
 
 function hasBatchim(ch) {
     const code = ch.charCodeAt(0) - 0xac00;

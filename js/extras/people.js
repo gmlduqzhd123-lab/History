@@ -86,7 +86,7 @@ export function renderPerson(env, stations, id) {
             env.persist();
             portrait.textContent = person.emoji;
             portrait.classList.add('revealed');
-            title.textContent = `나는 ${person.name}${hasBatchim(person.name.at(-1)) ? '이에요' : '예요'}`;
+            title.textContent = `나는 ${person.name}${hasBatchim(person.name.slice(-1)) ? '이에요' : '예요'}`;
             shown = person.clues.length; showClues(); updateMore(); moreBtn.classList.add('hidden');
             const next = people.find(p => stateOf(env, p) === 'open');
             after.append(
