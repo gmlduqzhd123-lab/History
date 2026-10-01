@@ -1,6 +1,6 @@
 // 오프라인 지원: 인터넷이 되면 항상 최신 파일을 받고(옛 파일과 새 파일이 섞이지 않게),
 // 인터넷이 끊기면 저장해 둔 파일로 동작함
-const CACHE = 'history-quest-v25';
+const CACHE = 'history-quest-v26';
 const FILES = [
     './',
     'index.html',
@@ -31,6 +31,8 @@ const FILES = [
     'content/timeline.js',
     'js/extras/timeline.js',
     'js/extras/review.js',
+    'js/extras/people.js',
+    'content/people.js',
     'content/q1-stone-age.js',
     'content/q2-bronze-gojoseon.js',
     'content/q3-three-kingdoms-gaya.js',
