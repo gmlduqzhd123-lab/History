@@ -1,6 +1,6 @@
 // 역사 탐험 퀘스트 — 화면 전환과 학습 기록 관리
 import { h, rich, clear, modal, toast, scrollTop } from './dom.js';
-import { loadData, saveData, newProfile, questRecord, cleanName, MAX_NAME } from './storage.js';
+import { loadData, saveData, newProfile, questRecord, cleanName, MAX_NAME, extrasOf } from './storage.js';
 import { encodeProgress, decodeProgress } from './code.js';
 import { stopSpeaking } from './tts.js';
 import { fillPicture, creditLine } from './picture.js';
@@ -11,6 +11,8 @@ import { renderReading } from './activities/reading.js';
 import { renderAdventure } from './activities/adventure.js';
 import { renderMastery } from './activities/mastery.js';
 import { renderSummary } from './activities/summary.js';
+import { timelines } from '../content/timeline.js';
+import { renderTimeline } from './extras/timeline.js';
 
 const renderers = {
     detective: renderDetective,
@@ -51,8 +53,11 @@ function render() {
     clear(app);
     setCalm(false);
     if (!profile()) ui = ['welcome', 'register', 'code'].includes(ui.screen) ? ui : { screen: 'welcome' };
-    ({ welcome: renderWelcome, register: renderRegister, code: renderCodeEntry, map: renderMap, quest: renderQuest, notes: renderNotes }[ui.screen] || renderWelcome)();
+    ({ welcome: renderWelcome, register: renderRegister, code: renderCodeEntry, map: renderMap, quest: renderQuest, notes: renderNotes, timeline: renderTimelineScreen }[ui.screen] || renderWelcome)();
 }
+
+// 더 탐험하기 활동이 쓰는 공통 도구
+const env = { mount, topbar: (...a) => topbar(...a), go: next => go(next), profile, persist };
 
 // ---------- 퀘스트 상태 ----------
 function stationState(station, index) {
@@ -62,6 +67,14 @@ function stationState(station, index) {
     if (openAll || index === 0) return 'open';
     const prev = stations[index - 1];
     return profile().quests[prev.id]?.done ? 'open' : 'locked';
+}
+
+// 단원의 정거장을 모두 마쳤는지 (선생님용 ?open=all 이면 늘 열림)
+function unitDone(unitIndex) {
+    return openAll || units[unitIndex].stations.every(s => profile().quests[s.id]?.done);
+}
+function allDone() {
+    return openAll || stations.every(s => profile().quests[s.id]?.done);
 }
 
 // ---------- 시작 화면 ----------
@@ -132,6 +145,8 @@ function helpPanel() {
             list(['정거장을 마치면 나오는 **💾 이어하기 코드**를 **공책에 적어** 둬요.',
                 '다른 기기나 다음 시간에는 **이어하기 코드로 계속하기**에 코드와 이름을 넣으면 이어서 할 수 있어요.',
                 '**📒 나의 역사 노트**에는 모은 유물과 내가 쓴 한 줄 정리가 쌓여요. 인쇄도 할 수 있어요.'])),
+        section('🎒 더 탐험하기',
+            list(['**⏳ 연표 잇기** — 단원의 정거장을 모두 마치면 열려요. 사건 카드를 일어난 순서대로 눌러 연표를 만들어요. 10개 정거장을 다 마치면 **큰 연표**도 열려요.'])),
         section('🔘 버튼 알아보기',
             list(['**🏠** — 시작 화면으로 가요.',
                 '**🗺️ 지도** — 탐험 지도로 돌아가요.',
@@ -333,11 +348,47 @@ function renderMap() {
                 h('button', { class: 'btn btn-small', type: 'button', onclick: showCode }, '💾 이어하기 코드'),
                 h('button', { class: 'btn btn-small', type: 'button', onclick: showGuide }, '❓ 탐험 방법'),
                 installButton('btn btn-small'))),
-        ...units.map(unit => h('section', { class: 'unit' },
+        ...units.map((unit, u) => h('section', { class: 'unit' },
             h('h2', { class: 'unit-title' }, `📚 ${unit.title}`),
-            h('div', { class: 'path' }, ...unit.stations.map(station => stationButton(station)))),
+            h('div', { class: 'path' }, ...unit.stations.map(station => stationButton(station))),
+            unitExtras(u)),
         ),
+        moreCard(),
     );
+}
+
+// 단원 마무리 활동: 단원의 정거장을 모두 마치면 열림
+function unitExtras(u) {
+    const tl = timelines.find(t => t.unit === u);
+    return h('div', { class: 'unit-extras' },
+        extraButton('⏳', '연표 잇기', unitDone(u), !!extrasOf(profile()).timeline[tl.key]?.done,
+            () => go({ screen: 'timeline', key: tl.key }), '이 단원의 정거장을 모두 마치면 열려요.'));
+}
+
+// 지도 맨 아래 "더 탐험하기"
+function moreCard() {
+    const big = timelines.find(t => t.key === 'all');
+    return h('section', { class: 'unit' },
+        h('h2', { class: 'unit-title' }, '🎒 더 탐험하기'),
+        h('div', { class: 'unit-extras' },
+            extraButton('⏳', '10개 정거장 큰 연표', allDone(), !!extrasOf(profile()).timeline[big.key]?.done,
+                () => go({ screen: 'timeline', key: big.key }), '10개 정거장을 모두 마치면 열려요.')));
+}
+
+function extraButton(emoji, label, open, done, onClick, lockedMsg) {
+    const state = done ? 'done' : open ? 'open' : 'locked';
+    return h('button', {
+        class: `extra-btn ${state}`, type: 'button', 'aria-disabled': String(!open),
+        onclick: () => (open ? onClick() : toast(`🔒 ${lockedMsg}`)),
+    }, h('span', { class: 'emoji', 'aria-hidden': 'true' }, emoji), h('span', { class: 'lbl' }, label),
+    h('span', { class: 'st' }, done ? '✅' : open ? '▶' : '🔒'));
+}
+
+function renderTimelineScreen() {
+    const tl = timelines.find(t => t.key === ui.key);
+    const open = tl && (tl.unit == null ? allDone() : unitDone(tl.unit));
+    if (!open) return go({ screen: 'map' });
+    renderTimeline(env, tl, { calm: tl.unit === 2 });
 }
 
 function stationButton(station) {

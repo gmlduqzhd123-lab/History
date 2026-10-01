@@ -179,6 +179,24 @@ p { margin: 0 0 10px; }
 .station .state { margin-left: auto; font-size: 15px; white-space: nowrap; }
 .station .bar { height: 8px; border-radius: 99px; background: #f3e8d6; margin-top: 6px; overflow: hidden; }
 .station .bar > i { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+/* 단원 마무리·더 탐험하기 활동 버튼 */
+.unit-extras { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0 34px; }
+.extra-btn { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 8px 14px; background: #fff; border: 3px solid var(--line); border-radius: 14px; font-family: var(--font-title); font-size: 17px; color: inherit; cursor: pointer; }
+.extra-btn .emoji { font-size: 22px; }
+.extra-btn .st { font-size: 14px; margin-left: 2px; }
+.extra-btn.open { border-color: #fdba74; }
+.extra-btn.done { border-color: #86efac; }
+.extra-btn.locked { opacity: 0.6; cursor: default; }
+/* 연표 잇기 */
+.tl-strip { list-style: none; margin: 12px 0 0; padding: 0 0 0 18px; border-left: 4px solid var(--accent); }
+.tl-strip:empty::before { content: '여기에 연표가 만들어져요'; display: block; color: var(--muted); padding: 8px 0; }
+.tl-item { position: relative; background: #fff; border: 2px solid var(--line); border-radius: 12px; padding: 8px 12px; margin: 8px 0; animation: pop-in 0.25s; }
+.tl-item::before { content: ''; position: absolute; left: -29px; top: 14px; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); border: 3px solid #fff; }
+.tl-year { display: block; font-size: 14px; font-weight: 700; color: var(--accent-dark); }
+.tl-text { display: block; }
+.tl-pool { display: grid; gap: 8px; }
+.tl-card { text-align: left; min-height: 52px; padding: 10px 14px; background: #fffaf2; border: 3px dashed #e2cfb2; border-radius: 14px; font-size: 17px; color: inherit; cursor: pointer; }
+.tl-card:hover { border-color: var(--accent); }
 
 /* ---------- 유물 탐정 ---------- */
 .artifact-frame {
