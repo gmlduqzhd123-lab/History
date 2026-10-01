@@ -17,6 +17,7 @@ import { renderTimeline } from './extras/timeline.js';
 import { updateReview, dueItems, waitingCount, renderReview } from './extras/review.js';
 import { renderPeople, renderPerson, peopleCount, collectedCount } from './extras/people.js';
 import { renderPlaces, placeCount, visitedCount } from './extras/places.js';
+import { renderWriting, writingView, writingFor } from './extras/writing.js';
 
 const renderers = {
     detective: renderDetective,
@@ -60,13 +61,15 @@ function render() {
     clear(app);
     setCalm(false);
     if (!profile()) ui = ['welcome', 'register', 'code'].includes(ui.screen) ? ui : { screen: 'welcome' };
-    ({ welcome: renderWelcome, register: renderRegister, code: renderCodeEntry, map: renderMap, quest: renderQuest, notes: renderNotes, timeline: renderTimelineScreen, review: () => renderReview(env, stations), people: () => renderPeople(env, stations), person: () => renderPerson(env, stations, ui.id), places: () => renderPlaces(env, stations, ui) }[ui.screen] || renderWelcome)();
+    ({ welcome: renderWelcome, register: renderRegister, code: renderCodeEntry, map: renderMap, quest: renderQuest, notes: renderNotes, timeline: renderTimelineScreen, review: () => renderReview(env, stations), people: () => renderPeople(env, stations), person: () => renderPerson(env, stations, ui.id), places: () => renderPlaces(env, stations, ui), writing: renderWritingScreen }[ui.screen] || renderWelcome)();
 }
 
 // 더 탐험하기 활동이 쓰는 공통 도구
 const env = {
     mount, topbar: (...a) => topbar(...a), go: next => go(next), profile, persist, toast,
     stationDone: id => openAll || !!profile().quests[id]?.done,
+    unitTitle: u => units[u].title,
+    author: () => { const p = profile(); return p.name ? `${p.number}번 ${p.name}` : `${p.number}번`; },
 };
 
 // ---------- 퀘스트 상태 ----------
@@ -156,7 +159,8 @@ function helpPanel() {
                 '다른 기기나 다음 시간에는 **이어하기 코드로 계속하기**에 코드와 이름을 넣으면 이어서 할 수 있어요.',
                 '**📒 나의 역사 노트**에는 모은 유물과 내가 쓴 한 줄 정리가 쌓여요. 인쇄도 할 수 있어요.'])),
         section('🎒 더 탐험하기',
-            list(['**🔁 복습 상자** — 개념 도전에서 헷갈린 개념은 다음 날 지도 위쪽에 나와요. 하루 지나 다시 풀면 오래 기억해요.',
+            list(['**📰 역사 신문 · 편지** — 단원을 마치면 열려요. 신문 기사나 역사 인물에게 보내는 편지를 문장 틀로 써서 노트에 모으고 인쇄할 수 있어요.',
+                '**🔁 복습 상자** — 개념 도전에서 헷갈린 개념은 다음 날 지도 위쪽에 나와요. 하루 지나 다시 풀면 오래 기억해요.',
                 '**🗺️ 문화유산 지도** — 배운 유적이 있는 곳이 지도에 나타나요. 점을 눌러 다시 살펴보고, **🎯 지도에서 찾기** 문제도 풀어요.',
                 '**🧑‍🤝‍🧑 인물 도감** — 정거장을 마치면 그 시대 인물이 "나는 누구일까요?" 단서를 들려줘요. 맞히면 인물 카드를 모아요.',
                 '**⏳ 연표 잇기** — 단원의 정거장을 모두 마치면 열려요. 사건 카드를 일어난 순서대로 눌러 연표를 만들어요. 10개 정거장을 다 마치면 **큰 연표**도 열려요.'])),
@@ -374,9 +378,18 @@ function renderMap() {
 // 단원 마무리 활동: 단원의 정거장을 모두 마치면 열림
 function unitExtras(u) {
     const tl = timelines.find(t => t.unit === u);
+    const wr = writingFor(tl.key); // 단원 열쇠 (u1, u2, u3) 가 연표와 같음
     return h('div', { class: 'unit-extras' },
         extraButton('⏳', '연표 잇기', unitDone(u), !!extrasOf(profile()).timeline[tl.key]?.done,
-            () => go({ screen: 'timeline', key: tl.key }), '이 단원의 정거장을 모두 마치면 열려요.'));
+            () => go({ screen: 'timeline', key: tl.key }), '이 단원의 정거장을 모두 마치면 열려요.'),
+        wr ? extraButton('📰', '역사 신문 · 편지', unitDone(u), !!extrasOf(profile()).writings[wr.key],
+            () => go({ screen: 'writing', key: wr.key }), '이 단원의 정거장을 모두 마치면 열려요.') : null);
+}
+
+function renderWritingScreen() {
+    const set = writingFor(ui.key);
+    if (!set || !unitDone(set.unit)) return go({ screen: 'map' });
+    renderWriting(env, ui.key, ui.opt);
 }
 
 // 오늘 다시 풀 개념이 있으면 지도 위쪽에 복습 상자를 보여 줌
@@ -544,6 +557,9 @@ function renderNotes() {
             h('h2', {}, `${p.avatar} ${p.name ? `${p.number}번 ${p.name}` : `${p.number}번 탐험가`}의 역사 노트`),
             h('p', { class: 'small muted', style: 'margin:6px 0 10px' }, '모은 유물과 내가 쓴 정리가 여기에 쌓여요.'),
             h('button', { class: 'btn btn-small no-print', type: 'button', onclick: () => window.print() }, '🖨️ 인쇄하기 / PDF로 저장')),
+        ...['u1', 'u2', 'u3'].filter(k => extrasOf(p).writings[k]).map(k => h('div', { class: 'card' },
+            h('h2', { style: 'margin-bottom:10px' }, `✍️ 나의 역사 글 — ${units[writingFor(k).unit].title}`),
+            writingView(extrasOf(p).writings[k], env.author()))),
         collectedCount(p) ? h('div', { class: 'card' },
             h('h2', { style: 'margin-bottom:10px' }, `🧑‍🤝‍🧑 내가 만난 인물 (${collectedCount(p)} / ${peopleCount()})`),
             h('p', {}, people.filter(x => extrasOf(p).people[x.id]).map(x => `${x.emoji} ${x.name}`).join(' · '))) : null,
