@@ -16,6 +16,7 @@ import { people } from '../content/people.js';
 import { renderTimeline } from './extras/timeline.js';
 import { updateReview, dueItems, waitingCount, renderReview } from './extras/review.js';
 import { renderPeople, renderPerson, peopleCount, collectedCount } from './extras/people.js';
+import { renderPlaces, placeCount, visitedCount } from './extras/places.js';
 
 const renderers = {
     detective: renderDetective,
@@ -47,16 +48,19 @@ function persist() { if (!saveData(data)) toast('⚠️ 이 기기에 저장하�
 
 function go(next) {
     stopSpeaking();
+    const y = window.scrollY;
     ui = next;
     render();
-    scrollTop();
+    // keepScroll: 같은 화면 안에서 고르기만 바뀔 때(문화유산 지도의 곳 고르기)는 보던 자리를 지킴
+    if (next.keepScroll) window.scrollTo(0, y);
+    else scrollTop();
 }
 
 function render() {
     clear(app);
     setCalm(false);
     if (!profile()) ui = ['welcome', 'register', 'code'].includes(ui.screen) ? ui : { screen: 'welcome' };
-    ({ welcome: renderWelcome, register: renderRegister, code: renderCodeEntry, map: renderMap, quest: renderQuest, notes: renderNotes, timeline: renderTimelineScreen, review: () => renderReview(env, stations), people: () => renderPeople(env, stations), person: () => renderPerson(env, stations, ui.id) }[ui.screen] || renderWelcome)();
+    ({ welcome: renderWelcome, register: renderRegister, code: renderCodeEntry, map: renderMap, quest: renderQuest, notes: renderNotes, timeline: renderTimelineScreen, review: () => renderReview(env, stations), people: () => renderPeople(env, stations), person: () => renderPerson(env, stations, ui.id), places: () => renderPlaces(env, stations, ui) }[ui.screen] || renderWelcome)();
 }
 
 // 더 탐험하기 활동이 쓰는 공통 도구
@@ -153,6 +157,7 @@ function helpPanel() {
                 '**📒 나의 역사 노트**에는 모은 유물과 내가 쓴 한 줄 정리가 쌓여요. 인쇄도 할 수 있어요.'])),
         section('🎒 더 탐험하기',
             list(['**🔁 복습 상자** — 개념 도전에서 헷갈린 개념은 다음 날 지도 위쪽에 나와요. 하루 지나 다시 풀면 오래 기억해요.',
+                '**🗺️ 문화유산 지도** — 배운 유적이 있는 곳이 지도에 나타나요. 점을 눌러 다시 살펴보고, **🎯 지도에서 찾기** 문제도 풀어요.',
                 '**🧑‍🤝‍🧑 인물 도감** — 정거장을 마치면 그 시대 인물이 "나는 누구일까요?" 단서를 들려줘요. 맞히면 인물 카드를 모아요.',
                 '**⏳ 연표 잇기** — 단원의 정거장을 모두 마치면 열려요. 사건 카드를 일어난 순서대로 눌러 연표를 만들어요. 10개 정거장을 다 마치면 **큰 연표**도 열려요.'])),
         section('🔘 버튼 알아보기',
@@ -391,6 +396,8 @@ function moreCard() {
         h('h2', { class: 'unit-title' }, '🎒 더 탐험하기'),
         h('div', { class: 'unit-extras' },
             reviewButton(),
+            extraButton('🗺️', `문화유산 지도 (${visitedCount(profile())}/${placeCount()})`, openAll || stations.some(s => profile().quests[s.id]?.done),
+                false, () => go({ screen: 'places' }), '정거장을 마치면 배운 유적이 지도에 나타나요.'),
             extraButton('🧑‍🤝‍🧑', `인물 도감 (${collectedCount(profile())}/${peopleCount()})`, openAll || stations.some(s => profile().quests[s.id]?.done),
                 collectedCount(profile()) === peopleCount(), () => go({ screen: 'people' }), '정거장을 마치면 그 시대 인물을 만날 수 있어요.'),
             extraButton('⏳', '10개 정거장 큰 연표', allDone(), !!extrasOf(profile()).timeline[big.key]?.done,
