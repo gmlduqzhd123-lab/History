@@ -13,6 +13,7 @@ import { renderMastery } from './activities/mastery.js';
 import { renderSummary } from './activities/summary.js';
 import { timelines } from '../content/timeline.js';
 import { renderTimeline } from './extras/timeline.js';
+import { updateReview, dueItems, waitingCount, renderReview } from './extras/review.js';
 
 const renderers = {
     detective: renderDetective,
@@ -53,7 +54,7 @@ function render() {
     clear(app);
     setCalm(false);
     if (!profile()) ui = ['welcome', 'register', 'code'].includes(ui.screen) ? ui : { screen: 'welcome' };
-    ({ welcome: renderWelcome, register: renderRegister, code: renderCodeEntry, map: renderMap, quest: renderQuest, notes: renderNotes, timeline: renderTimelineScreen }[ui.screen] || renderWelcome)();
+    ({ welcome: renderWelcome, register: renderRegister, code: renderCodeEntry, map: renderMap, quest: renderQuest, notes: renderNotes, timeline: renderTimelineScreen, review: () => renderReview(env, stations) }[ui.screen] || renderWelcome)();
 }
 
 // 더 탐험하기 활동이 쓰는 공통 도구
@@ -146,7 +147,8 @@ function helpPanel() {
                 '다른 기기나 다음 시간에는 **이어하기 코드로 계속하기**에 코드와 이름을 넣으면 이어서 할 수 있어요.',
                 '**📒 나의 역사 노트**에는 모은 유물과 내가 쓴 한 줄 정리가 쌓여요. 인쇄도 할 수 있어요.'])),
         section('🎒 더 탐험하기',
-            list(['**⏳ 연표 잇기** — 단원의 정거장을 모두 마치면 열려요. 사건 카드를 일어난 순서대로 눌러 연표를 만들어요. 10개 정거장을 다 마치면 **큰 연표**도 열려요.'])),
+            list(['**🔁 복습 상자** — 개념 도전에서 헷갈린 개념은 다음 날 지도 위쪽에 나와요. 하루 지나 다시 풀면 오래 기억해요.',
+                '**⏳ 연표 잇기** — 단원의 정거장을 모두 마치면 열려요. 사건 카드를 일어난 순서대로 눌러 연표를 만들어요. 10개 정거장을 다 마치면 **큰 연표**도 열려요.'])),
         section('🔘 버튼 알아보기',
             list(['**🏠** — 시작 화면으로 가요.',
                 '**🗺️ 지도** — 탐험 지도로 돌아가요.',
@@ -348,6 +350,7 @@ function renderMap() {
                 h('button', { class: 'btn btn-small', type: 'button', onclick: showCode }, '💾 이어하기 코드'),
                 h('button', { class: 'btn btn-small', type: 'button', onclick: showGuide }, '❓ 탐험 방법'),
                 installButton('btn btn-small'))),
+        reviewCard(),
         ...units.map((unit, u) => h('section', { class: 'unit' },
             h('h2', { class: 'unit-title' }, `📚 ${unit.title}`),
             h('div', { class: 'path' }, ...unit.stations.map(station => stationButton(station))),
@@ -365,14 +368,32 @@ function unitExtras(u) {
             () => go({ screen: 'timeline', key: tl.key }), '이 단원의 정거장을 모두 마치면 열려요.'));
 }
 
+// 오늘 다시 풀 개념이 있으면 지도 위쪽에 복습 상자를 보여 줌
+function reviewCard() {
+    const due = dueItems(profile(), stations).length;
+    if (!due) return null;
+    return h('div', { class: 'card review-card' },
+        h('h2', {}, '🔁 오늘의 복습 상자'),
+        h('p', { style: 'margin:6px 0 12px' }, `지난번 개념 도전에서 헷갈린 개념 ${due}개가 기다려요. 먼저 ${Math.min(due, 3)}문제만 풀어 볼까요?`),
+        h('button', { class: 'btn btn-primary', type: 'button', onclick: () => go({ screen: 'review' }) }, '복습 시작하기 ▶'));
+}
+
 // 지도 맨 아래 "더 탐험하기"
 function moreCard() {
     const big = timelines.find(t => t.key === 'all');
     return h('section', { class: 'unit' },
         h('h2', { class: 'unit-title' }, '🎒 더 탐험하기'),
         h('div', { class: 'unit-extras' },
+            reviewButton(),
             extraButton('⏳', '10개 정거장 큰 연표', allDone(), !!extrasOf(profile()).timeline[big.key]?.done,
                 () => go({ screen: 'timeline', key: big.key }), '10개 정거장을 모두 마치면 열려요.')));
+}
+
+function reviewButton() {
+    const due = dueItems(profile(), stations).length;
+    const waiting = waitingCount(profile());
+    return extraButton('🔁', due ? `복습 상자 (${due})` : '복습 상자', due > 0, false, () => go({ screen: 'review' }),
+        waiting ? `오늘 헷갈린 개념 ${waiting}개는 내일 복습 상자에 들어가요.` : '개념 도전에서 헷갈린 개념은 다음 날 여기에서 다시 풀어요.');
 }
 
 function extraButton(emoji, label, open, done, onClick, lockedMsg) {
@@ -443,6 +464,7 @@ function renderQuest() {
     const ctx = {
         record: ui.replay ? { ...rec, notes: [...rec.notes] } : rec, // 복습 중에는 기록을 바꾸지 않음
         readingStage: quest.stages.find(s => s.type === 'reading'),
+        reviewUpdate: (wrong, right) => { updateReview(profile(), quest.id, wrong, right); persist(); },
         save: () => { if (!ui.replay) persist(); },
         done: () => {
             if (ui.replay) {

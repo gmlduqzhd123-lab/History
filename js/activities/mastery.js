@@ -78,6 +78,8 @@ export function renderMastery(root, stage, ctx) {
             const wrongConcepts = concepts.filter(c => !firstTry.get(c));
             ctx.record.mastery = { passed: passed || !!ctx.record.mastery?.passed, best: Math.max(score, ctx.record.mastery?.best || 0), total: concepts.length };
             ctx.save();
+            // 첫 시도에 틀린 개념은 복습 상자에 넣고, 맞힌 개념은 꺼냄
+            ctx.reviewUpdate?.(wrongConcepts, concepts.filter(c => firstTry.get(c)));
 
             const tips = wrongConcepts.map(c => byConcept.get(c)[0].explain);
             root.replaceChildren(h('div', { class: 'card center' },
@@ -109,8 +111,8 @@ export function renderMastery(root, stage, ctx) {
     start();
 }
 
-// 문제 유형별 화면. onAnswer(correct, quick)
-function renderQuestion(q, onAnswer, headRow) {
+// 문제 유형별 화면. onAnswer(correct, quick) — 복습 상자에서도 씀
+export function renderQuestion(q, onAnswer, headRow) {
     const shownAt = Date.now();
     const quick = () => Date.now() - shownAt < FAST_MS;
     const wrap = h('div');

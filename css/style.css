@@ -187,6 +187,8 @@ p { margin: 0 0 10px; }
 .extra-btn.open { border-color: #fdba74; }
 .extra-btn.done { border-color: #86efac; }
 .extra-btn.locked { opacity: 0.6; cursor: default; }
+/* 복습 상자 */
+.review-card { border-color: #93c5fd; background: #eff6ff; }
 /* 연표 잇기 */
 .tl-strip { list-style: none; margin: 12px 0 0; padding: 0 0 0 18px; border-left: 4px solid var(--accent); }
 .tl-strip:empty::before { content: '여기에 연표가 만들어져요'; display: block; color: var(--muted); padding: 8px 0; }
