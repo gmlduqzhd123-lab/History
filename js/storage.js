@@ -9,6 +9,7 @@ export function loadData() {
             for (const [key, p] of Object.entries(data.profiles)) {
                 if (!p || typeof p !== 'object' || !Number.isInteger(Number(p.number))) { delete data.profiles[key]; continue; }
                 p.name = cleanName(p.name);
+                extrasOf(p);
                 if (!p.quests || typeof p.quests !== 'object') p.quests = {};
                 for (const q of Object.values(p.quests)) {
                     if (!q || typeof q !== 'object') continue;
@@ -38,7 +39,19 @@ export function cleanName(name) {
 }
 
 export function newProfile(number, avatar, name = '') {
-    return { number, avatar, name: cleanName(name), quests: {}, createdAt: Date.now() };
+    const profile = { number, avatar, name: cleanName(name), quests: {}, createdAt: Date.now() };
+    extrasOf(profile);
+    return profile;
+}
+
+// 더 탐험하기 활동 기록 (연표·복습 상자·인물 도감·문화유산 지도·역사 글). 이어하기 코드에는 담기지 않음
+const EXTRA_KEYS = ['timeline', 'review', 'people', 'places', 'writings'];
+export function extrasOf(profile) {
+    if (!profile.extras || typeof profile.extras !== 'object') profile.extras = {};
+    for (const key of EXTRA_KEYS) {
+        if (!profile.extras[key] || typeof profile.extras[key] !== 'object') profile.extras[key] = {};
+    }
+    return profile.extras;
 }
 
 // 퀘스트 기록: stage = 끝낸 단계 수, done = 퀘스트 완료
