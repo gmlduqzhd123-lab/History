@@ -45,6 +45,18 @@ function nameInput(value = '') {
 }
 
 function profile() { return data.current != null ? data.profiles[data.current] : null; }
+
+// 탐험가는 "번호 + 이름"으로 구분함: 여러 반이 태블릿을 함께 써서 같은 번호가 있어도 기록이 섞이지 않음
+// (예전 기록은 번호만 열쇠로 쓰고 이름이 비어 있을 수 있어, 이름 없는 같은 번호 기록은 그 학생 것으로 이어 줌)
+function findProfileKey(number, name) {
+    const entries = Object.entries(data.profiles).filter(([, p]) => p.number === number);
+    return (entries.find(([, p]) => p.name === name) || entries.find(([, p]) => !p.name))?.[0] ?? null;
+}
+function newProfileKey(number, name) {
+    let key = `${number}:${name}`;
+    for (let i = 2; data.profiles[key]; i++) key = `${number}:${name}:${i}`;
+    return key;
+}
 function persist() { if (!saveData(data)) toast('⚠️ 이 기기에 저장하지 못했어요. 이어하기 코드를 적어 두세요.'); }
 
 function go(next) {
@@ -92,7 +104,7 @@ function allDone() {
 
 // ---------- 시작 화면 ----------
 function renderWelcome() {
-    const saved = Object.values(data.profiles).sort((a, b) => a.number - b.number);
+    const saved = Object.entries(data.profiles).sort(([, a], [, b]) => a.number - b.number || a.name.localeCompare(b.name, 'ko'));
     const tab = ui.tab === 'help' ? 'help' : 'start';
     const tabButton = (id, label) => h('button', {
         type: 'button', role: 'tab', id: `tab-${id}`, 'aria-controls': 'welcome-panel',
@@ -100,12 +112,7 @@ function renderWelcome() {
         onclick: () => { if (tab !== id) go({ screen: 'welcome', tab: id }); },
     }, label);
     const startPanel = [
-        saved.length ? h('div', { class: 'card' },
-            h('h2', { style: 'margin-bottom:12px' }, '이 기기의 탐험가'),
-            h('div', { class: 'explorer-list' }, ...saved.map(p => h('button', {
-                type: 'button',
-                onclick: () => { data.current = p.number; persist(); go({ screen: 'map' }); },
-            }, h('span', { class: 'av' }, p.avatar), whoName(p), p.name ? h('span', { class: 'small muted' }, `${p.number}번`) : null)))) : null,
+        saved.length ? explorerCard(saved) : null,
         h('div', { class: 'card stack' },
             h('button', { class: 'btn btn-primary btn-block', type: 'button', onclick: () => go({ screen: 'register' }) }, '🙋 새 탐험가로 시작하기'),
             h('button', { class: 'btn btn-block', type: 'button', onclick: () => go({ screen: 'code' }) }, '💾 이어하기 코드로 계속하기'),
@@ -125,6 +132,35 @@ function renderWelcome() {
             '© 2026 엽쌤. All rights reserved. · ',
             h('a', { href: 'https://gmlduqzhd123-lab.github.io/YScode/' }, '엽쌤의 다른 앱 보기 →')),
     );
+}
+
+// 이 기기의 탐험가 목록. 공용 태블릿처럼 여러 명이면 이름·번호로 찾는 칸을 보여 줌
+function explorerCard(saved) {
+    const list = h('div', { class: 'explorer-list' }, ...saved.map(([key, p]) => h('button', {
+        type: 'button', 'data-find': `${p.name} ${p.number}번`,
+        onclick: () => { data.current = key; persist(); go({ screen: 'map' }); },
+    }, h('span', { class: 'av' }, p.avatar), whoName(p), p.name ? h('span', { class: 'small muted' }, `${p.number}번`) : null)));
+    let search = null;
+    if (saved.length > 8) {
+        const empty = h('p', { class: 'small muted hidden', style: 'margin-top:8px' }, '찾는 탐험가가 없어요. 처음이라면 아래 🙋 새 탐험가로 시작하기를 눌러요.');
+        search = h('div', {}, h('input', {
+            class: 'name-input', type: 'search', placeholder: '🔎 내 이름이나 번호로 찾기', 'aria-label': '탐험가 찾기', autocomplete: 'off',
+            oninput: e => {
+                const q = e.target.value.replace(/\s+/g, '');
+                let shown = 0;
+                [...list.children].forEach(btn => {
+                    const hit = !q || btn.dataset.find.replace(/\s+/g, '').includes(q);
+                    btn.classList.toggle('hidden', !hit);
+                    if (hit) shown++;
+                });
+                empty.classList.toggle('hidden', shown > 0);
+            },
+        }), empty);
+    }
+    return h('div', { class: 'card' },
+        h('h2', { style: 'margin-bottom:12px' }, '이 기기의 탐험가'),
+        search ? h('div', { style: 'margin-bottom:12px' }, search) : null,
+        list);
 }
 
 // 정거장 하나의 다섯 단계 (사용법 탭과 "탐험 방법" 창에서 함께 씀)
@@ -171,10 +207,14 @@ function helpPanel() {
                 '**📲 앱 설치** — 홈 화면에 아이콘을 만들어 바로 열어요. 인터넷이 끊겨도 탐험할 수 있어요.'])),
         h('details', { class: 'card help-card teacher' },
             h('summary', {}, '👩‍🏫 선생님께'),
-            list(['앱 주소를 QR 코드로 보여 주기만 하면 돼요. 진행·채점·피드백은 앱이 해요.',
-                '기록은 **그 기기에만** 저장되고 어디로도 보내지 않아요.',
-                '공용 태블릿은 학생마다 시작 화면에서 **자기 이름**을 눌러 들어가면 기록이 섞이지 않아요.',
-                '아이패드·아이폰은 7일 넘게 안 열면 기록이 지워질 수 있어요. **📲 앱 설치**를 해 두고, 수업 끝에 **이어하기 코드**를 적게 해 주세요.',
+            h('button', { class: 'btn btn-primary btn-block', type: 'button', style: 'margin:4px 0 12px', onclick: showQr }, '📺 교실 화면에 QR 코드 띄우기'),
+            list(['앱 주소를 QR 코드로 보여 주기만 하면 돼요. 회원 가입·로그인이 없고, 진행·채점·피드백은 앱이 해요.',
+                '정거장 하나는 **20~25분**쯤 걸려요(10개 정거장). 빨리 끝낸 학생은 **🎒 더 탐험하기**와 단원 마무리 활동을 하면 돼요.',
+                '기록은 **그 기기에만** 저장되고 어디로도 보내지 않아요. 학생의 **📒 나의 역사 노트** 맨 위에 진도 요약이 있어 확인하거나 인쇄·PDF로 받을 수 있어요.',
+                '여러 반이 태블릿을 함께 써도 **이름과 번호**로 구분되어 기록이 섞이지 않아요. 학생은 시작 화면에서 자기 이름을 눌러 들어가요.',
+                '아이패드·아이폰은 7일 넘게 안 열면 기록이 지워질 수 있어요. **📲 앱 설치**를 해 두고, 수업 끝에 **💾 이어하기 코드**를 공책에 적게 해 주세요.',
+                '교과서 출판사와 관계없이 5학년 2학기 역사(선사 시대~6·25 전쟁)의 핵심 내용으로 만들었어요. 용어·연도는 쓰시는 교과서와 한 번 대조해 주세요.',
+                '처음 한 번 연 뒤에는 인터넷이 없어도 돼요. **iOS 14 이상**이나 최신 **크롬·웨일·삼성 인터넷·엣지**에서 열려요.',
                 '결석한 학생 등을 위해 모든 정거장을 한꺼번에 열려면 주소 끝에 **?open=all** 을 붙여요.'])),
         h('button', { class: 'btn btn-primary btn-block', type: 'button', style: 'margin-top:16px', onclick: () => go({ screen: 'welcome', tab: 'start' }) }, '🚀 이제 시작하러 가기'),
     ];
@@ -212,11 +252,11 @@ function renderRegister() {
     startBtn.addEventListener('click', () => {
         const name = cleanName(nameEl.value);
         if (!number || !name) return;
-        const existing = data.profiles[number];
-        if (existing && !confirm(`${number}번${existing.name ? `(${existing.name})` : ''} 탐험가가 이미 이 기기에 있어요.\n그 기록으로 이어서 할까요? (취소를 누르면 번호를 다시 고를 수 있어요)`)) return;
-        if (existing) existing.name = name;
-        else data.profiles[number] = newProfile(number, avatar, name);
-        data.current = number;
+        const key = findProfileKey(number, name);
+        const existing = key && data.profiles[key];
+        if (existing && !confirm(`${number}번 ${existing.name || ''} 탐험가가 이미 이 기기에 있어요.\n그 기록으로 이어서 할까요? (취소를 누르면 이름이나 번호를 다시 고를 수 있어요)`)) return;
+        if (existing) { existing.name = name; data.current = key; }
+        else { data.current = newProfileKey(number, name); data.profiles[data.current] = newProfile(number, avatar, name); }
         persist();
         go({ screen: 'map' });
         if (!existing) showGuide();
@@ -243,14 +283,17 @@ function renderCodeEntry() {
             msg.replaceChildren(h('div', { class: 'feedback bad' }, '코드가 맞지 않아요. 글자를 다시 확인해 주세요.'));
             return;
         }
-        const existing = data.profiles[result.number];
         const name = cleanName(nameEl.value);
-        // 코드에는 이름이 없으므로, 이 기기에 이름이 없는 번호라면 이름을 꼭 써야 함
-        if (!name && !existing?.name) {
+        // 코드에는 이름이 없으므로 이름을 꼭 써야 함 (같은 번호 탐험가가 이 기기에 딱 한 명이고 이름이 있으면 그 탐험가로)
+        const sameNumber = Object.entries(data.profiles).filter(([, p]) => p.number === result.number);
+        let key = name ? findProfileKey(result.number, name) : sameNumber.length === 1 && sameNumber[0][1].name ? sameNumber[0][0] : null;
+        if (!name && !key) {
             msg.replaceChildren(h('div', { class: 'feedback bad' }, '내 이름도 써 주세요.'));
             nameEl.focus();
             return;
         }
+        const existing = key && data.profiles[key];
+        if (!key) key = newProfileKey(result.number, name);
         const merged = existing || newProfile(result.number, result.avatar);
         merged.avatar = result.avatar;
         if (name) merged.name = name;
@@ -259,8 +302,8 @@ function renderCodeEntry() {
             const cur = merged.quests[id];
             if (!cur || (!cur.done && (q.done || q.stage > cur.stage))) merged.quests[id] = { ...q, notes: cur?.notes || [] };
         });
-        data.profiles[result.number] = merged;
-        data.current = result.number;
+        data.profiles[key] = merged;
+        data.current = key;
         persist();
         toast(`${result.avatar} ${whoName(merged)} 탐험가, 다시 만나서 반가워요!`);
         go({ screen: 'map' });
@@ -277,6 +320,19 @@ function renderCodeEntry() {
             msg),
     );
     input.focus();
+}
+
+// 교실 TV·전자칠판에 띄울 큰 QR 코드
+function showQr() {
+    const url = 'https://gmlduqzhd123-lab.github.io/History/';
+    const close = modal(
+        h('div', { class: 'center' },
+            h('h2', {}, '📱 카메라로 찍어서 들어와요'),
+            h('img', { class: 'qr-big', src: 'icons/qr.svg', alt: `역사 탐험 퀘스트 주소 QR 코드 (${url})` }),
+            h('p', { class: 'qr-url' }, url.replace('https://', '')),
+            h('p', { class: 'small muted' }, '들어온 뒤 🙋 새 탐험가로 시작하기 → 이름·번호·캐릭터를 골라요.')),
+        h('button', { class: 'btn btn-primary btn-block', type: 'button', style: 'margin-top:12px', onclick: () => close() }, '닫기'),
+    );
 }
 
 // ---------- 공통 상단 막대 ----------
@@ -301,8 +357,22 @@ function showMenu() {
             h('button', { class: 'btn btn-block', type: 'button', onclick: () => { close(); go({ screen: 'notes' }); } }, '📒 나의 역사 노트'),
             h('button', { class: 'btn btn-block', type: 'button', onclick: () => { close(); showGuide(); } }, '❓ 탐험 방법'),
             h('button', { class: 'btn btn-block', type: 'button', onclick: () => { close(); data.current = null; persist(); go({ screen: 'welcome' }); } }, '🔄 다른 탐험가로 바꾸기'),
+            h('button', { class: 'btn btn-block danger-link', type: 'button', onclick: () => { close(); deleteProfile(); } }, '🗑️ 이 기기에서 내 기록 지우기'),
             h('button', { class: 'btn btn-block', type: 'button', onclick: () => close() }, '닫기')),
     );
+}
+
+// 새 학년이 되어 공용 태블릿을 정리할 때 등. 실수로 지우지 않게 두 번 확인
+function deleteProfile() {
+    const p = profile();
+    const who = `${p.number}번 ${p.name || ''}`.trim();
+    if (!confirm(`${who} 탐험가의 기록을 이 기기에서 지울까요?\n도장, 한 줄 정리, 인물 카드 등이 모두 사라지고 되돌릴 수 없어요.`)) return;
+    if (!confirm(`정말 지울까요? 이어하기 코드를 적어 두었다면 진도는 코드로 되살릴 수 있어요.\n(코드: ${encodeProgress(p, questOrder, avatars)})`)) return;
+    delete data.profiles[data.current];
+    data.current = null;
+    persist();
+    toast('🗑️ 기록을 지웠어요.');
+    go({ screen: 'welcome' });
 }
 
 function showRename() {
@@ -518,7 +588,10 @@ function renderQuestComplete(quest, rec) {
         allDone ? h('div', { class: 'card card-accent center' },
             h('h2', {}, '🎓 모든 정거장의 배움을 마쳤어요'),
             h('p', { style: 'margin:8px 0 12px' }, `선사 시대부터 6·25 전쟁까지, ${stations.length}개 정거장을 모두 지나왔어요. 나의 역사 노트에서 지금까지 배운 것을 돌아보세요.`),
-            h('button', { class: 'btn btn-primary', type: 'button', onclick: () => go({ screen: 'notes' }) }, '📒 나의 역사 노트 보기')) : null,
+            h('p', { class: 'small', style: 'margin:-4px 0 12px' }, '아직 시간이 있다면 ⏳ 큰 연표와 🎒 더 탐험하기(인물 도감, 문화유산 지도)에 도전해 보세요.'),
+            h('div', { class: 'row', style: 'justify-content:center' },
+                h('button', { class: 'btn btn-primary', type: 'button', onclick: () => go({ screen: 'notes' }) }, '📒 나의 역사 노트 보기'),
+                h('button', { class: 'btn', type: 'button', onclick: () => go({ screen: 'timeline', key: 'all' }) }, '⏳ 큰 연표 잇기'))) : null,
         h('div', { class: 'card center' },
             h('div', { class: 'stamp' }, h('span', { class: 'big' }, quest.emoji), tone('questStamp')),
             h('h2', {}, ui.justFinished ? tone('questDone') : tone('questDoneAgain')),
@@ -556,6 +629,7 @@ function renderNotes() {
         h('div', { class: 'card card-accent' },
             h('h2', {}, `${p.avatar} ${p.name ? `${p.number}번 ${p.name}` : `${p.number}번 탐험가`}의 역사 노트`),
             h('p', { class: 'small muted', style: 'margin:6px 0 10px' }, '모은 유물과 내가 쓴 정리가 여기에 쌓여요.'),
+            progressSummary(p),
             h('button', { class: 'btn btn-small no-print', type: 'button', onclick: () => window.print() }, '🖨️ 인쇄하기 / PDF로 저장')),
         ...['u1', 'u2', 'u3'].filter(k => extrasOf(p).writings[k]).map(k => h('div', { class: 'card' },
             h('h2', { style: 'margin-bottom:10px' }, `✍️ 나의 역사 글 — ${units[writingFor(k).unit].title}`),
@@ -574,6 +648,23 @@ function renderNotes() {
                     : h('p', { class: 'small muted', style: 'margin-top:10px' }, '아직 한 줄 정리를 쓰지 않았어요.'));
         }),
     );
+}
+
+// 노트 맨 위 진도 요약 (선생님이 한눈에 확인하거나 인쇄해서 받을 수 있게)
+function progressSummary(p) {
+    const ex = extrasOf(p);
+    const stamps = stations.filter(s => p.quests[s.id]?.done).length;
+    const passed = stations.filter(s => p.quests[s.id]?.mastery?.passed).length;
+    const rows = [
+        ['🏅', '정거장 도장', `${stamps} / ${stations.length}`],
+        ['🏆', '개념 도전 통과', `${passed} / ${stations.length}`],
+        ['⏳', '연표 잇기', `${timelines.filter(t => ex.timeline[t.key]?.done).length} / ${timelines.length}`],
+        ['📰', '역사 신문 · 편지', `${Object.keys(ex.writings).length} / 3`],
+        ['🧑‍🤝‍🧑', '인물 카드', `${collectedCount(p)} / ${peopleCount()}`],
+        ['🗺️', '문화유산 지도', `${visitedCount(p)} / ${placeCount()}`],
+    ];
+    return h('div', { class: 'progress-summary' }, ...rows.map(([e, label, value]) =>
+        h('div', { class: 'ps-item' }, h('span', { class: 'ps-emoji', 'aria-hidden': 'true' }, e), h('span', { class: 'ps-label' }, label), h('b', {}, value))));
 }
 
 // ---------- 앱 설치 (홈 화면에 추가) ----------
@@ -617,10 +708,12 @@ function showInstallGuide() {
         steps = ['카카오톡 화면의 **⋮ 메뉴**(오른쪽 아래 또는 위)를 눌러요. (카카오톡 안에서는 설치가 안 돼요)', '**다른 브라우저로 열기**(아이폰은 **Safari로 열기**)를 골라요.', '새로 열린 화면에서 다시 **📲 앱 설치**를 눌러요.'];
     } else if (ios) {
         steps = ['**Safari**로 이 페이지를 열어요. (다른 앱에서는 설치가 안 돼요)', '아래쪽 **공유 버튼 ⬆︎**을 눌러요.', '**홈 화면에 추가** → 오른쪽 위 **추가**를 눌러요.'];
+    } else if (/Whale/i.test(ua)) {
+        steps = ['**웨일** 주소창 오른쪽의 **설치 아이콘(⊕)** 을 눌러요.', '아이콘이 없으면 오른쪽 위 **⋯ 메뉴**에서 **앱 설치** 또는 **홈 화면에 추가**를 찾아요.', '설치한 뒤에는 웨일북 앱 목록이나 바탕 화면에서 바로 열 수 있어요.'];
     } else if (/Android/i.test(ua)) {
         steps = ['**Chrome** 또는 **삼성 인터넷**으로 열어요.', '오른쪽 위(또는 아래) **⋮ / ≡ 메뉴**를 눌러요.', '**앱 설치** 또는 **홈 화면에 추가**를 눌러요.'];
     } else {
-        steps = ['**Chrome**이나 **Edge**로 열어요.', '주소창 오른쪽의 **설치 아이콘**을 누르거나, **⋮ 메뉴 → 앱 설치**를 눌러요.', 'Edge는 **⋯ 메뉴 → 앱 → 이 사이트를 앱으로 설치**예요.'];
+        steps = ['**Chrome**, **웨일**, **Edge** 가운데 하나로 열어요.', '주소창 오른쪽의 **설치 아이콘**을 누르거나, **⋮ 메뉴 → 앱 설치**를 눌러요.', 'Edge는 **⋯ 메뉴 → 앱 → 이 사이트를 앱으로 설치**예요.'];
     }
     const close = modal(
         h('h2', {}, '📲 앱으로 설치하기'),

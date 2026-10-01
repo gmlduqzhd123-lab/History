@@ -8,6 +8,7 @@ export function loadData() {
             // 기록이 일부 빠지거나 깨져 있어도 앱이 멈추지 않도록 모양을 맞춤
             for (const [key, p] of Object.entries(data.profiles)) {
                 if (!p || typeof p !== 'object' || !Number.isInteger(Number(p.number))) { delete data.profiles[key]; continue; }
+                p.number = Number(p.number);
                 p.name = cleanName(p.name);
                 extrasOf(p);
                 if (!p.quests || typeof p.quests !== 'object') p.quests = {};
