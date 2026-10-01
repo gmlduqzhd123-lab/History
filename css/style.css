@@ -187,6 +187,33 @@ p { margin: 0 0 10px; }
 .extra-btn.open { border-color: #fdba74; }
 .extra-btn.done { border-color: #86efac; }
 .extra-btn.locked { opacity: 0.6; cursor: default; }
+/* 문화유산 지도 */
+.map-layout { display: grid; gap: 16px; margin-top: 16px; }
+.map-layout > .card { margin-top: 0; }
+.map-side > .card + .card { margin-top: 16px; }
+@media (min-width: 760px) { .map-layout { grid-template-columns: 1.1fr 1fr; align-items: start; } }
+.heritage-map { background: #dbeafe; border-radius: 14px; overflow: hidden; }
+.heritage-map svg { display: block; width: 100%; height: auto; max-height: 75vh; margin: 0 auto; }
+.heritage-map .land { fill: #fef3c7; stroke: #b45309; stroke-width: 3; stroke-linejoin: round; }
+.heritage-map .dmz { fill: none; stroke: #dc2626; stroke-width: 3; stroke-dasharray: 8 6; }
+.heritage-map .pin { cursor: pointer; }
+.heritage-map .pin .hit { fill: transparent; }
+.heritage-map .pin .dot { fill: var(--accent); stroke: #fff; stroke-width: 4; transition: r 0.15s; }
+.heritage-map .pin.visited .dot { fill: var(--good); }
+.heritage-map .pin.locked .dot { fill: #cbd5e1; r: 8; }
+.heritage-map .pin.selected .dot { fill: #1d4ed8; r: 15; stroke: #fff; }
+.map-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 10px; color: var(--muted); }
+.map-legend .lg { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+.map-legend .lg.open { background: var(--accent); }
+.map-legend .lg.visited { background: var(--good); }
+.map-legend .lg.locked { background: #cbd5e1; }
+.map-legend .lg.dmz { border-radius: 0; height: 0; border-top: 3px dashed #dc2626; vertical-align: 3px; }
+.place-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.place-chip { min-height: 40px; padding: 6px 12px; background: #fff; border: 2px solid var(--line); border-radius: 999px; font-size: 15px; color: inherit; cursor: pointer; }
+.place-chip.visited { border-color: #86efac; }
+.place-chip.selected { border-color: #1d4ed8; background: #eff6ff; }
+.place-chip.locked { opacity: 0.55; }
+.note-line.locked-line { color: var(--muted); border-left-color: #cbd5e1; }
 /* 인물 도감 */
 .people-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
 .person-card { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 8px; background: #fff; border: 3px solid var(--line); border-radius: 16px; color: inherit; cursor: pointer; min-height: 130px; }
