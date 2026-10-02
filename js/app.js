@@ -18,6 +18,8 @@ import { updateReview, dueItems, waitingCount, renderReview } from './extras/rev
 import { renderPeople, renderPerson, peopleCount, collectedCount } from './extras/people.js';
 import { renderPlaces, placeCount, visitedCount } from './extras/places.js';
 import { renderWriting, writingView, writingFor } from './extras/writing.js';
+import { inquiries } from '../content/inquiries.js';
+import { renderInquiry, inquiryView } from './extras/inquiry.js';
 
 const renderers = {
     detective: renderDetective,
@@ -36,6 +38,7 @@ const openAll = new URLSearchParams(location.search).get('open') === 'all';
 let ui = { screen: 'welcome' };
 let saving = false;
 let storageChanged = false;
+let screenCleanup = null;
 
 // null·false 는 건너뛰고 붙임 (append는 null을 "null" 글자로 넣어 버림)
 function mount(...nodes) { app.append(...nodes.filter(n => n !== null && n !== undefined && n !== false)); }
@@ -68,7 +71,7 @@ function newProfileKey(number, name) {
     for (let i = 2; data.profiles[key]; i++) key = `${number}:${name}:${i}`;
     return key;
 }
-async function persist() {
+async function persist(requireStorage = false) {
     if (saving) return false;
     saving = true;
     app.setAttribute('aria-busy', 'true');
@@ -85,9 +88,11 @@ async function persist() {
         return false;
     }
     if (refreshPending && refreshStorage()) return false;
-    if (!saved) toast('⚠️ 이 기기에 저장하지 못했어요. 이어하기 코드를 적어 두세요.');
+    if (!saved) toast(requireStorage
+        ? '⚠️ 이 기기에 저장하지 못했어요. 작성한 글을 복사해 두고 다시 저장해 주세요.'
+        : '⚠️ 이 기기에 저장하지 못했어요. 이어하기 코드를 적어 두세요.');
     // 저장 공간이 부족해도 이 창에서 학습과 이어하기 코드 사용은 계속할 수 있음
-    return true;
+    return requireStorage ? !!saved : true;
 }
 
 // 저장이 끝나기 전에 같은 버튼·Enter를 여러 번 눌러 활동이나 탐험가가 바뀌지 않게 함
@@ -132,16 +137,21 @@ function go(next) {
 }
 
 function render() {
+    screenCleanup?.();
+    screenCleanup = null;
     clear(app);
     setCalm(false);
     if (!profile()) ui = ['welcome', 'register', 'code'].includes(ui.screen) ? ui : { screen: 'welcome' };
-    ({ welcome: renderWelcome, register: renderRegister, code: renderCodeEntry, map: renderMap, quest: renderQuest, notes: renderNotes, timeline: renderTimelineScreen, review: () => renderReview(env, stations), people: () => renderPeople(env, stations), person: () => renderPerson(env, stations, ui.id), places: () => renderPlaces(env, stations, ui), writing: renderWritingScreen }[ui.screen] || renderWelcome)();
+    ({ welcome: renderWelcome, register: renderRegister, code: renderCodeEntry, map: renderMap, quest: renderQuest, notes: renderNotes, timeline: renderTimelineScreen, review: () => renderReview(env, stations), people: () => renderPeople(env, stations), person: () => renderPerson(env, stations, ui.id), places: () => renderPlaces(env, stations, ui), writing: renderWritingScreen, inquiry: renderInquiryScreen }[ui.screen] || renderWelcome)();
 }
 
 // 더 탐험하기 활동이 쓰는 공통 도구
 const env = {
     mount, topbar: (...a) => topbar(...a), go: next => go(next), profile, persist, toast,
+    profileKey: () => data.current,
     stationDone: id => openAll || !!profile().quests[id]?.done,
+    canInquire: activity => openAll || !!profile()?.quests[activity.questId]?.done,
+    onDispose: cleanup => { screenCleanup = cleanup; },
     unitTitle: u => units[u].title,
     author: () => { const p = profile(); return p.name ? `${p.number}번 ${p.name}` : `${p.number}번`; },
 };
@@ -473,7 +483,7 @@ function showCode() {
         h('h2', {}, '💾 이어하기 코드'),
         h('p', { class: 'muted small', style: 'margin-top:6px' }, '다른 기기나 다음 시간에 이 코드를 입력하면 지금까지의 진도를 이어서 할 수 있어요. 공책에 적어 두세요!'),
         h('div', { class: 'code-box' }, code),
-        h('p', { class: 'small muted', style: 'margin-top:10px' }, '※ 이름과 한 줄 정리 글은 코드에 담기지 않고 이 기기에만 남아요.'),
+        h('p', { class: 'small muted', style: 'margin-top:10px' }, '※ 이름과 쓴 글·자료 탐구 기록은 코드에 담기지 않고 이 기기에만 남아요.'),
         h('button', { class: 'btn btn-primary btn-block', type: 'button', onclick: () => close() }, '다 적었어요'),
     );
 }
@@ -516,15 +526,24 @@ function renderMap() {
     );
 }
 
-// 단원 마무리 활동: 단원의 정거장을 모두 마치면 열림
+// 마무리 활동은 단원 완료 후, 자료 탐구는 관련 정거장 완료 후 열림
 function unitExtras(u) {
     const tl = timelines.find(t => t.unit === u);
     const wr = writingFor(tl.key); // 단원 열쇠 (u1, u2, u3) 가 연표와 같음
+    const investigations = inquiries.filter(activity => activity.unit === u);
     return h('div', { class: 'unit-extras' },
         extraButton('⏳', '연표 잇기', unitDone(u), !!extrasOf(profile()).timeline[tl.key]?.done,
             () => go({ screen: 'timeline', key: tl.key }), '이 단원의 정거장을 모두 마치면 열려요.'),
         wr ? extraButton('📰', '역사 신문 · 편지', unitDone(u), !!extrasOf(profile()).writings[wr.key],
-            () => go({ screen: 'writing', key: wr.key }), '이 단원의 정거장을 모두 마치면 열려요.') : null);
+            () => go({ screen: 'writing', key: wr.key }), '이 단원의 정거장을 모두 마치면 열려요.') : null,
+        investigations.length ? extraButton('🔎', '자료 탐구 · 역사 일기', true,
+            investigations.every(activity => !!extrasOf(profile()).inquiries[activity.id]),
+            () => go({ screen: 'inquiry', unit: u }), '관련 정거장을 마친 뒤 자료를 읽고 내 생각을 기록해요.') : null);
+}
+
+function renderInquiryScreen() {
+    if (!Number.isInteger(ui.unit) || !inquiries.some(activity => activity.unit === ui.unit)) return go({ screen: 'map' });
+    renderInquiry({ ...env, persist: () => persist(true) }, ui.unit, ui.id);
 }
 
 function renderWritingScreen() {
@@ -715,6 +734,8 @@ function renderNotes() {
         ...['u1', 'u2', 'u3'].filter(k => extrasOf(p).writings[k]).map(k => h('div', { class: 'card' },
             h('h2', { style: 'margin-bottom:10px' }, `✍️ 나의 역사 글 — ${units[writingFor(k).unit].title}`),
             writingView(extrasOf(p).writings[k], env.author()))),
+        ...inquiries.filter(activity => extrasOf(p).inquiries[activity.id]).map(activity => h('div', { class: 'card' },
+            inquiryView(extrasOf(p).inquiries[activity.id], activity))),
         collectedCount(p) ? h('div', { class: 'card' },
             h('h2', { style: 'margin-bottom:10px' }, `🧑‍🤝‍🧑 내가 만난 인물 (${collectedCount(p)} / ${peopleCount()})`),
             h('p', {}, people.filter(x => extrasOf(p).people[x.id]).map(x => `${x.emoji} ${x.name}`).join(' · '))) : null,
@@ -741,6 +762,7 @@ function progressSummary(p) {
         ['🏆', '개념 도전 통과', `${passed} / ${stations.length}`],
         ['⏳', '연표 잇기', `${timelines.filter(t => ex.timeline[t.key]?.done).length} / ${timelines.length}`],
         ['📰', '역사 신문 · 편지', `${Object.keys(ex.writings).length} / 3`],
+        ['🔎', '자료 탐구 · 역사 일기', `${inquiries.filter(activity => ex.inquiries[activity.id]).length} / ${inquiries.length}`],
         ['🧑‍🤝‍🧑', '인물 카드', `${collectedCount(p)} / ${peopleCount()}`],
         ['🗺️', '문화유산 지도', `${visitedCount(p)} / ${placeCount()}`],
     ];

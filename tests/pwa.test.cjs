@@ -6,9 +6,13 @@ const { before, after, test } = require('node:test');
 const { chromium } = require('playwright');
 
 const root = path.resolve(__dirname, '..');
-const worker31 = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
+const workerCurrent = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
+const CURRENT = Number(workerCurrent.match(/const CACHE = 'history-quest-v(\d+)'/)[1]);
+const NEXT = CURRENT + 1;
+const CURRENT_CACHE = `history-quest-v${CURRENT}`;
+const NEXT_CACHE = `history-quest-v${NEXT}`;
 const worker30 = fs.readFileSync(path.join(__dirname, 'fixtures/sw-v30.js'), 'utf8');
-const worker32 = worker31.replace("'history-quest-v31'", "'history-quest-v32'")
+const workerNext = workerCurrent.replace(`'${CURRENT_CACHE}'`, `'${NEXT_CACHE}'`)
     .replace("    './',", "    './',\n    'js/update-addon.js',");
 let browser;
 
@@ -20,8 +24,8 @@ before(async () => {
 after(async () => { await browser?.close(); });
 
 // Each fixture has an isolated origin. Only the test app changes; the workers are
-// the actual historical v30 and current v31, plus a simulated future v32.
-async function fixture(t, version = 31) {
+// the actual historical v30 and shipped worker, plus its simulated next version.
+async function fixture(t, version = CURRENT) {
     const state = { version, interruptAddon: false, requests: [] };
     const server = http.createServer((request, response) => {
         const requestUrl = new URL(request.url, 'http://localhost');
@@ -35,16 +39,16 @@ async function fixture(t, version = 31) {
         const currentVersion = `v${state.version}`;
         if (file === 'sw.js') {
             response.setHeader('Content-Type', 'text/javascript');
-            response.end(state.version === 30 ? worker30 : state.version === 31 ? worker31 : worker32);
+            response.end(state.version === 30 ? worker30 : state.version === CURRENT ? workerCurrent : workerNext);
         } else if (file === 'index.html') {
             response.setHeader('Content-Type', 'text/html');
             response.end('<!doctype html><html><body><script type="module" src="js/app.js"></script></body></html>');
         } else if (file === 'js/app.js') {
             response.setHeader('Content-Type', 'text/javascript');
             response.end(`import { version } from './dom.js';
-                ${state.version === 32 ? "import { addon } from './update-addon.js';" : ''}
+                ${state.version === NEXT ? "import { addon } from './update-addon.js';" : ''}
                 if (version !== '${currentVersion}') throw new Error('Mixed app modules: ' + version);
-                ${state.version === 32 ? "if (addon !== version) throw new Error('Mixed new dependency');" : ''}
+                ${state.version === NEXT ? "if (addon !== version) throw new Error('Mixed new dependency');" : ''}
                 window.snapshot = '${currentVersion}';
                 document.body.append('${currentVersion}');
                 navigator.serviceWorker.register('sw.js');`);
@@ -107,73 +111,73 @@ async function reopen(context, page, url, version) {
     return next;
 }
 
-test('a complete v31 snapshot stays coherent online and offline, including query URLs', async t => {
+test(`a complete v${CURRENT} snapshot stays coherent online and offline, including query URLs`, async t => {
     const { state, context, page } = await fixture(t);
     assert.equal(await page.evaluate(() => !!navigator.serviceWorker.controller), false,
         'First installation must not take over a page that has already begun loading');
-    await controlledReload(page, 31);
-    state.version = 32;
+    await controlledReload(page, CURRENT);
+    state.version = NEXT;
     const start = state.requests.length;
-    assert.equal(await page.evaluate(async () => (await import('./js/dom.js?late-read')).version), 'v31');
+    assert.equal(await page.evaluate(async () => (await import('./js/dom.js?late-read')).version), `v${CURRENT}`);
     assert.equal(state.requests.slice(start).includes('js/dom.js'), false, 'Core assets must not fetch the new server version');
     await context.setOffline(true);
-    await controlledReload(page, 31);
+    await controlledReload(page, CURRENT);
 });
 
-test('the shipped v30 worker upgrades to v31 only after its controlled page closes', async t => {
+test(`the shipped v30 worker upgrades to v${CURRENT} only after its controlled page closes`, async t => {
     const { state, context, url } = await fixture(t, 30);
     let page = context.pages()[0];
     await page.waitForFunction(() => !!navigator.serviceWorker.controller);
-    state.version = 31;
+    state.version = CURRENT;
     assert.equal(await update(page), 'installed');
     assert.equal(await page.evaluate(async () => !!(await navigator.serviceWorker.getRegistration()).waiting), true);
-    assert.deepEqual((await page.evaluate(() => caches.keys())).sort(), ['history-quest-v30', 'history-quest-v31']);
-    page = await reopen(context, page, url, 31);
-    assert.deepEqual(await page.evaluate(() => caches.keys()), ['history-quest-v31']);
+    assert.deepEqual((await page.evaluate(() => caches.keys())).sort(), ['history-quest-v30', CURRENT_CACHE]);
+    page = await reopen(context, page, url, CURRENT);
+    assert.deepEqual(await page.evaluate(() => caches.keys()), [CURRENT_CACHE]);
     await context.setOffline(true);
-    await controlledReload(page, 31);
+    await controlledReload(page, CURRENT);
     // v30's network-first behavior before activation is historical and cannot
-    // be changed retroactively by shipping v31.
+    // be changed retroactively by shipping a new worker.
 });
 
-test('an interrupted v32 install preserves v31, then retries into a complete offline v32', async t => {
+test(`an interrupted v${NEXT} install preserves v${CURRENT}, then retries into a complete offline v${NEXT}`, async t => {
     const { state, context, url } = await fixture(t);
     let page = context.pages()[0];
-    await controlledReload(page, 31);
-    state.version = 32;
+    await controlledReload(page, CURRENT);
+    state.version = NEXT;
     state.interruptAddon = true;
     assert.notEqual(await update(page), 'installed');
     assert.equal(await page.evaluate(async () => !!(await navigator.serviceWorker.getRegistration()).waiting), false);
-    await controlledReload(page, 31);
-    assert.equal(await page.evaluate(async () => {
-        const cache = await caches.open('history-quest-v31');
-        return (await (await cache.match(new URL('js/app.js', location.href))).text()).includes("'v31'");
-    }), true, 'The healthy active app must not be overwritten by partial new files');
+    await controlledReload(page, CURRENT);
+    assert.equal(await page.evaluate(async version => {
+        const cache = await caches.open(`history-quest-v${version}`);
+        return (await (await cache.match(new URL('js/app.js', location.href))).text()).includes(`'v${version}'`);
+    }, CURRENT), true, 'The healthy active app must not be overwritten by partial new files');
     await context.setOffline(true);
-    await controlledReload(page, 31);
+    await controlledReload(page, CURRENT);
     await context.setOffline(false);
     state.interruptAddon = false;
     assert.equal(await update(page), 'installed');
-    await controlledReload(page, 31);
-    page = await reopen(context, page, url, 32);
-    assert.deepEqual(await page.evaluate(() => caches.keys()), ['history-quest-v32']);
+    await controlledReload(page, CURRENT);
+    page = await reopen(context, page, url, NEXT);
+    assert.deepEqual(await page.evaluate(() => caches.keys()), [NEXT_CACHE]);
     await context.setOffline(true);
-    await controlledReload(page, 32);
-    assert.equal(await page.evaluate(async () => (await import('./js/update-addon.js?offline-check')).addon), 'v32');
+    await controlledReload(page, NEXT);
+    assert.equal(await page.evaluate(async () => (await import('./js/update-addon.js?offline-check')).addon), `v${NEXT}`);
 });
 
 test('a waiting update keeps every old tab and late module load on the old snapshot', async t => {
     const { state, context, page, url } = await fixture(t);
-    await controlledReload(page, 31);
+    await controlledReload(page, CURRENT);
     const second = await context.newPage();
     await second.goto(url);
-    await second.waitForFunction(() => window.snapshot === 'v31');
-    state.version = 32;
+    await second.waitForFunction(expected => window.snapshot === expected, `v${CURRENT}`);
+    state.version = NEXT;
     assert.equal(await update(page), 'installed');
     await page.close();
-    assert.equal(await second.evaluate(async () => (await import('./js/dom.js?other-tab')).version), 'v31');
+    assert.equal(await second.evaluate(async () => (await import('./js/dom.js?other-tab')).version), `v${CURRENT}`);
     assert.equal(await second.evaluate(async () => !!(await navigator.serviceWorker.getRegistration()).waiting), true);
-    assert.equal(await second.evaluate(async () => (await caches.keys()).includes('history-quest-v31')), true);
-    const next = await reopen(context, second, url, 32);
-    assert.equal(await next.evaluate(() => window.snapshot), 'v32');
+    assert.equal(await second.evaluate(async cache => (await caches.keys()).includes(cache), CURRENT_CACHE), true);
+    const next = await reopen(context, second, url, NEXT);
+    assert.equal(await next.evaluate(() => window.snapshot), `v${NEXT}`);
 });

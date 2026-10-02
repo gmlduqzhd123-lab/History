@@ -1,6 +1,6 @@
 // 한 버전의 앱 파일을 모두 저장한 뒤에만 사용함.
 // 업데이트는 이전 버전을 쓰는 탭이 모두 닫힐 때 적용하여 실행 중인 파일이 섞이지 않게 함.
-const CACHE = 'history-quest-v31';
+const CACHE = 'history-quest-v32';
 const RUNTIME_CACHE = `${CACHE}-runtime`;
 const FILES = [
     './',
@@ -13,6 +13,7 @@ const FILES = [
     'icons/apple-touch-icon.png',
     'icons/qr.svg',
     'css/style.css',
+    'css/inquiry.css',
     'js/app.js',
     'js/dom.js',
     'js/storage.js',
@@ -39,6 +40,10 @@ const FILES = [
     'content/places.js',
     'js/extras/writing.js',
     'content/writings.js',
+    'js/extras/inquiry.js',
+    'content/inquiries.js',
+    'img/inquiries/seoul-streetcar-loc.jpg',
+    'img/inquiries/tenant-farmers.svg',
     'content/q1-stone-age.js',
     'content/q2-bronze-gojoseon.js',
     'content/q3-three-kingdoms-gaya.js',

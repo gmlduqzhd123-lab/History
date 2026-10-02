@@ -25,6 +25,8 @@ python3 tests/map-regressions.py -v
 python3 tests/browser-ui.py -v
 python3 tests/activity-save.py -v
 python3 tests/extras-flow.py -v
+python3 tests/inquiry-flow.py -v
+python3 tests/inquiry-offline.py -v
 python3 tests/full-flow.py
 ```
 
@@ -53,6 +55,10 @@ python3 tests/full-flow.py
   awaited, conflicts stop completion and repeated clicks cannot duplicate saves.
 - Extra activity checks verify saved review results, timeline improvements, person
   cards and a newspaper retained in the notebook after reloading.
+- Inquiry checks exercise source selection, historical diaries, self-checks,
+  separate saved responses, editing after reloading, safe text rendering, failed
+  and concurrent save guards, locked activities and narrow screens. The offline
+  smoke check uses the actual app and service worker, including the inquiry assets.
 - The full flow completes all 50 stages, verifies unlocking/saved notes and creates a
   notebook PDF. Results go to a temporary directory printed by the runner; set
   `HISTORY_TEST_OUTPUT` to choose another output directory.

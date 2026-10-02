@@ -5,6 +5,8 @@ const svg = (body, label) =>
 const ground = `<ellipse cx="100" cy="176" rx="72" ry="10" fill="#e6d5b8"/>`;
 
 export const art = {
+    // 조선 총독부 농림국(1938)의 소작농 비율; 교과서 126쪽 수치를 재구성
+    tenantFarmers: `<svg viewBox="0 0 640 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="전체 농가 중 소작농 비율: 1916년 36.8%, 1924년 42.2%, 1932년 54.8%. 세로축 0~100%." style="width:100%;height:auto;max-width:640px"><image href="img/inquiries/tenant-farmers.svg" width="640" height="480"/></svg>`,
     // 주먹도끼: 한쪽이 뾰족한 아몬드 모양, 돌을 떼어 낸 자국
     handaxe: svg(`
         <defs><linearGradient id="ha" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#b7a58f"/><stop offset="1" stop-color="#7d6a55"/></linearGradient></defs>

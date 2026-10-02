@@ -182,8 +182,8 @@ export function newProfile(number, avatar, name = '') {
     return profile;
 }
 
-// 더 탐험하기 활동 기록 (연표·복습 상자·인물 도감·문화유산 지도·역사 글). 이어하기 코드에는 담기지 않음
-const EXTRA_KEYS = ['timeline', 'review', 'people', 'places', 'writings'];
+// 더 탐험하기 활동 기록. 쓴 글과 자료 탐구는 이 기기에만 남고 이어하기 코드에는 담기지 않음
+const EXTRA_KEYS = ['timeline', 'review', 'people', 'places', 'writings', 'inquiries'];
 export function extrasOf(profile) {
     if (!profile.extras || typeof profile.extras !== 'object') profile.extras = {};
     for (const key of EXTRA_KEYS) {

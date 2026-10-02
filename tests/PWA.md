@@ -10,12 +10,13 @@ In the managed cloud workspace, Playwright and `/usr/bin/chromium` are already
 available. Set `HISTORY_TEST_CHROMIUM` to use another existing Chromium binary.
 
 The four browser tests use isolated localhost origins, the historical v30 worker,
-the actual v31 worker, and a simulated v32 that adds a new module. They verify:
+the shipped worker, and a simulated next version that adds a new module. The
+current and next versions are derived from `sw.js`. They verify:
 
 - A complete cached app stays on one version online and offline.
-- v30 can successfully transition to v31 after the previous page closes.
-- Interrupted installation of a new dependency preserves the healthy v31 app;
-  retrying later installs a complete, working offline v32.
+- v30 can successfully transition to the shipped version after the previous page closes.
+- Interrupted installation of a new dependency preserves the healthy current app;
+  retrying later installs a complete, working offline next version.
 - New workers wait while another old tab is open, preserving its late module loads
   and old cache until activation is safe.
 
@@ -24,7 +25,7 @@ alone can keep the new worker waiting. First visits are not taken over mid-load;
 the next navigation uses the installed worker.
 
 An already installed v30 worker retains its historical network-first behavior
-until v31 activates. Shipping v31 cannot repair that old worker's behavior in
+until a new version activates. Shipping a new worker cannot repair that old worker's behavior in
 place. Protection against interrupted future updates starts with active v31.
 
 For each future app release, increase the cache version in `sw.js` and include
