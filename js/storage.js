@@ -8,6 +8,10 @@ const conflictVersions = new WeakMap();
 const ownWrites = new WeakMap();
 const copy = value => JSON.parse(JSON.stringify(value));
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+const isRecord = value => !!value && typeof value === 'object' && !Array.isArray(value);
+// 배열에 문자열 열쇠로 넣은 기록은 JSON 저장 시 사라지므로, 맵은 항상 일반 객체로 맞춤.
+// 기존 숫자 열쇠에 남은 학생 기록도 버리지 않고 보존함.
+const mapOf = value => isRecord(value) ? value : Array.isArray(value) ? Object.fromEntries(Object.entries(value)) : {};
 let coordinationDatabase;
 
 function openCoordinationDatabase() {
@@ -58,19 +62,23 @@ function readData(requireAccess = false) {
         const data = JSON.parse(stored);
         if (data && data.profiles && typeof data.profiles === 'object') {
             // 기록이 일부 빠지거나 깨져 있어도 앱이 멈추지 않도록 모양을 맞춤
+            data.profiles = mapOf(data.profiles);
             for (const [key, p] of Object.entries(data.profiles)) {
-                if (!p || typeof p !== 'object' || !Number.isInteger(Number(p.number))) { delete data.profiles[key]; continue; }
-                p.number = Number(p.number);
+                // 잘못 남은 번호 객체의 숫자 변환이 예외를 내더라도 다른 학생 기록은 보존함.
+                const number = isRecord(p) && (typeof p.number === 'number' || typeof p.number === 'string') ? Number(p.number) : NaN;
+                if (!Number.isInteger(number)) { delete data.profiles[key]; continue; }
+                p.number = number;
                 p.name = cleanName(p.name);
                 extrasOf(p);
-                if (!p.quests || typeof p.quests !== 'object') p.quests = {};
-                for (const q of Object.values(p.quests)) {
-                    if (!q || typeof q !== 'object') continue;
+                p.quests = mapOf(p.quests);
+                for (const [questId, q] of Object.entries(p.quests)) {
+                    if (!isRecord(q)) { delete p.quests[questId]; continue; }
                     if (!Array.isArray(q.notes)) q.notes = [];
-                    q.stage = Number.isFinite(q.stage) ? q.stage : 0;
+                    // 단계는 끝낸 단계 수(0~5). 음수·소수로 잘못 남으면 없는 화면을 렌더하지 않음.
+                    q.stage = Number.isFinite(q.stage) ? Math.max(0, Math.min(5, Math.trunc(q.stage))) : 0;
                 }
             }
-            if (data.current != null && !data.profiles[data.current]) data.current = null;
+            if (data.current != null && !Object.prototype.hasOwnProperty.call(data.profiles, data.current)) data.current = null;
             return data;
         }
     } catch (e) { /* 저장된 값이 깨졌거나 저장소를 쓸 수 없음 */ }
@@ -185,16 +193,22 @@ export function newProfile(number, avatar, name = '') {
 // 더 탐험하기 활동 기록. 쓴 글과 자료 탐구는 이 기기에만 남고 이어하기 코드에는 담기지 않음
 const EXTRA_KEYS = ['timeline', 'review', 'people', 'places', 'writings', 'inquiries'];
 export function extrasOf(profile) {
-    if (!profile.extras || typeof profile.extras !== 'object') profile.extras = {};
+    profile.extras = mapOf(profile.extras);
     for (const key of EXTRA_KEYS) {
-        if (!profile.extras[key] || typeof profile.extras[key] !== 'object') profile.extras[key] = {};
+        profile.extras[key] = mapOf(profile.extras[key]);
     }
+    for (const [key, writing] of Object.entries(profile.extras.writings)) {
+        if (!isRecord(writing)) { delete profile.extras.writings[key]; continue; }
+        if (!Array.isArray(writing.lines)) writing.lines = [];
+    }
+    const places = profile.extras.places;
+    if (places.visited != null) places.visited = mapOf(places.visited);
     return profile.extras;
 }
 
 // 퀘스트 기록: stage = 끝낸 단계 수, done = 퀘스트 완료
 export function questRecord(profile, questId) {
     const rec = profile.quests[questId];
-    if (!rec || typeof rec !== 'object') profile.quests[questId] = { stage: 0, done: false, notes: [], mastery: null };
+    if (!isRecord(rec)) profile.quests[questId] = { stage: 0, done: false, notes: [], mastery: null };
     return profile.quests[questId];
 }

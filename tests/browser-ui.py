@@ -172,6 +172,60 @@ class BrowserUI(unittest.TestCase):
                 self.assertEqual(after['queue'], [])
                 self.assertGreater(after['cancels'], before['cancels'])
 
+    def test_canceled_narration_callbacks_cannot_stop_a_restarted_reading(self):
+        speech = '''(() => {
+            window.speechLog = {queue: [], cancels: 0};
+            Object.defineProperty(window, 'speechSynthesis', {value: {
+                getVoices: () => [{lang: 'ko-KR'}], addEventListener() {},
+                cancel() {speechLog.cancels++;},
+                speak(utterance) {speechLog.queue.push(utterance);}
+            }});
+            window.SpeechSynthesisUtterance = function(text) {this.text = text;};
+        })();'''
+        page = self.page(init=speech)
+        self.explorer(page, stage=1)
+        page.locator('.station.open').click()
+        button = page.get_by_role('button', name='읽어 주기', exact=True)
+        expect(button).to_have_attribute('aria-pressed', 'false')
+        button.click()
+        page.evaluate('window.previousReading = speechLog.queue.at(-1)')
+        expect(button).to_have_attribute('aria-pressed', 'true')
+        button.click()  # Stop, then start again on the same button.
+        button.click()
+        cancels = page.evaluate('speechLog.cancels')
+        page.evaluate('''() => {
+            previousReading.onend();
+            previousReading.onerror({error: 'network'});
+        }''')
+        self.assertEqual(page.evaluate('speechLog.cancels'), cancels)
+        expect(button).to_have_class('speak-btn speaking')
+        expect(button).to_have_attribute('aria-pressed', 'true')
+        page.evaluate('speechLog.queue.at(-1).onend()')
+        expect(button).to_have_class('speak-btn')
+        expect(button).to_have_attribute('aria-pressed', 'false')
+        self.assertEqual(page.evaluate('speechLog.cancels'), cancels + 1)
+
+    def test_long_warning_stays_centered_during_animation_on_a_narrow_screen(self):
+        page = self.page(width=320)
+        page.evaluate('''async () => {
+            const {toast} = await import('./js/dom.js');
+            toast('⚠️ 이 기기에 저장하지 못했어요. 작성한 글을 복사해 두고 다시 저장해 주세요.');
+        }''')
+        warning = page.locator('.toast')
+        for time in (0, 100, 200):
+            with self.subTest(animation_time=time):
+                metrics = warning.evaluate('''(el, time) => {
+                    const animation = el.getAnimations()[0];
+                    if (animation) { animation.pause(); animation.currentTime = time; }
+                    const rect = el.getBoundingClientRect();
+                    return {left: rect.left, right: rect.right, width: rect.width, screen: innerWidth};
+                }''', time)
+                self.assertAlmostEqual((metrics['left'] + metrics['right']) / 2,
+                                       metrics['screen'] / 2, delta=1)
+                self.assertGreaterEqual(metrics['left'], 15)
+                self.assertLessEqual(metrics['right'], metrics['screen'] - 15)
+                self.assertGreaterEqual(metrics['width'], 250)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -2,7 +2,7 @@
 // 기록: extras.review["q3|kings"] = { q: 'q3', c: 'kings', at: 넣은(또는 다시 틀린) 시각 }
 // 맞히면 상자에서 꺼내고, 또 틀리면 다음 날 다시 나옴 (하루 뒤에 다시 떠올리는 것이 기억에 오래 남음)
 import { h, scrollTop } from '../dom.js';
-import { feedbackBox, nextButton } from '../activities/common.js';
+import { feedbackBox, nextButton, focusActivity } from '../activities/common.js';
 import { renderQuestion } from '../activities/mastery.js';
 import { setCalm, tone } from '../tone.js';
 import { extrasOf } from '../storage.js';
@@ -90,6 +90,7 @@ export function renderReview(env, stations) {
         if (index === 0) content.replaceChildren(intro, card);
         else content.replaceChildren(card);
         scrollTop();
+        focusActivity(content);
     }
 
     function showEnd() {
@@ -101,6 +102,7 @@ export function renderReview(env, stations) {
             h('p', { class: 'small muted' }, left ? `상자에 남은 개념 ${left}개는 다음에 다시 나와요.` : '복습 상자가 텅 비었어요!'),
             nextButton('🗺️ 지도로 돌아가기', () => env.go({ screen: 'map' }))));
         scrollTop();
+        focusActivity(content);
     }
 
     showItem();

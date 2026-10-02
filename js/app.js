@@ -510,6 +510,11 @@ async function deleteProfile() {
         if (data.profiles === previousProfiles) {
             data.profiles[key] = p;
             data.current = key;
+        } else {
+            // 기다리는 동안 다른 창이 저장했으면 최신 객체로 현재 학생과 화면을 다시 연결함.
+            // 다른 창에서 지운 기록은 되살리지 않음.
+            data.current = Object.prototype.hasOwnProperty.call(data.profiles, key) ? key : null;
+            go({ screen: profile() ? 'map' : 'welcome' }, true);
         }
         return;
     }
@@ -520,17 +525,30 @@ async function deleteProfile() {
 }
 
 function showRename() {
+    const key = data.current;
     const p = profile();
     const nameEl = nameInput(p.name);
+    const feedback = h('p', { class: 'muted small', role: 'status', 'aria-live': 'polite', style: 'margin-top:8px' });
     const save = async () => {
+        if (profile() !== p) return;
         const name = cleanName(nameEl.value);
         if (!name) return nameEl.focus();
         if (Object.entries(data.profiles).some(([key, other]) => key !== data.current && other.number === p.number && other.name === name)) {
             toast('이 번호에 같은 이름의 탐험가가 있어요. 구별할 수 있는 이름을 써 주세요.');
             return nameEl.focus();
         }
+        const previousName = p.name;
         p.name = name;
-        if (!await persist()) return;
+        feedback.textContent = '';
+        if (!await persist(true, '⚠️ 이름을 저장하지 못했어요. 이전 이름은 그대로 남아 있어요. 다시 시도해 주세요.')) {
+            // 저장 실패 때만 되돌림. 다른 창의 최신 기록은 덮어쓰지 않음.
+            if (data.profiles[key] === p) {
+                p.name = previousName;
+                feedback.textContent = '이름을 저장하지 못했어요. 이전 이름은 그대로 남아 있어요. 다시 시도해 주세요.';
+                nameEl.focus();
+            }
+            return;
+        }
         close();
         render();
     };
@@ -538,6 +556,7 @@ function showRename() {
     const close = modal(
         h('h2', { style: 'margin-bottom:12px' }, '✏️ 이름 바꾸기'),
         nameEl,
+        feedback,
         h('button', { class: 'btn btn-primary btn-block', type: 'button', style: 'margin-top:12px', onclick: save }, '저장하기'),
         h('button', { class: 'btn btn-block', type: 'button', style: 'margin-top:8px', onclick: () => close() }, '닫기'),
     );

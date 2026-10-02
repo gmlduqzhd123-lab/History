@@ -24,6 +24,12 @@ Updates apply after every tab/window using the previous app closes. A refresh
 alone can keep the new worker waiting. First visits are not taken over mid-load;
 the next navigation uses the installed worker.
 
+The offline readiness indicator checks that every mandatory asset remains cached,
+including images and fonts. Missing files expose a retry that reinstalls a complete
+snapshot atomically. When a newer snapshot is waiting, the indicator asks the user
+to close and reopen all app tabs instead of mixing new files into an old cache.
+`tests/offline-readiness.py` exercises corruption, repair and app-module recovery.
+
 An already installed v30 worker retains its historical network-first behavior
 until a new version activates. Shipping a new worker cannot repair that old worker's behavior in
 place. Protection against interrupted future updates starts with active v31.

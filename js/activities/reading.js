@@ -2,7 +2,7 @@
 import { h, rich, scrollTop } from '../dom.js';
 import { art } from '../art.js';
 import { speakButton, stopSpeaking } from '../tts.js';
-import { retryChoice, nextButton, artBlock } from './common.js';
+import { retryChoice, nextButton, artBlock, focusActivity } from './common.js';
 
 const MIN_READ_MS = 2500; // 읽지 않고 바로 넘기지 않도록 잠깐 기다림
 
@@ -50,6 +50,8 @@ export function renderReading(root, stage, ctx) {
             ),
         );
         scrollTop();
+        // 읽어 주기 버튼이 제목보다 앞에 있으므로 카드의 시작부터 이어 가요.
+        focusActivity(root, true);
     }
 
     showCard();

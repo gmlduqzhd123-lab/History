@@ -408,7 +408,8 @@ p { margin: 0 0 10px; }
 .modal-back { position: fixed; inset: 0; z-index: 50; background: rgba(58, 46, 40, 0.45); display: flex; align-items: center; justify-content: center; padding: 16px; }
 .modal { background: var(--card); border-radius: 22px; padding: 22px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; animation: pop-in 0.2s; }
 
-.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 60; background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 999px; font-size: 16px; animation: pop-in 0.2s; }
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 60; width: max-content; max-width: calc(100vw - 32px); background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 999px; font-size: 16px; text-align: center; overflow-wrap: anywhere; animation: toast-in 0.2s; }
+@keyframes toast-in { from { transform: translateX(-50%) scale(0.96); opacity: 0; } to { transform: translateX(-50%) scale(1); opacity: 1; } }
 
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }

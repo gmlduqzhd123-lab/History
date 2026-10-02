@@ -1,6 +1,6 @@
 // 한 버전의 앱 파일을 모두 저장한 뒤에만 사용함.
 // 업데이트는 이전 버전을 쓰는 탭이 모두 닫힐 때 적용하여 실행 중인 파일이 섞이지 않게 함.
-const CACHE = 'history-quest-v38';
+const CACHE = 'history-quest-v39';
 const RUNTIME_CACHE = `${CACHE}-runtime`;
 const FILES = [
     './',
@@ -76,6 +76,20 @@ self.addEventListener('activate', event => {
 });
 
 const APP_FILES = new Set(FILES.map(file => new URL(file, self.location.href).href));
+
+// 활성화된 워커라도 브라우저가 저장한 파일을 지울 수 있다. 준비 안내는 실제 저장본을 확인한다.
+self.addEventListener('message', event => {
+    if (event.data?.type !== 'HISTORY_OFFLINE_STATUS' || !event.ports[0]) return;
+    event.waitUntil((async () => {
+        try {
+            const cache = await caches.open(CACHE);
+            const stored = await Promise.all([...APP_FILES].map(url => cache.match(url)));
+            event.ports[0].postMessage({ complete: stored.every(Boolean), cache: CACHE });
+        } catch {
+            event.ports[0].postMessage({ complete: false, cache: CACHE });
+        }
+    })());
+});
 
 // 앱 파일은 설치 때 완성한 저장본만 사용. 새 파일은 다음 서비스 워커 설치 때 받음.
 // 사진·글꼴 등 별도 자원은 앱 저장본을 바꾸지 않는 별도 캐시에 저장.

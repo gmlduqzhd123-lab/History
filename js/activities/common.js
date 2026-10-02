@@ -78,6 +78,22 @@ export function nextButton(label, onClick, primary = true) {
     return btn;
 }
 
+// 활동 안에서 카드·문제를 바꾸면 이전 버튼이 사라져 초점이 body로 빠져요.
+// 새 내용의 제목을 읽게 하고, 다음 Tab도 새 활동 안에서 이어 가요.
+let activityTitleNumber = 0;
+export function focusActivity(root, fromStart = false) {
+    if (!root.isConnected || document.querySelector('[role="dialog"]')) return;
+    const heading = root.querySelector('h2, h3');
+    const target = fromStart ? root : heading || root.querySelector('.score-big, .stamp, .scene') || root;
+    if (fromStart && heading) {
+        heading.id ||= `activity-title-${++activityTitleNumber}`;
+        root.setAttribute('role', 'group');
+        root.setAttribute('aria-labelledby', heading.id);
+    }
+    target.tabIndex = -1;
+    target.focus({ preventScroll: true });
+}
+
 // 이야기 카드·장면 그림: 등록된 사진이나 그림 이름이면 그것을, 아니면 이모지
 export function artBlock(artName, _arts, className = 'story-art') {
     if (hasPicture(artName)) {

@@ -1,6 +1,6 @@
 // ④ 개념 도전: 개념마다 한 문제씩, 틀린 개념은 한 번 더 확인 (비슷한 문제가 있으면 그 문제로, 점수는 첫 시도만 셈)
 import { h, rich, shuffle, scrollTop, modal } from '../dom.js';
-import { feedbackBox, questionHead, nextButton } from './common.js';
+import { feedbackBox, questionHead, nextButton, focusActivity } from './common.js';
 import { readingReview } from './reading.js';
 import { tone } from '../tone.js';
 
@@ -70,6 +70,7 @@ export function renderMastery(root, stage, ctx) {
             const body = renderQuestion(q, onAnswer, headRow);
             root.replaceChildren(h('div', { class: 'card' }, headRow, body, slot));
             scrollTop();
+            focusActivity(root);
         }
 
         async function showResult() {
@@ -117,6 +118,7 @@ export function renderMastery(root, stage, ctx) {
                             nextButton('🔁 새 문제로 다시 도전', start)),
                 ));
                 scrollTop();
+                focusActivity(root);
             } finally { finishing = false; }
         }
 
@@ -141,7 +143,7 @@ export function renderQuestion(q, onAnswer, headRow) {
         const items = pickSortItems(q);
         const choice = new Map();
         const rows = items.map(item => {
-            const seg = h('div', { class: 'seg', role: 'group' });
+            const seg = h('div', { class: 'seg', role: 'group', 'aria-label': `${item.t} 분류` });
             const row = h('div', { class: 'sort-item' }, h('span', { class: 'label' }, item.t), seg);
             q.buckets.forEach((name, b) => {
                 const btn = h('button', { type: 'button', 'aria-pressed': 'false' }, name);

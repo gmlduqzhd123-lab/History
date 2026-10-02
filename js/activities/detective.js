@@ -1,7 +1,7 @@
 // ① 유물 탐정: 조각조각 가려진 유물을 단서로 추리 → 쓰임 → 시대 → 알게 된 점
 import { h, shuffle, scrollTop } from '../dom.js';
 import { fillPicture, creditLine } from '../picture.js';
-import { retryChoice, feedbackBox, nextButton } from './common.js';
+import { retryChoice, feedbackBox, nextButton, focusActivity } from './common.js';
 import { speakButton, stopSpeaking } from '../tts.js';
 import { tone } from '../tone.js';
 
@@ -92,6 +92,7 @@ export function renderDetective(root, stage, ctx) {
             h('div', { class: 'card' }, flow),
         );
         scrollTop();
+        focusActivity(root);
     }
 
     showArtifact();

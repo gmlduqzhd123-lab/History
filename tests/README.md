@@ -21,13 +21,17 @@ Run all checks from the repository root:
 ```sh
 node --test tests/storage.test.mjs tests/grading.test.mjs tests/pwa.test.cjs
 python3 tests/storage_browser.py -v
+python3 tests/rename-regressions.py -v
+python3 tests/delete-save-race.py -v
 python3 tests/map-regressions.py -v
 python3 tests/browser-ui.py -v
 python3 tests/accessibility-navigation.py -v
 python3 tests/landing-page.py -v
 python3 tests/activity-save.py -v
+python3 tests/activity-navigation.py -v
 python3 tests/extras-flow.py -v
 python3 tests/writing-regressions.py -v
+python3 tests/writing-print.py -v
 python3 tests/draft-deletion.py -v
 python3 tests/inquiry-flow.py -v
 python3 tests/inquiry-print.py -v
@@ -38,6 +42,8 @@ python3 tests/full-flow.py
 
 - Storage checks protect against stale profile writes, deleted-record resurrection,
   same-number identity confusion, rename collisions and lost mastery status. They
+  recover damaged stage/map/writing records without dropping valid classmates'
+  work and require repaired maps to retain subsequent saves after reloading. They
   also cover queued changes/reversions and preserve in-memory learning when browser
   storage or coordination is unavailable. Browser barrier tests pause one tab
   between reading and writing while another tab requests a save, requiring atomic
@@ -54,11 +60,15 @@ python3 tests/full-flow.py
   to retain their resume code rather than writing without a lock.
 - Grading checks validate normal examples, word banks, Korean particles and synonyms,
   and reject unrelated words or answers missing required facts.
+- Rename regressions require failed storage to retain the previous name, keep a
+  retry available, and preserve learning records after a successful rename/reload.
 - Map checks click real dot centers on mobile/desktop and require correct 5/5 scoring.
 - UI checks cover keyboard focus, nested dialogs, narrow screens, concealed accessible
   labels, failed-photo fallback and cancellation of previous narration.
 - Navigation accessibility checks cover heading focus, arrow-key tab selection,
   avatar selection state, and preserved place-selection and modal focus.
+- Activity navigation checks require keyboard focus to move to each new reading
+  card, concept question, review item, map question and activity result.
 - Activity save checks defer completion callbacks to verify that save results are
   awaited, conflicts stop completion and repeated clicks cannot duplicate saves.
 - Extra activity checks verify saved review results, timeline improvements, person
@@ -67,6 +77,9 @@ python3 tests/full-flow.py
   preservation of previous work, and separate drafts across activities and students.
 - Draft deletion checks require successful deletion to remove that student's writing
   and inquiry drafts, while failed deletion and other students' drafts remain safe.
+- Delete-save race checks pause a deletion while another tab changes a classmate's
+  record, then fail its save. The active student and menu must recover without
+  overwriting the classmate's update or reporting a successful deletion.
 - Inquiry checks exercise source selection, historical diaries, self-checks,
   separate saved responses, editing after reloading, safe text rendering, failed
   and concurrent save guards, locked activities and narrow screens. The offline
@@ -74,9 +87,14 @@ python3 tests/full-flow.py
 - Individual inquiry/diary PDF checks require Poppler's `pdftotext` and verify student
   name, number and activity title in the actual printed document. Without Poppler,
   the runner explicitly reports this check as skipped.
+- Standalone newspaper/letter PDF checks also use Poppler and require the student
+  author, title/recipient and written text, while excluding screen buttons and save
+  confirmations from the printed work.
 - Offline readiness checks interrupt a required asset and worker registration on
   fresh origins, then require a visible retry, successful preparation and an actual
-  offline reload. No student records are used.
+  offline reload. They also remove mandatory files from an active cache, require
+  an honest status and complete repair, and preserve version coherence while a
+  newer snapshot waits for older tabs to close. No student records are used.
 - The full flow completes all 50 stages, verifies unlocking/saved notes and creates a
   notebook PDF. Results go to a temporary directory printed by the runner; set
   `HISTORY_TEST_OUTPUT` to choose another output directory.

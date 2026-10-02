@@ -1,6 +1,6 @@
 // ⏳ 연표 잇기: 섞인 사건 카드를 가장 먼저 일어난 일부터 눌러 연표에 붙임
 import { h, shuffle, scrollTop } from '../dom.js';
-import { feedbackBox, nextButton } from '../activities/common.js';
+import { feedbackBox, nextButton, focusActivity } from '../activities/common.js';
 import { setCalm } from '../tone.js';
 import { extrasOf } from '../storage.js';
 
@@ -40,6 +40,7 @@ export function renderTimeline(env, timeline, { calm = false } = {}) {
             h('p', { class: 'small muted' }, '완성한 연표를 위에서 처음부터 끝까지 한 번 더 읽어 보세요.'),
             nextButton('🔁 다시 해 보기', () => env.go({ screen: 'timeline', key: timeline.key }), false),
             nextButton('🗺️ 지도로 돌아가기', () => env.go({ screen: 'map' }))));
+        focusActivity(body.lastElementChild);
     }
 
     const cards = shuffle(timeline.events.map((ev, i) => ({ ev, i })));

@@ -2,7 +2,7 @@
 import { h, rich, scrollTop } from '../dom.js';
 import { art } from '../art.js';
 import { speakButton, stopSpeaking } from '../tts.js';
-import { retryChoice, nextButton, artBlock } from './common.js';
+import { retryChoice, nextButton, artBlock, focusActivity } from './common.js';
 
 export function renderAdventure(root, stage, ctx) {
     const learned = [];
@@ -16,6 +16,7 @@ export function renderAdventure(root, stage, ctx) {
             nextButton('이야기 시작하기 ▶', () => showStep(0)),
         ));
         scrollTop();
+        focusActivity(root);
     }
 
     function showStep(i) {
@@ -41,6 +42,7 @@ export function renderAdventure(root, stage, ctx) {
             after,
         ));
         scrollTop();
+        focusActivity(root);
     }
 
     function showEnding() {
@@ -52,6 +54,7 @@ export function renderAdventure(root, stage, ctx) {
             nextButton(`${stage.title} 완료! 다음 단계로 ▶`, () => ctx.done()),
         ));
         scrollTop();
+        focusActivity(root);
     }
 
     showIntro();

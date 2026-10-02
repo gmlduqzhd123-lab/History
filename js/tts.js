@@ -15,6 +15,7 @@ if (ttsSupported) {
 
 let activeButton = null;
 let warnedNoVoice = false;
+let narrationId = 0;
 
 // 가운뎃점이 든 역사 이름은 기계가 "삼 점 일"처럼 읽지 않도록 부르는 말로 바꿔 읽음
 const SPOKEN = [['3·1', '삼일'], ['6·25', '육이오'], ['5·10', '오일공'], ['1·4', '일사'], ['8·15', '팔일오']];
@@ -28,8 +29,12 @@ function cleanForSpeech(text) {
 
 export function stopSpeaking() {
     if (!ttsSupported) return;
+    narrationId++;
     window.speechSynthesis.cancel();
-    if (activeButton) activeButton.classList.remove('speaking');
+    if (activeButton) {
+        activeButton.classList.remove('speaking');
+        activeButton.setAttribute('aria-pressed', 'false');
+    }
     activeButton = null;
 }
 
@@ -41,7 +46,7 @@ function splitSentences(text) {
 
 export function speak(text, button) {
     if (!ttsSupported) return;
-    const wasActive = activeButton === button;
+    const wasActive = !!button && activeButton === button;
     stopSpeaking();
     if (wasActive) return; // 읽는 중에 다시 누르면 멈춤
     // 한국어 음성이 없는 기기(일부 크롬북·윈도 PC)는 다른 나라 목소리로 읽으므로 한 번 알려 줌
@@ -51,15 +56,20 @@ export function speak(text, button) {
     }
     const sentences = splitSentences(cleanForSpeech(text));
     if (!sentences.length) return;
-    if (button) { button.classList.add('speaking'); activeButton = button; }
-    const mine = activeButton;
+    if (button) {
+        button.classList.add('speaking');
+        button.setAttribute('aria-pressed', 'true');
+        activeButton = button;
+    }
+    // 취소한 읽기의 늦은 종료 알림이 같은 버튼에서 새로 시작한 읽기를 멈추지 않게 함.
+    const mine = narrationId;
     sentences.forEach((sentence, i) => {
         const utterance = new SpeechSynthesisUtterance(sentence);
         utterance.lang = 'ko-KR';
         if (koVoice) utterance.voice = koVoice;
         utterance.rate = 0.95;
-        if (i === sentences.length - 1) utterance.onend = () => { if (activeButton === mine) stopSpeaking(); };
-        utterance.onerror = e => { if (e.error !== 'interrupted' && e.error !== 'canceled' && activeButton === mine) stopSpeaking(); };
+        if (i === sentences.length - 1) utterance.onend = () => { if (narrationId === mine) stopSpeaking(); };
+        utterance.onerror = e => { if (e.error !== 'interrupted' && e.error !== 'canceled' && narrationId === mine) stopSpeaking(); };
         window.speechSynthesis.speak(utterance);
     });
 }
@@ -67,7 +77,7 @@ export function speak(text, button) {
 // 🔊 읽어 주기 버튼 (지원하지 않는 기기에서는 만들지 않음)
 export function speakButton(getText, label = '읽어 주기') {
     if (!ttsSupported) return null;
-    const btn = h('button', { class: 'speak-btn', type: 'button', 'aria-label': label }, `🔊 ${label}`);
+    const btn = h('button', { class: 'speak-btn', type: 'button', 'aria-label': label, 'aria-pressed': 'false' }, `🔊 ${label}`);
     btn.addEventListener('click', () => speak(typeof getText === 'function' ? getText() : getText, btn));
     return btn;
 }

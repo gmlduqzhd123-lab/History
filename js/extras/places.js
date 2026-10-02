@@ -1,6 +1,6 @@
 // 🗺️ 문화유산 지도: 배운 유적이 있는 곳을 지도에서 눌러 보고, "지도에서 찾기" 문제를 풂
 import { h, shuffle, scrollTop } from '../dom.js';
-import { feedbackBox, nextButton } from '../activities/common.js';
+import { feedbackBox, nextButton, focusActivity } from '../activities/common.js';
 import { extrasOf } from '../storage.js';
 import { places, outline, jeju, dmzLine } from '../../content/places.js';
 
@@ -162,6 +162,7 @@ function renderQuiz(env, stations) {
                 h('div', { class: 'map-side' }, h('div', { class: 'card' }, placeList(env, {}, null, pick)))),
         );
         scrollTop();
+        focusActivity(content);
     }
 
     async function finish() {
@@ -178,6 +179,7 @@ function renderQuiz(env, stations) {
             nextButton('🔁 다시 풀기', () => env.go({ screen: 'places', mode: 'quiz' }), false),
             nextButton('🗺️ 문화유산 지도로', () => env.go({ screen: 'places' }))));
         scrollTop();
+        focusActivity(content);
     }
 
     show();

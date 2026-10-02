@@ -279,6 +279,88 @@ class StorageBrowserTests(unittest.TestCase):
         expect(self.page.locator('.code-box')).to_contain_text('-')
         self.assertIsNone(self.read(), 'coordination failure must not perform an unprotected write')
 
+    def test_malformed_quest_stages_still_open_a_valid_activity(self):
+        for stage, heading in [(-1, '유물 탐정'), (1.5, '이야기 카드')]:
+            with self.subTest(stage=stage):
+                self.seed({'1:하늘': profile('하늘', stage=stage)}, '1:하늘')
+                self.page.locator('.station').first.click()
+                expect(self.page.locator('.stage-head h2')).to_have_text(heading)
+
+    def test_array_backed_quests_keep_completed_progress_after_reload(self):
+        existing = profile('하늘')
+        existing['quests'] = []
+        self.seed({'1:하늘': existing}, '1:하늘')
+        self.page.locator('.station').first.click()
+        answers = [
+            ('동물을 사냥하고, 고기를 자르고, 땅을 파는 데 썼어요.', '구석기 시대'),
+            ('음식을 담거나 저장하고, 끓이는 데 썼어요.', '신석기 시대'),
+            ('곡식이나 열매를 갈아서 껍질을 벗기거나 가루로 만들었어요.', '신석기 시대'),
+        ]
+        for index, (use, era) in enumerate(answers):
+            self.page.locator('button.choice').filter(has_text=use).click()
+            self.page.locator('button.choice').filter(has_text=era).click()
+            label = '다음 유물 조사하기 ▶' if index < 2 else '유물 탐정 완료! 다음 단계로 ▶'
+            self.page.get_by_role('button', name=label, exact=True).click()
+        expect(self.page.locator('.stage-head h2')).to_have_text('이야기 카드')
+        self.assertEqual(self.read()['profiles']['1:하늘']['quests']['q1']['stage'], 1)
+        self.page.reload(wait_until='domcontentloaded')
+        self.page.locator('.station').first.click()
+        expect(self.page.locator('.stage-head h2')).to_have_text('이야기 카드')
+
+    def test_array_backed_profiles_keep_a_newly_registered_student(self):
+        self.seed([profile('하늘')], '0')
+        self.page.get_by_label('홈으로', exact=True).click()
+        self.page.get_by_role('button', name='🙋 새 탐험가로 시작하기', exact=True).click()
+        self.page.get_by_label('이름', exact=True).fill('바다')
+        self.page.locator('.num-grid').get_by_role('button', name='2', exact=True).click()
+        self.page.get_by_role('button', name='🚀 탐험 시작!', exact=True).click()
+        self.page.get_by_role('button', name='알겠어요!', exact=True).click()
+        saved = self.read()['profiles']
+        self.assertEqual(saved['0']['name'], '하늘')
+        self.assertEqual(saved['2:바다']['name'], '바다')
+        self.page.reload(wait_until='domcontentloaded')
+        expect(self.page.locator('.explorer-list button').filter(has_text='바다')).to_be_visible()
+
+    def test_malformed_extra_records_keep_notebook_and_map_usable(self):
+        existing = profile('하늘', stage=5)
+        existing['extras'] = {
+            'writings': {
+                'u1': {'title': '기존 신문', 'kind': 'news', 'lines': None},
+                'u2': {'title': '정상 편지', 'kind': 'letter', 'to': '선생님', 'lines': ['남아 있는 편지']},
+            },
+            'places': {'visited': '깨진 방문 기록'},
+        }
+        self.seed({'1:하늘': existing}, '1:하늘')
+        self.page.get_by_role('button', name='📒 나의 역사 노트', exact=True).click()
+        expect(self.page.locator('.np-head')).to_have_text('기존 신문')
+        expect(self.page.get_by_text('남아 있는 편지', exact=True)).to_be_visible()
+        self.page.get_by_label('홈으로', exact=True).click()
+        self.page.locator('.explorer-list button').filter(has_text='하늘').click()
+        self.page.get_by_role('button', name='문화유산 지도', exact=False).click()
+        self.page.locator('.place-chip:not(.locked)').first.click()
+        saved = self.read()['profiles']['1:하늘']['extras']
+        self.assertTrue(any(saved['places']['visited'].values()))
+        self.assertEqual(saved['writings']['u2']['lines'], ['남아 있는 편지'])
+
+    def test_invalid_current_key_returns_to_the_student_picker(self):
+        self.seed({'1:하늘': profile('하늘')}, 'toString')
+        expect(self.page.locator('.explorer-list button').filter(has_text='하늘')).to_be_visible()
+        self.page.locator('.explorer-list button').filter(has_text='하늘').click()
+        expect(self.page.get_by_label('탐험가 메뉴', exact=True)).to_contain_text('하늘')
+
+    def test_one_malformed_profile_keeps_other_students_available(self):
+        self.seed({
+            'broken': {'number': {'toString': None}, 'quests': {}},
+            '2:바다': profile('바다', number=2, stage=4),
+        }, 'broken')
+        expect(self.page.locator('.explorer-list button').filter(has_text='바다')).to_be_visible()
+        self.page.locator('.explorer-list button').filter(has_text='바다').click()
+        self.rename('새바다')
+        saved = self.read()['profiles']['2:바다']
+        self.assertEqual(saved['name'], '새바다')
+        self.assertEqual(saved['quests']['q1']['stage'], 4)
+        self.assertEqual(saved['quests']['q1']['notes'], ['내 기록'])
+
 
 class AtomicStorageBrowserTests(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):

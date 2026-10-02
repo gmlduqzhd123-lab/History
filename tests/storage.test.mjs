@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { beforeEach, test } from 'node:test';
-import { loadData, saveData, newProfile, questRecord } from '../js/storage.js';
+import { loadData, saveData, newProfile, questRecord, extrasOf } from '../js/storage.js';
 import { encodeProgress, decodeProgress } from '../js/code.js';
 import { questOrder, avatars } from '../content/quests.js';
 
@@ -155,6 +155,86 @@ test('legacy records keep their keys, notes and progress through a valid rename'
     assert.deepEqual(read().profiles['1'].quests.q1.notes, ['옛 기록']);
     assert.equal(read().profiles['1'].quests.q1.stage, 4);
     assert.equal(read().current, '1');
+});
+
+test('malformed quest stages recover without discarding valid notes or other progress', async () => {
+    const p = newProfile(1, avatars[0], '하늘');
+    p.quests = {
+        q1: { stage: -1, notes: ['남아 있는 정리'] },
+        q2: { stage: 1.5, notes: ['두 번째 정리'] },
+        q3: { stage: 4, notes: ['정상 기록'], mastery: { passed: true, best: 5 } },
+        q4: null,
+    };
+    stored = JSON.stringify({ current: '1:하늘', profiles: { '1:하늘': p } });
+    const recovered = loadData().profiles['1:하늘'];
+    assert.equal(recovered.quests.q1.stage, 0);
+    assert.equal(recovered.quests.q2.stage, 1);
+    assert.deepEqual(recovered.quests.q1.notes, ['남아 있는 정리']);
+    assert.deepEqual(recovered.quests.q2.notes, ['두 번째 정리']);
+    assert.deepEqual(recovered.quests.q3, p.quests.q3);
+    assert.equal(recovered.quests.q4, undefined);
+});
+
+test('array-backed maps retain new students and progress after successful saves', async () => {
+    const p = newProfile(1, avatars[0], '하늘');
+    p.quests = [];
+    p.extras.writings = [];
+    stored = JSON.stringify({ current: '0', profiles: [p] });
+    const data = loadData();
+    data.profiles['2:바다'] = newProfile(2, avatars[1], '바다');
+    questRecord(data.profiles['0'], 'q1').stage = 1;
+    extrasOf(data.profiles['0']).writings.u1 = { title: '내 신문', kind: 'news', lines: ['내 글'] };
+    assert.equal(await saveData(data), true);
+    const saved = loadData();
+    assert.equal(saved.profiles['2:바다'].name, '바다');
+    assert.equal(saved.profiles['0'].name, '하늘');
+    assert.equal(saved.profiles['0'].quests.q1.stage, 1);
+    assert.deepEqual(saved.profiles['0'].extras.writings.u1.lines, ['내 글']);
+});
+
+test('damaged writing and visited records do not erase other valid work', async () => {
+    const p = newProfile(1, avatars[0], '하늘');
+    p.extras.writings = {
+        u1: { title: '기존 신문', kind: 'news', lines: null },
+        u2: { title: '정상 편지', kind: 'letter', lines: ['남아 있는 편지'] },
+        u3: true,
+    };
+    p.extras.places.visited = '깨진 방문 기록';
+    stored = JSON.stringify({ current: '1:하늘', profiles: { '1:하늘': p } });
+    const data = loadData();
+    const extras = extrasOf(data.profiles['1:하늘']);
+    assert.deepEqual(extras.writings.u1.lines, []);
+    assert.equal(extras.writings.u1.title, '기존 신문');
+    assert.deepEqual(extras.writings.u2.lines, ['남아 있는 편지']);
+    assert.equal(extras.writings.u3, undefined);
+    extras.places.visited.yeoncheon = true;
+    assert.equal(await saveData(data), true);
+    assert.equal(read().profiles['1:하늘'].extras.places.visited.yeoncheon, true);
+    assert.deepEqual(read().profiles['1:하늘'].extras.writings.u2.lines, ['남아 있는 편지']);
+});
+
+test('a damaged current key cannot select an inherited object as a student', () => {
+    stored = JSON.stringify({ current: 'toString', profiles: { '1:하늘': newProfile(1, avatars[0], '하늘') } });
+    const data = loadData();
+    assert.equal(data.current, null);
+    assert.equal(data.profiles['1:하늘'].name, '하늘');
+});
+
+test('one malformed student number does not discard another student’s valid work', async () => {
+    const valid = newProfile(2, avatars[1], '바다');
+    valid.quests.q1 = { stage: 4, notes: ['정상 정리'], mastery: { passed: true, best: 4 } };
+    stored = JSON.stringify({ current: 'broken', profiles: {
+        broken: { number: { toString: null }, quests: {} },
+        '2:바다': valid,
+    } });
+    const data = loadData();
+    assert.equal(data.current, null);
+    assert.equal(data.profiles.broken, undefined);
+    assert.deepEqual(data.profiles['2:바다'].quests.q1, valid.quests.q1);
+    data.profiles['2:바다'].name = '새바다';
+    assert.equal(await saveData(data), true);
+    assert.deepEqual(read().profiles['2:바다'].quests.q1.notes, ['정상 정리']);
+    assert.equal(read().profiles['2:바다'].quests.q1.stage, 4);
 });
 
 test('storage errors return failure without deleting stored records', async () => {

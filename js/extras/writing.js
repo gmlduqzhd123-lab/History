@@ -181,7 +181,7 @@ export function renderWriting(env, key, optionId) {
         feedback.textContent = '';
         content.replaceChildren(
             h('div', { class: 'card' }, writingView(store[key], env.author())),
-            h('div', { class: 'card stack' },
+            h('div', { class: 'card stack no-print' },
                 h('p', { class: 'center' }, '나의 역사 노트에도 저장했어요.'),
                 h('button', { class: 'btn btn-block no-print', type: 'button', onclick: () => window.print() }, '🖨️ 인쇄하기 / PDF로 저장'),
                 nextButton('📒 나의 역사 노트 보기', () => env.go({ screen: 'notes' }), false),
