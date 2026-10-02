@@ -81,6 +81,31 @@ class GuideVideo(unittest.TestCase):
         expect(page.locator('#app.landing-page')).to_be_visible()
         return page, requests
 
+    def click_native_mute_button(self, page, video):
+        # Native media controls live in Chromium's closed user-agent shadow root.
+        # Click the actual control using its accessible node and rendered bounds.
+        video.hover()
+        session = page.context.new_cdp_session(page)
+        try:
+            controls = session.send('Accessibility.getFullAXTree')['nodes']
+            for node in controls:
+                if node.get('role', {}).get('value') != 'button' or not node.get('backendDOMNodeId'):
+                    continue
+                backend_id = node['backendDOMNodeId']
+                attributes = session.send('DOM.describeNode', {'backendNodeId': backend_id})['node'].get('attributes', [])
+                attributes = dict(zip(attributes[::2], attributes[1::2]))
+                if attributes.get('pseudo') != '-webkit-media-controls-mute-button':
+                    continue
+                disabled = any(prop['name'] == 'disabled' and prop['value']['value']
+                               for prop in node.get('properties', []))
+                self.assertFalse(disabled, 'The soundtrack must enable the native mute control.')
+                bounds = session.send('DOM.getBoxModel', {'backendNodeId': backend_id})['model']['content']
+                page.mouse.click(sum(bounds[::2]) / 4, sum(bounds[1::2]) / 4)
+                return
+            self.fail('The native player must expose its mute button.')
+        finally:
+            session.detach()
+
     def test_player_has_native_controls_captions_and_complete_written_instructions(self):
         page, _ = self.page()
         guide = page.get_by_role('region', name='역사 탐험, 이렇게 시작해요.', exact=True)
@@ -89,6 +114,7 @@ class GuideVideo(unittest.TestCase):
         for attribute in ('controls', 'playsinline'):
             self.assertTrue(video.evaluate('(el, key) => el.hasAttribute(key)', attribute))
         self.assertFalse(video.evaluate('el => el.hasAttribute("autoplay")'))
+        self.assertFalse(video.evaluate('el => el.hasAttribute("muted")'))
         expect(video).to_have_attribute('preload', 'none')
         expect(video).to_have_attribute('poster', 'media/history-quest-guide-poster.jpg')
         expect(video).to_have_attribute('width', '1280')
@@ -110,6 +136,8 @@ class GuideVideo(unittest.TestCase):
         expect(guide.locator('ol')).to_contain_text('자료 탐구와 역사 일기')
         expect(guide.locator('ol')).to_contain_text('PDF로 보관')
         expect(guide.locator('ol')).to_contain_text('진도만 옮겨요')
+        expect(guide.locator('figcaption')).to_contain_text('배경음악과 효과음')
+        expect(guide.locator('figcaption')).to_contain_text('음소거해도 화면 안내와 한국어 자막')
         expect(guide.locator('figcaption')).to_contain_text('처음 영상을 볼 때는 인터넷 연결이 필요해요.')
 
     def test_movie_waits_for_user_playback_and_does_not_create_student_records(self):
@@ -117,6 +145,8 @@ class GuideVideo(unittest.TestCase):
         page.evaluate('document.fonts.ready')
         video = page.locator('#video-guide video')
         self.assertTrue(video.evaluate('el => el.paused'))
+        self.assertFalse(video.evaluate('el => el.muted'))
+        self.assertEqual(video.evaluate('el => el.volume'), 1)
         self.assertEqual(video.evaluate('el => el.currentTime'), 0)
         self.assertFalse(any(url.endswith(MEDIA) for url in requests),
                          'The introductory movie must not download during an ordinary first visit.')
@@ -170,6 +200,7 @@ class GuideVideo(unittest.TestCase):
         self.assertIsNone(video.get_attribute('aria-hidden'))
         expect(video).to_be_focused()
         self.assertTrue(video.evaluate('el => el.controls'))
+        self.assertFalse(video.evaluate('el => el.muted'))
         page.keyboard.press('Space')
         page.wait_for_function('document.querySelector("#video-guide video").paused')
         expect(cover).to_be_hidden()
@@ -213,8 +244,7 @@ class GuideVideo(unittest.TestCase):
         self.addCleanup(close_server)
         page, _ = self.page(base=f'http://127.0.0.1:{server.server_port}/')
         video = page.locator('#video-guide video')
-        video.focus()
-        page.keyboard.press('Space')
+        page.get_by_role('button', name='45초 사용법 영상 재생하기', exact=True).click()
         page.wait_for_function('''() => {
             const video = document.querySelector('#video-guide video');
             return video.readyState >= 2 && !video.paused && video.currentTime > 0;
@@ -224,9 +254,22 @@ class GuideVideo(unittest.TestCase):
         self.assertLess(metadata['duration'], 120)
         self.assertGreaterEqual(metadata['width'], 640)
         self.assertGreaterEqual(metadata['height'], 360)
+        page.wait_for_function('document.querySelector("#video-guide video").webkitAudioDecodedByteCount > 0')
+        self.assertFalse(video.evaluate('el => el.muted'))
+        self.assertEqual(video.evaluate('el => el.volume'), 1)
+
+        # The player's own keyboard control changes volume, and a real click on
+        # its mute button silences the soundtrack without disabling captions.
+        video.focus()
+        page.keyboard.press('ArrowDown')
+        self.assertAlmostEqual(video.evaluate('el => el.volume'), .95)
+        self.click_native_mute_button(page, video)
+        page.wait_for_function('document.querySelector("#video-guide video").muted')
         video.focus()
         page.keyboard.press('Space')
         page.wait_for_function('document.querySelector("#video-guide video").paused')
+        self.assertTrue(video.evaluate('el => el.muted'))
+        self.assertAlmostEqual(video.evaluate('el => el.volume'), .95)
         target = min(20, metadata['duration'] / 2)
         video.evaluate('(el, time) => { el.currentTime = time; }', target)
         page.wait_for_function('''time => {
@@ -245,6 +288,15 @@ class GuideVideo(unittest.TestCase):
         self.assertEqual(captions['language'], 'ko')
         self.assertEqual(captions['mode'], 'showing')
         self.assertTrue(any('탐험' in text for text in captions['cues']))
+        video.focus()
+        page.keyboard.press('Space')
+        page.wait_for_function('!document.querySelector("#video-guide video").paused')
+        self.assertTrue(video.evaluate('el => el.muted'))
+        self.assertAlmostEqual(video.evaluate('el => el.volume'), .95)
+        self.click_native_mute_button(page, video)
+        page.wait_for_function('!document.querySelector("#video-guide video").muted')
+        self.assertAlmostEqual(video.evaluate('el => el.volume'), .95)
+        self.assertEqual(video.evaluate('el => el.textTracks[0].mode'), 'showing')
         self.assertIsNone(page.evaluate('localStorage.getItem("history-quest:v1")'))
 
 

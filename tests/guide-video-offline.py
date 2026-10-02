@@ -140,15 +140,20 @@ class GuideVideoOffline(unittest.TestCase):
     def play_and_seek(self, page):
         video = page.locator('video')
         expect(video).to_have_count(1)
-        page.evaluate('''async () => {
-            const video = document.querySelector('video');
-            video.muted = true;
-            await video.play();
-        }''')
+        # Audible media needs the same explicit user action as the real player.
+        # Muting and calling play() from evaluate() would hide audio/autoplay bugs.
+        cover = page.get_by_role('button', name='45초 사용법 영상 재생하기', exact=True)
+        cover.focus()
+        page.keyboard.press('Enter')
         page.wait_for_function('''() => {
             const video = document.querySelector('video');
-            return video.duration > 20 && video.currentTime > .2 && !video.paused && !video.error;
+            return video.duration > 20 && video.currentTime > .2 && !video.paused && !video.error
+                && video.webkitAudioDecodedByteCount > 0;
         }''')
+        self.assertFalse(video.evaluate('el => el.muted'))
+        self.assertGreater(video.evaluate('el => el.volume'), 0)
+        expect(cover).to_be_hidden()
+        expect(video).to_be_focused()
         page.evaluate('''() => {
             const video = document.querySelector('video');
             video.currentTime = video.duration - 4;
@@ -159,7 +164,7 @@ class GuideVideoOffline(unittest.TestCase):
         }''')
         page.evaluate('document.querySelector("video").pause()')
 
-    def test_native_player_plays_and_seeks_after_an_offline_reload(self):
+    def test_native_player_plays_audible_audio_and_seeks_after_an_offline_reload(self):
         with self.app_fixture() as (context, page, state):
             self.play_and_seek(page)
             self.assertEqual(state['video_requests'], [None])

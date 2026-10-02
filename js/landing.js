@@ -99,7 +99,7 @@ function videoGuide() {
         h('div', { class: 'landing-video-layout' },
             h('figure', { class: 'landing-video-player' },
                 h('div', { class: 'landing-video-frame' }, video, cover),
-                h('figcaption', { id: 'landing-video-note' }, '소리 없이도 화면 안내와 한국어 자막으로 따라갈 수 있어요.',
+                h('figcaption', { id: 'landing-video-note' }, '경쾌한 배경음악과 효과음이 함께해요. 음소거해도 화면 안내와 한국어 자막으로 따라갈 수 있어요.',
                     h('span', {}, '처음 영상을 볼 때는 인터넷 연결이 필요해요.')),
                 errorMessage, fallback),
             h('div', { class: 'landing-video-summary' },
