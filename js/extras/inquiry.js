@@ -18,13 +18,21 @@ window.addEventListener('beforeunload', event => {
 const textOf = value => typeof value === 'string' ? value : '';
 const evidenceOf = saved => Array.isArray(saved?.evidence) ? saved.evidence : [];
 const kindLabel = activity => activity.kind === 'diary' ? '역사 일기' : '역사 자료 탐구';
+const profileDraftKey = (profileKey, profile) => JSON.stringify([
+    profileKey ?? `${profile.number}:${profile.name || ''}`, profile.createdAt ?? null,
+]);
 
 function draftStore(env, profile) {
     // 저장 충돌로 profile 객체가 교체되어도 같은 탐험가의 초안은 유지해요.
     // 같은 번호의 다른 학생과 새로 만든 기록은 서로 섞이지 않아요.
-    const key = JSON.stringify([env.profileKey?.() ?? `${profile.number}:${profile.name || ''}`, profile.createdAt ?? null]);
+    const key = profileDraftKey(env.profileKey?.(), profile);
     if (!drafts.has(key)) drafts.set(key, new Map());
     return drafts.get(key);
+}
+
+// 기록 삭제가 기기에 반영된 뒤에만 호출해, 실패한 삭제의 초안은 계속 보호해요.
+export function discardInquiryDrafts(profileKey, profile) {
+    drafts.delete(profileDraftKey(profileKey, profile));
 }
 
 function stateOf(saved, activity) {
@@ -41,13 +49,14 @@ function canOpen(env, activity) {
 }
 
 // 노트와 인쇄에서도 같은 자료 제목·역할·학생의 응답을 보여 줌
-export function inquiryView(saved, activity) {
+export function inquiryView(saved, activity, author = '') {
     const role = activity.roles?.find(item => item.id === saved.role);
     const date = new Date(saved.at);
     const evidence = activity.sources.filter(source => evidenceOf(saved).includes(source.id));
     return h('article', { class: 'inquiry-result' },
         h('p', { class: 'inquiry-kind' }, kindLabel(activity)),
         h('h3', { class: 'inquiry-title' }, activity.title),
+        author ? h('p', { class: 'inquiry-result-meta' }, `작성자: ${author}`) : null,
         h('p', { class: 'inquiry-result-meta' },
             Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('ko-KR'),
             role ? ` · ${role.label}` : ''),
@@ -65,6 +74,8 @@ export function renderInquiry(env, unit, activityId) {
     setCalm(unit === 2);
     const owner = env.profile();
     if (!owner) return env.go({ screen: 'welcome' });
+    // 개별 인쇄에서도 이름과 번호를 남기고, 저장 중 학생이 바뀌어도 작성자가 섞이지 않아요.
+    const author = owner.name ? `${owner.number}번 ${owner.name}` : `${owner.number}번`;
     const extra = extrasOf(owner);
     if (!extra.inquiries || typeof extra.inquiries !== 'object') extra.inquiries = {};
     const store = extra.inquiries;
@@ -292,7 +303,7 @@ export function renderInquiry(env, unit, activityId) {
         dirty = false;
         ownerDrafts.delete(activity.id);
         container.replaceChildren(
-            h('div', { class: 'card' }, inquiryView(saved, activity)),
+            h('div', { class: 'card' }, inquiryView(saved, activity, author)),
             h('div', { class: 'card inquiry-actions stack no-print' },
                 h('p', {}, '📒 나의 역사 노트에 탐구 기록을 저장했어요.'),
                 h('button', { type: 'button', class: 'btn btn-block', onclick: () => env.go({ screen: 'inquiry', unit, id: activity.id }) }, '✏️ 다시 쓰기'),

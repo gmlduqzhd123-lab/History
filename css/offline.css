@@ -1,0 +1,26 @@
+.offline-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    max-width: 1168px;
+    margin: 10px auto 0;
+    padding: 10px 16px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--card);
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.5;
+}
+.offline-status[data-state="ready"] { border-color: #bbd9c8; background: #edf7f0; color: #236346; }
+.offline-status[data-state="failed"] { border-color: #edca95; background: #fff5e7; color: #7b4314; }
+.offline-status .btn { flex: 0 0 auto; min-height: 44px; padding: 8px 14px; font-size: 14px; }
+.offline-status [hidden] { display: none; }
+@media (max-width: 540px) {
+    .offline-status { align-items: stretch; flex-direction: column; gap: 8px; padding: 10px 12px; }
+    .offline-status .btn { align-self: flex-start; }
+}
+@media print { .offline-status { display: none; } }

@@ -193,6 +193,48 @@ class StorageBrowserTests(unittest.TestCase):
         self.page.reload(wait_until='domcontentloaded')
         self.assertEqual(self.read()['profiles'], {})
 
+    def test_delete_storage_failure_retains_profile_until_successful_retry(self):
+        self.seed({'1:하늘': profile('하늘')}, '1:하늘')
+        before = self.read()
+        self.page.evaluate('''() => {
+            const set = Storage.prototype.setItem;
+            Storage.prototype.setItem = function(...args) {
+                if (window.failSave) throw new DOMException('full', 'QuotaExceededError');
+                return set.apply(this, args);
+            };
+            window.failSave = true;
+        }''')
+        self.page.on('dialog', lambda dialog: dialog.accept())
+        self.menu()
+        self.page.get_by_role('button', name='🗑️ 이 기기에서 내 기록 지우기', exact=True).click()
+        expect(self.page.get_by_text('⚠️ 기록을 지우지 못했어요. 기록은 그대로 남아 있어요. 다시 시도해 주세요.', exact=True)).to_be_visible()
+        self.assertEqual(self.read(), before)
+        self.assertEqual(self.page.get_by_text('🗑️ 기록을 지웠어요.', exact=True).count(), 0)
+        expect(self.page.get_by_label('탐험가 메뉴', exact=True)).to_contain_text('하늘')
+        self.page.reload(wait_until='domcontentloaded')
+        expect(self.page.get_by_label('탐험가 메뉴', exact=True)).to_contain_text('하늘')
+        self.menu()
+        self.page.get_by_role('button', name='🗑️ 이 기기에서 내 기록 지우기', exact=True).click()
+        expect(self.page.get_by_text('🗑️ 기록을 지웠어요.', exact=True)).to_be_visible()
+        self.assertEqual(self.read()['profiles'], {})
+        self.page.reload(wait_until='domcontentloaded')
+        expect(self.page.get_by_role('button', name='🙋 새 탐험가로 시작하기', exact=True)).to_be_visible()
+        self.assertEqual(self.read()['profiles'], {})
+
+    def test_conflicting_delete_keeps_newer_student_record(self):
+        self.seed({'1:하늘': profile('하늘')}, '1:하늘')
+        stale = self.new_page()
+        stale.evaluate('window.ignoreStorageEvents = true')
+        self.rename('새하늘')
+        stale.on('dialog', lambda dialog: dialog.accept())
+        self.menu(stale)
+        stale.get_by_role('button', name='🗑️ 이 기기에서 내 기록 지우기', exact=True).click()
+        expect(stale.get_by_text('다른 창에서 바뀐 최신 기록을 불러왔어요. 열린 앱 창을 하나만 사용해 주세요.', exact=True)).to_be_visible()
+        self.assertEqual(self.read()['profiles']['1:하늘']['name'], '새하늘')
+        self.assertEqual(stale.get_by_text('🗑️ 기록을 지웠어요.', exact=True).count(), 0)
+        stale.reload(wait_until='domcontentloaded')
+        expect(stale.get_by_label('탐험가 메뉴', exact=True)).to_contain_text('새하늘')
+
     def test_quota_failure_allows_registration_learning_and_code_export(self):
         self.context.add_init_script('Storage.prototype.setItem = () => { throw new DOMException("full", "QuotaExceededError"); }')
         self.page.reload(wait_until='domcontentloaded')

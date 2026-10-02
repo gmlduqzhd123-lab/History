@@ -23,11 +23,16 @@ node --test tests/storage.test.mjs tests/grading.test.mjs tests/pwa.test.cjs
 python3 tests/storage_browser.py -v
 python3 tests/map-regressions.py -v
 python3 tests/browser-ui.py -v
+python3 tests/accessibility-navigation.py -v
 python3 tests/landing-page.py -v
 python3 tests/activity-save.py -v
 python3 tests/extras-flow.py -v
+python3 tests/writing-regressions.py -v
+python3 tests/draft-deletion.py -v
 python3 tests/inquiry-flow.py -v
+python3 tests/inquiry-print.py -v
 python3 tests/inquiry-offline.py -v
+python3 tests/offline-readiness.py -v
 python3 tests/full-flow.py
 ```
 
@@ -52,14 +57,26 @@ python3 tests/full-flow.py
 - Map checks click real dot centers on mobile/desktop and require correct 5/5 scoring.
 - UI checks cover keyboard focus, nested dialogs, narrow screens, concealed accessible
   labels, failed-photo fallback and cancellation of previous narration.
+- Navigation accessibility checks cover heading focus, arrow-key tab selection,
+  avatar selection state, and preserved place-selection and modal focus.
 - Activity save checks defer completion callbacks to verify that save results are
   awaited, conflicts stop completion and repeated clicks cannot duplicate saves.
 - Extra activity checks verify saved review results, timeline improvements, person
   cards and a newspaper retained in the notebook after reloading.
+- Writing regressions cover failed, pending and conflicting saves, safe retries,
+  preservation of previous work, and separate drafts across activities and students.
+- Draft deletion checks require successful deletion to remove that student's writing
+  and inquiry drafts, while failed deletion and other students' drafts remain safe.
 - Inquiry checks exercise source selection, historical diaries, self-checks,
   separate saved responses, editing after reloading, safe text rendering, failed
   and concurrent save guards, locked activities and narrow screens. The offline
   smoke check uses the actual app and service worker, including the inquiry assets.
+- Individual inquiry/diary PDF checks require Poppler's `pdftotext` and verify student
+  name, number and activity title in the actual printed document. Without Poppler,
+  the runner explicitly reports this check as skipped.
+- Offline readiness checks interrupt a required asset and worker registration on
+  fresh origins, then require a visible retry, successful preparation and an actual
+  offline reload. No student records are used.
 - The full flow completes all 50 stages, verifies unlocking/saved notes and creates a
   notebook PDF. Results go to a temporary directory printed by the runner; set
   `HISTORY_TEST_OUTPUT` to choose another output directory.

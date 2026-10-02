@@ -17,10 +17,11 @@ import { renderTimeline } from './extras/timeline.js';
 import { updateReview, dueItems, waitingCount, renderReview } from './extras/review.js';
 import { renderPeople, renderPerson, peopleCount, collectedCount } from './extras/people.js';
 import { renderPlaces, placeCount, visitedCount } from './extras/places.js';
-import { renderWriting, writingView, writingFor } from './extras/writing.js';
+import { renderWriting, writingView, writingFor, discardWritingDrafts } from './extras/writing.js';
 import { inquiries } from '../content/inquiries.js';
-import { renderInquiry, inquiryView } from './extras/inquiry.js';
+import { renderInquiry, inquiryView, discardInquiryDrafts } from './extras/inquiry.js';
 import { renderLanding, landingHeader } from './landing.js';
+import { prepareOffline, remountOfflineStatus } from './offline.js';
 
 const renderers = {
     detective: renderDetective,
@@ -40,6 +41,7 @@ let ui = { screen: 'welcome' };
 let saving = false;
 let storageChanged = false;
 let screenCleanup = null;
+let screenBeforeNavigate = null;
 
 // null·false 는 건너뛰고 붙임 (append는 null을 "null" 글자로 넣어 버림)
 function mount(...nodes) { app.append(...nodes.filter(n => n !== null && n !== undefined && n !== false)); }
@@ -72,7 +74,7 @@ function newProfileKey(number, name) {
     for (let i = 2; data.profiles[key]; i++) key = `${number}:${name}:${i}`;
     return key;
 }
-async function persist(requireStorage = false) {
+async function persist(requireStorage = false, failureMessage = '') {
     if (saving) return false;
     saving = true;
     app.setAttribute('aria-busy', 'true');
@@ -85,13 +87,13 @@ async function persist(requireStorage = false) {
         if (refreshPending) refreshStorage(false);
         modal.closeAll?.();
         toast('다른 창에서 바뀐 최신 기록을 불러왔어요. 열린 앱 창을 하나만 사용해 주세요.');
-        go({ screen: profile() ? 'map' : 'welcome' });
+        go({ screen: profile() ? 'map' : 'welcome' }, true);
         return false;
     }
     if (refreshPending && refreshStorage()) return false;
-    if (!saved) toast(requireStorage
+    if (!saved) toast(failureMessage || (requireStorage
         ? '⚠️ 이 기기에 저장하지 못했어요. 작성한 글을 복사해 두고 다시 저장해 주세요.'
-        : '⚠️ 이 기기에 저장하지 못했어요. 이어하기 코드를 적어 두세요.');
+        : '⚠️ 이 기기에 저장하지 못했어요. 이어하기 코드를 적어 두세요.'));
     // 저장 공간이 부족해도 이 창에서 학습과 이어하기 코드 사용은 계속할 수 있음
     return requireStorage ? !!saved : true;
 }
@@ -116,7 +118,7 @@ function refreshStorage(notice = true) {
     if (activeChanged) {
         modal.closeAll?.();
         if (notice) toast(profile() ? '다른 창에서 바뀐 최신 기록을 불러왔어요.' : '다른 창에서 이 탐험가의 기록을 지웠어요.');
-        go({ screen: profile() ? 'map' : 'welcome' });
+        go({ screen: profile() ? 'map' : 'welcome' }, true);
     } else if (ui.screen === 'welcome') render();
     return activeChanged;
 }
@@ -127,17 +129,34 @@ window.addEventListener('storage', event => {
     refreshStorage();
 });
 
-function go(next) {
+function navigateAfterGuard(next, proceed) {
+    if (screenBeforeNavigate) screenBeforeNavigate(next, proceed);
+    else proceed();
+}
+
+function go(next, skipGuard = false) {
+    if (!skipGuard && screenBeforeNavigate) {
+        navigateAfterGuard(next, () => go(next, true));
+        return;
+    }
     stopSpeaking();
     const y = window.scrollY;
     ui = next;
-    render();
+    render({ focusHeading: !next.keepScroll, focusId: next.focusId });
     // keepScroll: 같은 화면 안에서 고르기만 바뀔 때(문화유산 지도의 곳 고르기)는 보던 자리를 지킴
     if (next.keepScroll) window.scrollTo(0, y);
     else scrollTop();
+    // 시작하기·사용법 탭은 페이지 길이가 달라도 선택한 탭이 화면 안에 보이게 함.
+    if (next.focusId) document.getElementById(next.focusId)?.scrollIntoView({ block: 'nearest' });
 }
 
-function render() {
+function render({ focusHeading = false, focusId = null } = {}) {
+    // 같은 화면을 다시 그릴 때는 선택하던 버튼을 지키고, 새 화면에서는 제목부터 읽게 함.
+    const active = app.contains(document.activeElement) ? document.activeElement : null;
+    const previousFocus = active ? {
+        id: active.id, tag: active.tagName, label: active.getAttribute('aria-label'), text: active.textContent,
+    } : null;
+    screenBeforeNavigate = null;
     screenCleanup?.();
     screenCleanup = null;
     clear(app);
@@ -146,6 +165,21 @@ function render() {
     app.classList.toggle('landing-page', ui.screen === 'welcome');
     document.body.classList.toggle('landing-home', ui.screen === 'welcome');
     ({ welcome: renderWelcome, register: renderRegister, code: renderCodeEntry, map: renderMap, quest: renderQuest, notes: renderNotes, timeline: renderTimelineScreen, review: () => renderReview(env, stations), people: () => renderPeople(env, stations), person: () => renderPerson(env, stations, ui.id), places: () => renderPlaces(env, stations, ui), writing: renderWritingScreen, inquiry: renderInquiryScreen }[ui.screen] || renderWelcome)();
+    remountOfflineStatus();
+    if (document.querySelector('[role="dialog"]')) return;
+    const heading = () => app.querySelector('.stage-head h2') || app.querySelector('h1, h2, h3') || app;
+    let target = focusId ? document.getElementById(focusId) : null;
+    if (!target && focusHeading) target = heading();
+    if (!target && previousFocus) {
+        target = previousFocus.id ? document.getElementById(previousFocus.id) :
+            [...app.querySelectorAll('button, input, select, textarea, a[href], [tabindex]')].find(el =>
+                el.tagName === previousFocus.tag && el.getAttribute('aria-label') === previousFocus.label && el.textContent === previousFocus.text);
+        target ||= heading();
+    }
+    if (target) {
+        if (!target.matches('button, input, select, textarea, a[href], [tabindex]')) target.tabIndex = -1;
+        target.focus({ preventScroll: true });
+    }
 }
 
 // 더 탐험하기 활동이 쓰는 공통 도구
@@ -155,6 +189,7 @@ const env = {
     stationDone: id => openAll || !!profile().quests[id]?.done,
     canInquire: activity => openAll || !!profile()?.quests[activity.questId]?.done,
     onDispose: cleanup => { screenCleanup = cleanup; },
+    onBeforeNavigate: guard => { screenBeforeNavigate = guard; },
     unitTitle: u => units[u].title,
     author: () => { const p = profile(); return p.name ? `${p.number}번 ${p.name}` : `${p.number}번`; },
 };
@@ -181,10 +216,19 @@ function allDone() {
 function renderWelcome() {
     const saved = Object.entries(data.profiles).sort(([, a], [, b]) => a.number - b.number || a.name.localeCompare(b.name, 'ko'));
     const tab = ui.tab === 'help' ? 'help' : 'start';
+    const selectTab = id => {
+        if (tab !== id) go({ screen: 'welcome', tab: id, focusId: `tab-${id}` });
+        else document.getElementById(`tab-${id}`).focus();
+    };
     const tabButton = (id, label) => h('button', {
         type: 'button', role: 'tab', id: `tab-${id}`, 'aria-controls': 'welcome-panel',
-        'aria-selected': String(tab === id), class: tab === id ? 'on' : '',
-        onclick: () => { if (tab !== id) go({ screen: 'welcome', tab: id }); },
+        'aria-selected': String(tab === id), tabindex: tab === id ? '0' : '-1', class: tab === id ? 'on' : '',
+        onclick: () => selectTab(id),
+        onkeydown: event => {
+            if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+            event.preventDefault();
+            selectTab(event.key === 'Home' ? 'start' : event.key === 'End' ? 'help' : id === 'start' ? 'help' : 'start');
+        },
     }, label);
     const startPanel = [
         saved.length ? explorerCard(saved) : null,
@@ -293,7 +337,7 @@ function helpPanel() {
                 '여러 반이 태블릿을 함께 써도 **이름과 번호**로 구분되어 기록이 섞이지 않아요. 학생은 시작 화면에서 자기 이름을 눌러 들어가요.',
                 '아이패드·아이폰은 7일 넘게 안 열면 기록이 지워질 수 있어요. **📲 앱 설치**를 해 두고, 수업 끝에 **💾 이어하기 코드**를 공책에 적게 해 주세요.',
                 '교과서 출판사와 관계없이 5학년 2학기 역사(선사 시대~6·25 전쟁)의 핵심 내용으로 만들었어요. 용어·연도는 쓰시는 교과서와 한 번 대조해 주세요.',
-                '처음 한 번 연 뒤에는 인터넷이 없어도 돼요. **iOS 14 이상**이나 최신 **크롬·웨일·삼성 인터넷·엣지**에서 열려요.',
+                '화면 위쪽에 **오프라인 준비 완료**가 표시되면 인터넷 없이 탐험할 수 있어요. 준비 중이거나 실패했다면 인터넷 연결을 유지하고 **다시 준비하기**를 눌러 주세요. **iOS 14 이상**이나 최신 **크롬·웨일·삼성 인터넷·엣지**에서 열려요.',
                 '결석한 학생 등을 위해 모든 정거장을 한꺼번에 열려면 주소 끝에 **?open=all** 을 붙여요.'])),
         h('button', { class: 'btn btn-primary btn-block', type: 'button', style: 'margin-top:16px', onclick: () => go({ screen: 'welcome', tab: 'start' }) }, '🚀 이제 시작하러 가기'),
     ];
@@ -320,11 +364,12 @@ function renderRegister() {
         }, n));
     }
     const avGrid = h('div', { class: 'avatar-grid' }, ...avatars.map((a, i) => h('button', {
-        type: 'button', class: i === 0 ? 'on' : '', 'aria-label': `캐릭터 ${a}`,
+        type: 'button', class: i === 0 ? 'on' : '', 'aria-label': `캐릭터 ${a}`, 'aria-pressed': String(i === 0),
         onclick: e => {
             avatar = a;
-            [...avGrid.children].forEach(b => b.classList.remove('on'));
+            [...avGrid.children].forEach(b => { b.classList.remove('on'); b.setAttribute('aria-pressed', 'false'); });
             e.currentTarget.classList.add('on');
+            e.currentTarget.setAttribute('aria-pressed', 'true');
         },
     }, a)));
     const startBtn = h('button', { class: 'btn btn-primary btn-block', type: 'button', disabled: true }, '🚀 탐험 시작!');
@@ -440,7 +485,11 @@ function showMenu() {
             h('button', { class: 'btn btn-block', type: 'button', onclick: () => { close(); showCode(); } }, '💾 이어하기 코드 보기'),
             h('button', { class: 'btn btn-block', type: 'button', onclick: () => { close(); go({ screen: 'notes' }); } }, '📒 나의 역사 노트'),
             h('button', { class: 'btn btn-block', type: 'button', onclick: () => { close(); showGuide(); } }, '❓ 탐험 방법'),
-            h('button', { class: 'btn btn-block', type: 'button', onclick: async () => { close(); data.current = null; if (await persist()) go({ screen: 'welcome' }); } }, '🔄 다른 탐험가로 바꾸기'),
+            h('button', { class: 'btn btn-block', type: 'button', onclick: () => {
+                close();
+                const next = { screen: 'welcome' };
+                navigateAfterGuard(next, async () => { data.current = null; if (await persist()) go(next, true); });
+            } }, '🔄 다른 탐험가로 바꾸기'),
             h('button', { class: 'btn btn-block danger-link', type: 'button', onclick: () => { close(); deleteProfile(); } }, '🗑️ 이 기기에서 내 기록 지우기'),
             h('button', { class: 'btn btn-block', type: 'button', onclick: () => close() }, '닫기')),
     );
@@ -452,11 +501,22 @@ async function deleteProfile() {
     const who = `${p.number}번 ${p.name || ''}`.trim();
     if (!confirm(`${who} 탐험가의 기록을 이 기기에서 지울까요?\n도장, 한 줄 정리, 인물 카드 등이 모두 사라지고 되돌릴 수 없어요.`)) return;
     if (!confirm(`정말 지울까요? 이어하기 코드를 적어 두었다면 진도는 코드로 되살릴 수 있어요.\n(코드: ${encodeProgress(p, questOrder, avatars)})`)) return;
-    delete data.profiles[data.current];
+    const key = data.current;
+    const previousProfiles = data.profiles;
+    delete data.profiles[key];
     data.current = null;
-    if (!await persist()) return;
+    if (!await persist(true, '⚠️ 기록을 지우지 못했어요. 기록은 그대로 남아 있어요. 다시 시도해 주세요.')) {
+        // 저장소 오류 때만 되돌림. 다른 창에서 바뀐 최신 기록은 덮어쓰지 않음.
+        if (data.profiles === previousProfiles) {
+            data.profiles[key] = p;
+            data.current = key;
+        }
+        return;
+    }
+    discardWritingDrafts(key, p);
+    discardInquiryDrafts(key, p);
     toast('🗑️ 기록을 지웠어요.');
-    go({ screen: 'welcome' });
+    go({ screen: 'welcome' }, true);
 }
 
 function showRename() {
@@ -842,20 +902,5 @@ render();
 // (사파리는 7일 넘게 안 연 사이트의 기록을 지울 수 있음 → 홈 화면에 설치하면 안전)
 if (navigator.storage?.persist) navigator.storage.persisted().then(p => p || navigator.storage.persist()).catch(() => {});
 
-// 한 번 열면 인터넷이 끊겨도 쓸 수 있도록 서비스 워커 등록
-if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
-    navigator.serviceWorker.register('sw.js').then(registration => {
-        let notified = false;
-        const notifyUpdate = () => {
-            if (notified || !registration.waiting || !navigator.serviceWorker.controller) return;
-            notified = true;
-            toast('새 버전이 준비됐어요. 열린 앱 창을 모두 닫고 다시 열면 새 버전으로 사용할 수 있어요.');
-        };
-        notifyUpdate();
-        const watchInstalling = () => {
-            registration.installing?.addEventListener('statechange', notifyUpdate);
-        };
-        watchInstalling();
-        registration.addEventListener('updatefound', watchInstalling);
-    }).catch(() => { /* 오프라인 기능 없이도 동작 */ });
-}
+// 모든 필수 파일을 저장한 서비스 워커가 활성화되었을 때만 준비 완료를 안내한다.
+prepareOffline(toast);
