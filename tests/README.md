@@ -27,6 +27,8 @@ python3 tests/map-regressions.py -v
 python3 tests/browser-ui.py -v
 python3 tests/accessibility-navigation.py -v
 python3 tests/landing-page.py -v
+python3 tests/guide-video.py -v
+python3 tests/guide-video-offline.py -v
 python3 tests/activity-save.py -v
 python3 tests/activity-navigation.py -v
 python3 tests/extras-flow.py -v
@@ -67,6 +69,11 @@ python3 tests/full-flow.py
   labels, failed-photo fallback and cancellation of previous narration.
 - Navigation accessibility checks cover heading focus, arrow-key tab selection,
   avatar selection state, and preserved place-selection and modal focus.
+- Guide-video checks exercise the actual MP4's keyboard play/pause, seeking and
+  Korean captions. They keep first-visit downloads user initiated, verify the
+  written instructions and narrow-screen layout, and retry after a network error.
+  The seek check starts an isolated HTTP origin supporting byte ranges, as Pages
+  does; Python's standard static server cannot expose native seekable ranges.
 - Activity navigation checks require keyboard focus to move to each new reading
   card, concept question, review item, map question and activity result.
 - Activity save checks defer completion callbacks to verify that save results are

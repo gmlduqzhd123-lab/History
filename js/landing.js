@@ -17,6 +17,7 @@ export function landingHeader(start, compact = false) {
             h('span', {}, '역사 탐험 퀘스트', h('small', {}, '엽쌤스쿨 · HISTORY QUEST'))),
         !compact ? h('nav', { 'aria-label': '메인 메뉴' },
             h('a', { href: '#learning' }, '앱 소개'),
+            h('a', { href: '#video-guide' }, '사용법 영상'),
             h('a', { href: '#curriculum' }, '학습 여정'),
             h('a', { href: '#classroom' }, '선생님께')) : null,
         button(compact ? '소개 화면으로' : '탐험 시작', start, true));
@@ -41,6 +42,72 @@ function preview() {
             h('span', { class: 'landing-preview-caption' }, '살펴보고, 생각하고, 내 말로 기록해요.')),
         h('div', { class: 'landing-note' }, h('span', { 'aria-hidden': 'true' }, '✦'),
             h('div', {}, h('strong', {}, '발견이 배움이 되는 순간'), h('span', {}, '나만의 역사 노트에 차곡차곡'))));
+}
+
+function videoGuide() {
+    const guideSteps = [
+        ['나만의 탐험가 만들기', '이름·번호·캐릭터를 고르고 탐험을 시작해요.'],
+        ['열린 정거장 탐험하기', '유물 탐정·이야기 카드·생활 체험·개념 도전·한 줄 정리의 다섯 단계를 따라가요.'],
+        ['자료 탐구와 역사 일기', '자료에서 찾은 근거와 그 시대 사람의 생각을 내 말로 기록해요.'],
+        ['역사 노트로 모아 보기', '진도와 작성한 글을 확인하고, 인쇄하거나 PDF로 보관해요.'],
+        ['내 기록으로 이어가기', '같은 기기에서 내 탐험가를 선택해요. 다른 기기의 이어하기 코드는 진도만 옮겨요.'],
+    ];
+    const errorMessage = h('p', { class: 'landing-video-error', role: 'status', 'aria-live': 'polite' });
+    const fallback = h('div', { class: 'landing-video-fallback', hidden: true });
+    const showError = () => {
+        errorMessage.textContent = '영상을 불러오지 못했어요. 인터넷 연결을 확인하고 다시 재생하거나, 영상 파일을 직접 열어 주세요.';
+        fallback.hidden = false;
+    };
+    const cover = h('button', {
+        type: 'button', class: 'landing-video-cover',
+        'aria-label': '45초 사용법 영상 재생하기', 'aria-describedby': 'landing-video-note',
+    },
+    h('img', { src: 'media/history-quest-guide-poster.jpg', width: '1280', height: '720', alt: '' }),
+    h('span', { class: 'landing-video-cover-action' },
+        h('span', { class: 'landing-video-cover-icon', 'aria-hidden': 'true' }, '▶'),
+        h('span', {}, '45초 사용법 영상 보기')));
+    let started = false;
+    const video = h('video', {
+        controls: true, playsinline: true, preload: 'none',
+        poster: 'media/history-quest-guide-poster.jpg', width: '1280', height: '720', tabindex: '-1',
+        'aria-label': '역사 탐험 퀘스트 사용법 영상', 'aria-describedby': 'landing-video-note', 'aria-hidden': 'true',
+        onerror: showError,
+        onplay: () => {
+            cover.hidden = true;
+            video.tabIndex = 0;
+            video.removeAttribute('aria-hidden');
+            if (!started) video.focus({ preventScroll: true });
+            started = true;
+        },
+        onloadeddata: () => { errorMessage.textContent = ''; fallback.hidden = true; },
+    },
+    h('source', { src: 'media/history-quest-guide.mp4', type: 'video/mp4', onerror: showError }),
+    h('track', {
+        kind: 'captions', src: 'media/history-quest-guide.ko.vtt', srclang: 'ko', label: '한국어', default: true,
+    }),
+    '영상이 재생되지 않으면 아래 글 안내를 따라 시작해 주세요.');
+    const play = () => video.play().then(() => video.focus({ preventScroll: true })).catch(showError);
+    cover.addEventListener('click', play);
+    fallback.append(
+        h('button', { type: 'button', onclick: () => { video.load(); play(); } }, '다시 재생하기'),
+        h('a', { href: 'media/history-quest-guide.mp4', target: '_blank', rel: 'noopener' }, '영상 파일 열기', arrow()));
+    return h('section', { class: 'landing-section landing-video-guide', id: 'video-guide', 'aria-labelledby': 'landing-video-title' },
+        h('div', { class: 'landing-section-heading' },
+            h('div', {}, eyebrow('처음이라면, 영상으로 한눈에'),
+                h('h2', { id: 'landing-video-title' }, '역사 탐험,', h('br'), '이렇게 시작해요.')),
+            h('p', {}, '45초 사용법 영상으로', h('br'), '시작부터 기록 확인까지 살펴보세요.')),
+        h('div', { class: 'landing-video-layout' },
+            h('figure', { class: 'landing-video-player' },
+                h('div', { class: 'landing-video-frame' }, video, cover),
+                h('figcaption', { id: 'landing-video-note' }, '소리 없이도 화면 안내와 한국어 자막으로 따라갈 수 있어요.',
+                    h('span', {}, '처음 영상을 볼 때는 인터넷 연결이 필요해요.')),
+                errorMessage, fallback),
+            h('div', { class: 'landing-video-summary' },
+                h('h3', { id: 'landing-video-steps-title' }, '영상 속 다섯 걸음'),
+                h('ol', { 'aria-labelledby': 'landing-video-steps-title' },
+                    ...guideSteps.map(([title, description], i) => h('li', {},
+                        h('span', { 'aria-hidden': 'true' }, String(i + 1).padStart(2, '0')),
+                        h('div', {}, h('strong', {}, title), h('p', {}, description))))))));
 }
 
 export function renderLanding({ start, resume, hasSaved, code, help, qr, startArea, steps }) {
@@ -74,6 +141,7 @@ export function renderLanding({ start, resume, hasSaved, code, help, qr, startAr
                         h('a', { class: 'landing-text-link', href: '#classroom' }, '선생님을 위한 안내', arrow())),
                     h('p', { class: 'landing-reassurance' }, h('span', { 'aria-hidden': 'true' }, '✓'), ' 회원 가입 없이 · PC와 태블릿, 휴대전화에서'),
                     h('div', { class: 'landing-resume-line' },
+                        h('a', { href: '#video-guide' }, '사용법 영상 보기 →'),
                         hasSaved ? h('a', { href: '#start' }, '이 기기의 기록 찾기 →') : null,
                         h('button', { type: 'button', onclick: code }, '코드로 이어하기 →'))),
                 preview()),
@@ -81,6 +149,7 @@ export function renderLanding({ start, resume, hasSaved, code, help, qr, startAr
                 ...[[String(units.length).padStart(2, '0'), '시대별 단원'], [String(stations.length), '역사 정거장'],
                     [String(steps.length), '정거장별 학습 단계'], [String(inquiries.length).padStart(2, '0'), '자료 탐구·역사 일기']]
                     .map(([n, text]) => h('div', {}, h('dt', {}, text), h('dd', {}, n, h('span', {}, '개'))))),
+            videoGuide(),
             h('section', { class: 'landing-section', id: 'learning', 'aria-labelledby': 'landing-learning-title' },
                 h('div', { class: 'landing-section-heading' },
                     h('div', {}, eyebrow('배움의 방식'), h('h2', { id: 'landing-learning-title' }, '외우는 역사에서,', h('br'), '발견하는 역사로.')),
