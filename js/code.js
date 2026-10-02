@@ -44,7 +44,7 @@ export function decodeProgress(code, questOrder, avatars) {
         const n = Number(value & 7n);
         value >>= STAGE_BITS;
         const id = questOrder[i];
-        if (id && n > 0) quests[id] = { stage: n === 6 ? 5 : n, done: n === 6, notes: [], mastery: n === 6 ? { passed: true } : null };
+        if (id && n > 0) quests[id] = { stage: n === 6 ? 5 : n, done: n === 6, notes: [], mastery: n >= 4 ? { passed: true } : null };
     }
     const avatar = avatars[Number(value & 15n)] || avatars[0];
     value >>= 4n;

@@ -1,7 +1,7 @@
 // ② 이야기 카드: 짧은 글 읽기 → "다 읽었어요" → 확인 문제
 import { h, rich, scrollTop } from '../dom.js';
 import { art } from '../art.js';
-import { speakButton } from '../tts.js';
+import { speakButton, stopSpeaking } from '../tts.js';
 import { retryChoice, nextButton, artBlock } from './common.js';
 
 const MIN_READ_MS = 2500; // 읽지 않고 바로 넘기지 않도록 잠깐 기다림
@@ -10,6 +10,7 @@ export function renderReading(root, stage, ctx) {
     let index = 0;
 
     function showCard() {
+        stopSpeaking();
         const card = stage.cards[index];
         const last = index === stage.cards.length - 1;
         const fullText = [card.title, ...card.text].join(' ');

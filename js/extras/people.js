@@ -80,10 +80,10 @@ export function renderPerson(env, stations, id) {
             t: name, correct: i === 0,
             fb: i === 0 ? person.fact : '단서와 맞지 않아요. 단서를 한 번 더 읽어 보세요.',
         })),
-        onSolved: () => {
+        onSolved: async () => {
             const firstTime = !extrasOf(env.profile()).people[person.id];
             extrasOf(env.profile()).people[person.id] = true;
-            env.persist();
+            if (await env.persist() === false) return;
             portrait.textContent = person.emoji;
             portrait.classList.add('revealed');
             title.textContent = `나는 ${person.name}${hasBatchim(person.name.slice(-1)) ? '이에요' : '예요'}`;

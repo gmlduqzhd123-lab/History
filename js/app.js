@@ -29,11 +29,13 @@ const renderers = {
 
 const MAX_NUMBER = 40;
 const app = document.getElementById('app');
-const data = loadData();
+let data = loadData();
 // 선생님용: 주소 끝에 ?open=all 을 붙이면 준비된 퀘스트를 순서와 관계없이 모두 열 수 있음
 const openAll = new URLSearchParams(location.search).get('open') === 'all';
 
 let ui = { screen: 'welcome' };
+let saving = false;
+let storageChanged = false;
 
 // null·false 는 건너뛰고 붙임 (append는 null을 "null" 글자로 넣어 버림)
 function mount(...nodes) { app.append(...nodes.filter(n => n !== null && n !== undefined && n !== false)); }
@@ -50,8 +52,12 @@ function profile() { return data.current != null ? data.profiles[data.current] :
 // (예전 기록은 번호만 열쇠로 쓰고 이름이 비어 있을 수 있어, 이름 없는 같은 번호 기록은 그 학생 것으로 이어 줌)
 function findProfileKey(number, name) {
     const entries = Object.entries(data.profiles).filter(([, p]) => p.number === number);
-    const exact = entries.find(([, p]) => p.name === name);
-    if (exact) return exact[0];
+    const exact = entries.filter(([, p]) => p.name === name);
+    if (exact.length > 1) {
+        toast('같은 번호와 이름의 기록이 여러 개 있어요. 시작 화면에서 내 기록을 고른 뒤 이름을 구별해 주세요.');
+        return false;
+    }
+    if (exact.length === 1) return exact[0][0];
     // 이름 없는 예전 기록은 다른 반 같은 번호 학생 것일 수도 있으니 물어보고 이어 줌
     const legacy = entries.find(([, p]) => !p.name);
     if (legacy && confirm(`이 기기에 이름이 없는 ${number}번 기록(예전에 쓰던 기록)이 있어요.\n내 기록이 맞으면 [확인], 아니면 [취소]를 눌러 새로 시작해요.`)) return legacy[0];
@@ -62,7 +68,58 @@ function newProfileKey(number, name) {
     for (let i = 2; data.profiles[key]; i++) key = `${number}:${name}:${i}`;
     return key;
 }
-function persist() { if (!saveData(data)) toast('⚠️ 이 기기에 저장하지 못했어요. 이어하기 코드를 적어 두세요.'); }
+async function persist() {
+    if (saving) return false;
+    saving = true;
+    app.setAttribute('aria-busy', 'true');
+    const saved = await saveData(data);
+    saving = false;
+    app.removeAttribute('aria-busy');
+    const refreshPending = storageChanged;
+    storageChanged = false;
+    if (saved === 'conflict') {
+        if (refreshPending) refreshStorage(false);
+        modal.closeAll?.();
+        toast('다른 창에서 바뀐 최신 기록을 불러왔어요. 열린 앱 창을 하나만 사용해 주세요.');
+        go({ screen: profile() ? 'map' : 'welcome' });
+        return false;
+    }
+    if (refreshPending && refreshStorage()) return false;
+    if (!saved) toast('⚠️ 이 기기에 저장하지 못했어요. 이어하기 코드를 적어 두세요.');
+    // 저장 공간이 부족해도 이 창에서 학습과 이어하기 코드 사용은 계속할 수 있음
+    return true;
+}
+
+// 저장이 끝나기 전에 같은 버튼·Enter를 여러 번 눌러 활동이나 탐험가가 바뀌지 않게 함
+for (const type of ['click', 'keydown']) document.addEventListener(type, event => {
+    if (!saving) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+}, true);
+
+function refreshStorage(notice = true) {
+    const current = data.current;
+    const active = profile();
+    const next = loadData(data);
+    next.current = current != null && next.profiles[current] ? current : null;
+    const nextActive = next.current != null ? next.profiles[next.current] : null;
+    const activeChanged = JSON.stringify(active) !== JSON.stringify(nextActive);
+    if (active && !activeChanged) next.profiles[current] = active;
+    data = next;
+    // 다른 창에서 탐험가를 바꾸어도 이 창의 학생은 바뀌지 않음
+    if (activeChanged) {
+        modal.closeAll?.();
+        if (notice) toast(profile() ? '다른 창에서 바뀐 최신 기록을 불러왔어요.' : '다른 창에서 이 탐험가의 기록을 지웠어요.');
+        go({ screen: profile() ? 'map' : 'welcome' });
+    } else if (ui.screen === 'welcome') render();
+    return activeChanged;
+}
+
+window.addEventListener('storage', event => {
+    if (event.storageArea !== localStorage || (event.key !== null && event.key !== 'history-quest:v1')) return;
+    if (saving) { storageChanged = true; return; }
+    refreshStorage();
+});
 
 function go(next) {
     stopSpeaking();
@@ -143,7 +200,7 @@ function renderWelcome() {
 function explorerCard(saved) {
     const list = h('div', { class: 'explorer-list' }, ...saved.map(([key, p]) => h('button', {
         type: 'button', 'data-find': `${p.name} ${p.number}번`,
-        onclick: () => { data.current = key; persist(); go({ screen: 'map' }); },
+        onclick: async () => { data.current = key; if (await persist()) go({ screen: 'map' }); },
     }, h('span', { class: 'av' }, p.avatar), whoName(p), p.name ? h('span', { class: 'small muted' }, `${p.number}번`) : null)));
     let search = null;
     if (saved.length > 8) {
@@ -254,15 +311,16 @@ function renderRegister() {
         },
     }, a)));
     const startBtn = h('button', { class: 'btn btn-primary btn-block', type: 'button', disabled: true }, '🚀 탐험 시작!');
-    startBtn.addEventListener('click', () => {
+    startBtn.addEventListener('click', async () => {
         const name = cleanName(nameEl.value);
         if (!number || !name) return;
         const key = findProfileKey(number, name);
+        if (key === false) return;
         const existing = key && data.profiles[key];
         if (existing && existing.name && !confirm(`${number}번 ${existing.name} 탐험가가 이미 이 기기에 있어요.\n그 기록으로 이어서 할까요? (취소를 누르면 이름이나 번호를 다시 고를 수 있어요)`)) return;
         if (existing) { existing.name = name; data.current = key; }
         else { data.current = newProfileKey(number, name); data.profiles[data.current] = newProfile(number, avatar, name); }
-        persist();
+        if (!await persist()) return;
         go({ screen: 'map' });
         if (!existing) showGuide();
     });
@@ -281,7 +339,7 @@ function renderCodeEntry() {
     const input = h('input', { class: 'code-input', type: 'text', placeholder: 'XXXXX-XXXXX', maxlength: '14', autocomplete: 'off', 'aria-label': '이어하기 코드' });
     const nameEl = nameInput();
     const msg = h('div');
-    const submit = () => {
+    const submit = async () => {
         const result = decodeProgress(input.value, questOrder, avatars);
         // 글자를 잘못 옮겨 적어 우연히 맞는 코드가 되어도 없는 번호(41번 이상)면 받지 않음
         if (!result || result.number > MAX_NUMBER) {
@@ -289,14 +347,14 @@ function renderCodeEntry() {
             return;
         }
         const name = cleanName(nameEl.value);
-        // 코드에는 이름이 없으므로 이름을 꼭 써야 함 (같은 번호 탐험가가 이 기기에 딱 한 명이고 이름이 있으면 그 탐험가로)
-        const sameNumber = Object.entries(data.profiles).filter(([, p]) => p.number === result.number);
-        let key = name ? findProfileKey(result.number, name) : sameNumber.length === 1 && sameNumber[0][1].name ? sameNumber[0][0] : null;
-        if (!name && !key) {
+        // 번호만으로는 다른 반 학생을 구별할 수 없으므로, 이 기기에 한 명만 있어도 이름을 꼭 받음
+        if (!name) {
             msg.replaceChildren(h('div', { class: 'feedback bad' }, '내 이름도 써 주세요.'));
             nameEl.focus();
             return;
         }
+        let key = findProfileKey(result.number, name);
+        if (key === false) return;
         const existing = key && data.profiles[key];
         if (!key) key = newProfileKey(result.number, name);
         const merged = existing || newProfile(result.number, result.avatar);
@@ -305,11 +363,15 @@ function renderCodeEntry() {
         // 코드에 담긴 진도가 더 앞서 있을 때만 덮어씀
         Object.entries(result.quests).forEach(([id, q]) => {
             const cur = merged.quests[id];
-            if (!cur || (!cur.done && (q.done || q.stage > cur.stage))) merged.quests[id] = { ...q, notes: cur?.notes || [] };
+            if (!cur || (!cur.done && (q.done || q.stage > cur.stage))) {
+                merged.quests[id] = { ...q, notes: cur?.notes || [], mastery: q.mastery ? { ...cur?.mastery, ...q.mastery } : cur?.mastery || null };
+            } else if (q.mastery?.passed && !cur.mastery?.passed && cur.stage >= 4) {
+                cur.mastery = { ...cur.mastery, passed: true };
+            }
         });
         data.profiles[key] = merged;
         data.current = key;
-        persist();
+        if (!await persist()) return;
         toast(`${result.avatar} ${whoName(merged)} 탐험가, 다시 만나서 반가워요!`);
         go({ screen: 'map' });
     };
@@ -361,21 +423,21 @@ function showMenu() {
             h('button', { class: 'btn btn-block', type: 'button', onclick: () => { close(); showCode(); } }, '💾 이어하기 코드 보기'),
             h('button', { class: 'btn btn-block', type: 'button', onclick: () => { close(); go({ screen: 'notes' }); } }, '📒 나의 역사 노트'),
             h('button', { class: 'btn btn-block', type: 'button', onclick: () => { close(); showGuide(); } }, '❓ 탐험 방법'),
-            h('button', { class: 'btn btn-block', type: 'button', onclick: () => { close(); data.current = null; persist(); go({ screen: 'welcome' }); } }, '🔄 다른 탐험가로 바꾸기'),
+            h('button', { class: 'btn btn-block', type: 'button', onclick: async () => { close(); data.current = null; if (await persist()) go({ screen: 'welcome' }); } }, '🔄 다른 탐험가로 바꾸기'),
             h('button', { class: 'btn btn-block danger-link', type: 'button', onclick: () => { close(); deleteProfile(); } }, '🗑️ 이 기기에서 내 기록 지우기'),
             h('button', { class: 'btn btn-block', type: 'button', onclick: () => close() }, '닫기')),
     );
 }
 
 // 새 학년이 되어 공용 태블릿을 정리할 때 등. 실수로 지우지 않게 두 번 확인
-function deleteProfile() {
+async function deleteProfile() {
     const p = profile();
     const who = `${p.number}번 ${p.name || ''}`.trim();
     if (!confirm(`${who} 탐험가의 기록을 이 기기에서 지울까요?\n도장, 한 줄 정리, 인물 카드 등이 모두 사라지고 되돌릴 수 없어요.`)) return;
     if (!confirm(`정말 지울까요? 이어하기 코드를 적어 두었다면 진도는 코드로 되살릴 수 있어요.\n(코드: ${encodeProgress(p, questOrder, avatars)})`)) return;
     delete data.profiles[data.current];
     data.current = null;
-    persist();
+    if (!await persist()) return;
     toast('🗑️ 기록을 지웠어요.');
     go({ screen: 'welcome' });
 }
@@ -383,11 +445,15 @@ function deleteProfile() {
 function showRename() {
     const p = profile();
     const nameEl = nameInput(p.name);
-    const save = () => {
+    const save = async () => {
         const name = cleanName(nameEl.value);
         if (!name) return nameEl.focus();
+        if (Object.entries(data.profiles).some(([key, other]) => key !== data.current && other.number === p.number && other.name === name)) {
+            toast('이 번호에 같은 이름의 탐험가가 있어요. 구별할 수 있는 이름을 써 주세요.');
+            return nameEl.focus();
+        }
         p.name = name;
-        persist();
+        if (!await persist()) return;
         close();
         render();
     };
@@ -564,19 +630,29 @@ function renderQuest() {
         content,
     );
 
+    let completing = false;
     const ctx = {
         record: ui.replay ? { ...rec, notes: [...rec.notes] } : rec, // 복습 중에는 기록을 바꾸지 않음
         readingStage: quest.stages.find(s => s.type === 'reading'),
-        reviewUpdate: (wrong, right) => { updateReview(profile(), quest.id, wrong, right); persist(); },
-        save: () => { if (!ui.replay) persist(); },
-        done: () => {
+        reviewUpdate: (wrong, right) => {
+            if (profile()?.quests[quest.id] !== rec) return false;
+            updateReview(profile(), quest.id, wrong, right);
+            return persist();
+        },
+        save: () => {
+            if (profile()?.quests[quest.id] !== rec) return false;
+            return ui.replay ? true : persist();
+        },
+        done: async () => {
+            if (completing || profile()?.quests[quest.id] !== rec) return;
+            completing = true;
             if (ui.replay) {
                 const next = stageIndex + 1;
                 return go(next < quest.stages.length ? { ...ui, stageIndex: next } : { screen: 'quest', questId: quest.id, replay: false });
             }
             rec.stage = stageIndex + 1;
             if (rec.stage >= quest.stages.length) { rec.done = true; rec.doneAt = Date.now(); }
-            persist();
+            if (!await persist()) return;
             go({ screen: 'quest', questId: quest.id, replay: false, justFinished: rec.done });
         },
     };
@@ -739,5 +815,18 @@ if (navigator.storage?.persist) navigator.storage.persisted().then(p => p || nav
 
 // 한 번 열면 인터넷이 끊겨도 쓸 수 있도록 서비스 워커 등록
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
-    navigator.serviceWorker.register('sw.js').catch(() => { /* 오프라인 기능 없이도 동작 */ });
+    navigator.serviceWorker.register('sw.js').then(registration => {
+        let notified = false;
+        const notifyUpdate = () => {
+            if (notified || !registration.waiting || !navigator.serviceWorker.controller) return;
+            notified = true;
+            toast('새 버전이 준비됐어요. 열린 앱 창을 모두 닫고 다시 열면 새 버전으로 사용할 수 있어요.');
+        };
+        notifyUpdate();
+        const watchInstalling = () => {
+            registration.installing?.addEventListener('statechange', notifyUpdate);
+        };
+        watchInstalling();
+        registration.addEventListener('updatefound', watchInstalling);
+    }).catch(() => { /* 오프라인 기능 없이도 동작 */ });
 }

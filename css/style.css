@@ -357,8 +357,8 @@ p { margin: 0 0 10px; }
     min-height: 56px; border-radius: 14px; border: 3px solid var(--line); background: #fff; font-size: 20px; font-family: var(--font-title);
 }
 .num-grid button.on, .avatar-grid button.on { border-color: var(--accent); background: var(--accent-soft); }
-.avatar-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-.avatar-grid button { font-size: 32px; min-height: 64px; }
+.avatar-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.avatar-grid button { font-size: 32px; min-height: 64px; min-width: 0; padding: 4px; }
 .explorer-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
 .explorer-list button { background: #fff; border: 3px solid var(--line); border-radius: 16px; padding: 10px; font-family: var(--font-title); font-size: 18px; }
 .explorer-list .av { font-size: 34px; display: block; }
@@ -369,6 +369,7 @@ p { margin: 0 0 10px; }
 .chip-name { display: inline-block; max-width: 5.5em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* 아주 작은 휴대폰: 상단 막대 버튼이 두 줄로 꺾이지 않게 */
 @media (max-width: 380px) {
+    .avatar-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     .topbar { gap: 6px; }
     .topbar > .btn { padding-left: 10px; padding-right: 10px; }
     .topbar .title { font-size: 17px; }

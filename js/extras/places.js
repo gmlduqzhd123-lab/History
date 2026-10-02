@@ -5,6 +5,7 @@ import { extrasOf } from '../storage.js';
 import { places, outline, jeju, dmzLine } from '../../content/places.js';
 
 const QUIZ_COUNT = 5;
+const PIN_HIT_RADIUS = 22;
 const proj = ([lat, lon]) => [Math.round((lon - 124) * 80), Math.round((43.1 - lat) * 100)];
 
 // env: { mount, topbar, go, profile, persist, toast, stationDone(id) }
@@ -23,7 +24,7 @@ function mapSvg(env, visited, selected) {
         const [x, y] = proj(place.at);
         const state = !isOpen(env, place) ? 'locked' : place.id === selected ? 'selected' : visited[place.id] ? 'visited' : 'open';
         return `<g class="pin ${state}" data-place="${place.id}" transform="translate(${x} ${y})" tabindex="-1">`
-            + '<circle class="hit" r="22"/><circle class="dot" r="11"/>'
+            + '<circle class="dot" r="11"/>'
             + `<title>${place.name}</title></g>`;
     }).join('');
     return `<svg viewBox="0 0 560 1010" role="img" aria-label="문화유산 지도">
@@ -33,7 +34,26 @@ function mapSvg(env, visited, selected) {
 
 function mapBlock(env, visited, selected, onPick) {
     const box = h('div', { class: 'heritage-map', html: mapSvg(env, visited, selected) });
-    box.querySelectorAll('[data-place]').forEach(pin => pin.addEventListener('click', () => onPick(places.find(p => p.id === pin.dataset.place))));
+    const svg = box.querySelector('svg');
+    svg.addEventListener('click', event => {
+        const visiblePin = event.target.closest('[data-place]');
+        if (visiblePin) return onPick(places.find(place => place.id === visiblePin.dataset.place));
+        const matrix = svg.getScreenCTM();
+        if (!matrix) return;
+        const point = svg.createSVGPoint();
+        point.x = event.clientX;
+        point.y = event.clientY;
+        const local = point.matrixTransform(matrix.inverse());
+        // 가까운 점의 보이지 않는 클릭 영역이 겹쳐도, 실제로 누른 곳과 가장 가까운 핀을 고름.
+        let nearest = null;
+        let distance = PIN_HIT_RADIUS;
+        places.forEach(place => {
+            const [x, y] = proj(place.at);
+            const next = Math.hypot(local.x - x, local.y - y);
+            if (next <= distance) { nearest = place; distance = next; }
+        });
+        if (nearest) onPick(nearest);
+    });
     return box;
 }
 
@@ -52,13 +72,13 @@ export function renderPlaces(env, stations, { selected = null, mode = 'explore' 
     if (!store.visited) store.visited = {};
     if (mode === 'quiz') return renderQuiz(env, stations);
 
-    const pick = place => {
+    const pick = async place => {
         if (!isOpen(env, place)) {
             const first = stations.find(s => s.id === place.items[0].station);
             return env.toast(`🔒 「${first.name}」 정거장을 마치면 알 수 있어요.`);
         }
         store.visited[place.id] = true;
-        env.persist();
+        if (await env.persist() === false) return;
         env.go({ screen: 'places', selected: place.id, keepScroll: true });
     };
     const place = places.find(p => p.id === selected);
@@ -144,14 +164,14 @@ function renderQuiz(env, stations) {
         scrollTop();
     }
 
-    function finish() {
+    async function finish() {
         // 열린 곳이 적으면 문제 수도 적으므로, 맞힌 비율이 가장 높았던 기록을 문제 수와 함께 남김
         const total = questions.length;
         if (store.quizBest == null || score / total > store.quizBest / (store.quizTotal || QUIZ_COUNT)) {
             store.quizBest = score;
             store.quizTotal = total;
         }
-        env.persist();
+        if (await env.persist() === false) return;
         content.replaceChildren(h('div', { class: 'card center' },
             h('div', { class: 'stamp' }, h('span', { class: 'big' }, '🎯'), '지도 탐험가'),
             h('p', {}, `${questions.length}문제 가운데 ${score}문제를 한 번에 찾았어요.`),

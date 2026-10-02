@@ -7,8 +7,31 @@ import { tone } from '../tone.js';
 // 띄어쓰기를 무시하고, 가운뎃점(·)을 ㆍ . ‧ • ・ 로 입력해도 같은 것으로 봄 (예: 3ㆍ1 운동)
 const normalize = s => s.replace(/\s+/g, '').replace(/[ㆍ.‧•・･]/g, '·');
 
+// 짧은 명사는 다른 단어의 일부(당근, 식당, 철학)가 아니라 그 말 자체를 확인해요.
+// 조사 뒤에는 띄어쓰기를 하지 않아도 인정하고, 긴 핵심어·어간은 기존처럼 확인해요.
+function hasKeyword(value, keyword, wholeKeywords = []) {
+    if (!wholeKeywords.includes(keyword)) return normalize(value).includes(normalize(keyword));
+    const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const last = keyword.charCodeAt(keyword.length - 1);
+    const finalConsonant = last >= 0xac00 && last <= 0xd7a3 && (last - 0xac00) % 28 !== 0;
+    const particles = finalConsonant ? '으로|과|은|이|을' : '로|와|는|가|를';
+    const endings = `${particles}|에서|에게|부터|까지|처럼|보다|하고|랑|의|에|도|만`;
+    return new RegExp(`(^|[^가-힣A-Za-z0-9])${escaped}(?=$|[^가-힣A-Za-z0-9]|${endings})`, 'u').test(value);
+}
+
+// keywords는 대체 가능한 표현(any), keywordMode: 'all'은 모두 필요한 사실,
+// keywordGroups는 각 사실의 대체 표현 묶음이에요(모든 묶음에서 하나씩 필요).
+export function evaluateSummary(spec, value) {
+    const v = value.trim();
+    if (spec.free) return v.length >= 2;
+    const matches = keyword => hasKeyword(v, keyword, spec.wholeKeywords);
+    if (spec.keywordGroups) return spec.keywordGroups.every(group => group.some(matches));
+    return spec.keywordMode === 'all' ? spec.keywords.every(matches) : spec.keywords.some(matches);
+}
+
 export function renderSummary(root, stage, ctx) {
     let checks = 0;
+    let saving = false;
     const blanks = []; // { spec, input, hintEl }
     let lastFocused = null;
 
@@ -34,13 +57,6 @@ export function renderSummary(root, stage, ctx) {
     const resultSlot = h('div');
     const checkBtn = h('button', { class: 'btn btn-primary btn-block', type: 'button', style: 'margin-top:16px' }, '✔ 확인하기');
 
-    function evaluate(spec, value) {
-        const v = value.trim();
-        if (spec.free) return v.length >= 2;
-        const nv = normalize(v);
-        return spec.keywords.some(k => nv.includes(normalize(k)));
-    }
-
     function assembled(frame) {
         return frame.parts.map(part => {
             if (typeof part === 'string') return part;
@@ -58,17 +74,26 @@ export function renderSummary(root, stage, ctx) {
         target.focus();
     }
 
-    function save() {
-        ctx.record.notes = stage.frames.map(f => filterProfanity(assembled(f)));
-        ctx.save();
-        ctx.done();
+    async function save() {
+        if (saving) return;
+        saving = true;
+        const buttons = [...resultSlot.querySelectorAll('button')];
+        buttons.forEach(button => { button.disabled = true; });
+        try {
+            ctx.record.notes = stage.frames.map(f => filterProfanity(assembled(f)));
+            if (await ctx.save() === false) return;
+            await ctx.done();
+        } finally {
+            saving = false;
+            buttons.forEach(button => { if (button.isConnected) button.disabled = false; });
+        }
     }
 
     checkBtn.addEventListener('click', () => {
         checks++;
         let allOk = true;
         blanks.forEach(({ spec, input, hintEl }) => {
-            const ok = evaluate(spec, input.value);
+            const ok = evaluateSummary(spec, input.value);
             input.classList.toggle('ok', ok);
             hintEl.classList.toggle('ok', ok);
             if (ok) hintEl.textContent = spec.free ? '✅ 좋아요' : '✅ 핵심어가 들어갔어요';

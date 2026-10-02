@@ -66,9 +66,9 @@ export function renderWriting(env, key, optionId) {
     renderSummary(content, { frames: opt.frames }, {
         record: temp,
         save: () => {},
-        done: () => {
+        done: async () => {
             store[key] = { id: opt.id, kind: opt.kind, title: opt.title, to: opt.to, lines: temp.notes, at: Date.now() };
-            env.persist();
+            if (await env.persist() === false) return;
             showResult();
         },
     });

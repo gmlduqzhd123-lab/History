@@ -24,6 +24,7 @@ export function renderMastery(root, stage, ctx) {
         const missed = [];
         let fastWrongs = 0;
         let done = 0;
+        let finishing = false;
 
         function pickQuestion(concept, avoid) {
             const pool = byConcept.get(concept);
@@ -71,38 +72,52 @@ export function renderMastery(root, stage, ctx) {
             scrollTop();
         }
 
-        function showResult() {
-            const score = concepts.filter(c => firstTry.get(c)).length;
-            const passMark = Math.min(stage.pass, concepts.length);
-            const passed = score >= passMark;
-            const wrongConcepts = concepts.filter(c => !firstTry.get(c));
-            ctx.record.mastery = { passed: passed || !!ctx.record.mastery?.passed, best: Math.max(score, ctx.record.mastery?.best || 0), total: concepts.length };
-            ctx.save();
-            // 첫 시도에 틀린 개념은 복습 상자에 넣고, 맞힌 개념은 꺼냄
-            ctx.reviewUpdate?.(wrongConcepts, concepts.filter(c => firstTry.get(c)));
+        async function showResult() {
+            if (finishing) return;
+            finishing = true;
+            try {
+                const score = concepts.filter(c => firstTry.get(c)).length;
+                const passMark = Math.min(stage.pass, concepts.length);
+                const passed = score >= passMark;
+                const wrongConcepts = concepts.filter(c => !firstTry.get(c));
+                ctx.record.mastery = { passed: passed || !!ctx.record.mastery?.passed, best: Math.max(score, ctx.record.mastery?.best || 0), total: concepts.length };
+                if (await ctx.save() === false) return;
+                // 첫 시도에 틀린 개념은 복습 상자에 넣고, 맞힌 개념은 꺼냄
+                if (await ctx.reviewUpdate?.(wrongConcepts, concepts.filter(c => firstTry.get(c))) === false) return;
 
-            const tips = wrongConcepts.map(c => byConcept.get(c)[0].explain);
-            root.replaceChildren(h('div', { class: 'card center' },
-                h('div', { class: 'score-big' }, `${score} / ${concepts.length}`),
-                passed
-                    ? h('div', {}, h('div', { class: 'stamp' }, h('span', { class: 'big' }, tone('masteryIcon')), tone('masteryStamp')),
-                        h('p', {}, tone('masteryPraise')))
-                    : h('div', {},
-                        h('p', { style: 'font-size:20px' }, `${passMark}문제 이상 맞히면 통과예요. 조금만 더 힘내요! 💪`),
-                        h('p', { class: 'muted' }, '틀린 개념을 다시 확인하고 새 문제로 도전해 보세요.')),
-                tips.length ? h('div', { style: 'text-align:left' },
-                    h('h3', { style: 'margin-top:12px' }, '📌 다시 기억할 것'),
-                    ...tips.map(t => h('div', { class: 'note-line' }, rich(t)))) : null,
-                passed
-                    ? nextButton('다음 단계로 ▶', () => ctx.done())
-                    : h('div', {},
-                        ctx.readingStage ? nextButton('📖 이야기 카드 요점 다시 보기', () => {
-                            const close = modal(h('h2', {}, '📖 요점 다시 보기'), readingReview(ctx.readingStage),
-                                nextButton('다 봤어요', () => close()));
-                        }, false) : null,
-                        nextButton('🔁 새 문제로 다시 도전', start)),
-            ));
-            scrollTop();
+                const tips = wrongConcepts.map(c => byConcept.get(c)[0].explain);
+                root.replaceChildren(h('div', { class: 'card center' },
+                    h('div', { class: 'score-big' }, `${score} / ${concepts.length}`),
+                    passed
+                        ? h('div', {}, h('div', { class: 'stamp' }, h('span', { class: 'big' }, tone('masteryIcon')), tone('masteryStamp')),
+                            h('p', {}, tone('masteryPraise')))
+                        : h('div', {},
+                            h('p', { style: 'font-size:20px' }, `${passMark}문제 이상 맞히면 통과예요. 조금만 더 힘내요! 💪`),
+                            h('p', { class: 'muted' }, '틀린 개념을 다시 확인하고 새 문제로 도전해 보세요.')),
+                    tips.length ? h('div', { style: 'text-align:left' },
+                        h('h3', { style: 'margin-top:12px' }, '📌 다시 기억할 것'),
+                        ...tips.map(t => h('div', { class: 'note-line' }, rich(t)))) : null,
+                    passed
+                        ? nextButton('다음 단계로 ▶', async event => {
+                            if (finishing) return;
+                            finishing = true;
+                            const button = event.currentTarget;
+                            button.disabled = true;
+                            try { await ctx.done(); }
+                            finally {
+                                finishing = false;
+                                if (button.isConnected) button.disabled = false;
+                            }
+                        })
+                        : h('div', {},
+                            ctx.readingStage ? nextButton('📖 이야기 카드 요점 다시 보기', () => {
+                                const close = modal(h('h2', {}, '📖 요점 다시 보기'), readingReview(ctx.readingStage),
+                                    nextButton('다 봤어요', () => close()));
+                            }, false) : null,
+                            nextButton('🔁 새 문제로 다시 도전', start)),
+                ));
+                scrollTop();
+            } finally { finishing = false; }
         }
 
         showNext();

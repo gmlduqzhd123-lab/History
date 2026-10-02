@@ -1,13 +1,14 @@
 // ③ 생활 체험: 그 시대 아이가 되어 선택하며 하루를 보내는 이야기
 import { h, rich, scrollTop } from '../dom.js';
 import { art } from '../art.js';
-import { speakButton } from '../tts.js';
+import { speakButton, stopSpeaking } from '../tts.js';
 import { retryChoice, nextButton, artBlock } from './common.js';
 
 export function renderAdventure(root, stage, ctx) {
     const learned = [];
 
     function showIntro() {
+        stopSpeaking();
         root.replaceChildren(h('div', { class: 'card center' },
             artBlock(stage.intro.art, art),
             h('p', { class: 'scene' }, rich(stage.intro.text)),
@@ -18,6 +19,7 @@ export function renderAdventure(root, stage, ctx) {
     }
 
     function showStep(i) {
+        stopSpeaking();
         const step = stage.steps[i];
         const last = i === stage.steps.length - 1;
         const after = h('div');
@@ -42,6 +44,7 @@ export function renderAdventure(root, stage, ctx) {
     }
 
     function showEnding() {
+        stopSpeaking();
         root.replaceChildren(h('div', { class: 'card' },
             h('h2', { class: 'center' }, '📌 이야기로 알게 된 것'),
             h('ul', { class: 'learned' }, ...learned.map(t => h('li', {}, t))),

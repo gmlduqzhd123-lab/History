@@ -68,7 +68,7 @@ export function renderReview(env, stations) {
         const headRow = h('div', { class: 'row', style: 'margin-bottom:8px' },
             h('span', { class: 'counter' }, `복습 ${index + 1} / ${items.length} · ${station.emoji} ${station.name}`),
             h('span', { class: 'spacer' }));
-        const body = renderQuestion(question, correct => {
+        const body = renderQuestion(question, async correct => {
             if (correct) {
                 remembered++;
                 delete box[item.key];
@@ -77,7 +77,7 @@ export function renderReview(env, stations) {
                 box[item.key] = { q: item.q, c: item.c, at: Date.now() };
                 slot.append(feedbackBox('bad', '📚 이렇게 기억해요 (내일 한 번 더 나와요)', question.explain));
             }
-            env.persist();
+            if (await env.persist() === false) return;
             const last = index === items.length - 1;
             slot.append(nextButton(last ? '복습 마치기 ▶' : '다음 복습 ▶', () => {
                 if (last) return showEnd();

@@ -1,7 +1,7 @@
-// 한 버전의 앱 파일을 모두 저장한 뒤에만 사용함.
-// 업데이트는 이전 버전을 쓰는 탭이 모두 닫힐 때 적용하여 실행 중인 파일이 섞이지 않게 함.
-const CACHE = 'history-quest-v31';
-const RUNTIME_CACHE = `${CACHE}-runtime`;
+// Historical worker shipped in commit 2e9a930, retained for upgrade regression testing.
+// 오프라인 지원: 인터넷이 되면 항상 최신 파일을 받고(옛 파일과 새 파일이 섞이지 않게),
+// 인터넷이 끊기면 저장해 둔 파일로 동작함
+const CACHE = 'history-quest-v30';
 const FILES = [
     './',
     'index.html',
@@ -54,20 +54,18 @@ const FILES = [
 self.addEventListener('install', event => {
     // 브라우저의 HTTP 캐시를 거치지 않고 새로 받아 저장 (새 버전 설치 때 옛 파일이 끼어들지 않게)
     event.waitUntil(caches.open(CACHE)
-        .then(cache => cache.addAll(FILES.map(f => new Request(f, { cache: 'reload' })))));
-    // skipWaiting하지 않음: 열려 있는 이전 앱은 이전 파일을 계속 사용해야 함.
+        .then(cache => cache.addAll(FILES.map(f => new Request(f, { cache: 'reload' }))))
+        .then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', event => {
     event.waitUntil(caches.keys()
-        .then(keys => Promise.all(keys.filter(k => k.startsWith('history-quest-') && k !== CACHE && k !== RUNTIME_CACHE).map(k => caches.delete(k)))));
-    // clients.claim하지 않음: 처음 방문한 페이지의 로딩 도중 제어권을 가져오지 않음.
+        .then(keys => Promise.all(keys.filter(k => k.startsWith('history-quest-') && k !== CACHE).map(k => caches.delete(k))))
+        .then(() => self.clients.claim()));
 });
 
-const APP_FILES = new Set(FILES.map(file => new URL(file, self.location.href).href));
-
-// 앱 파일은 설치 때 완성한 저장본만 사용. 새 파일은 다음 서비스 워커 설치 때 받음.
-// 사진·글꼴 등 별도 자원은 앱 저장본을 바꾸지 않는 별도 캐시에 저장.
+// 같은 사이트의 파일: 인터넷 먼저(서버에 바뀐 것이 있는지 확인), 실패하면 저장본
+// 글꼴: 저장본 먼저(잘 바뀌지 않으므로)
 self.addEventListener('fetch', event => {
     const { request } = event;
     if (request.method !== 'GET') return;
@@ -76,35 +74,26 @@ self.addEventListener('fetch', event => {
     const isFont = url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
     if (!sameOrigin && !isFont) return;
 
-    const appUrl = new URL(url);
-    appUrl.search = '';
-    if (sameOrigin && APP_FILES.has(appUrl.href)) {
-        event.respondWith(caches.open(CACHE).then(cache => cache.match(appUrl.href))
-            .then(cached => cached || Response.error()));
-        return;
-    }
-
     if (sameOrigin) {
         event.respondWith((async () => {
-            const cache = await caches.open(RUNTIME_CACHE);
+            const cache = await caches.open(CACHE);
             try {
-                const response = await fetch(request);
-                if (response.ok) event.waitUntil(cache.put(request, response.clone()));
+                const response = await fetch(request.url, { cache: 'no-cache', credentials: 'same-origin' });
+                if (response.ok) cache.put(request, response.clone());
                 return response;
             } catch (e) {
                 const cached = await cache.match(request, { ignoreSearch: true });
-                if (cached) return cached;
-                return request.mode === 'navigate' ? (await caches.open(CACHE)).match('./') : Response.error();
+                return cached || (request.mode === 'navigate' ? cache.match('./') : Response.error());
             }
         })());
         return;
     }
 
-    event.respondWith(caches.open(RUNTIME_CACHE).then(async cache => {
+    event.respondWith(caches.open(CACHE).then(async cache => {
         const cached = await cache.match(request);
         if (cached) return cached;
         const response = await fetch(request);
-        if (response && (response.ok || response.type === 'opaque')) event.waitUntil(cache.put(request, response.clone()));
+        if (response && (response.ok || response.type === 'opaque')) cache.put(request, response.clone());
         return response;
     }));
 });

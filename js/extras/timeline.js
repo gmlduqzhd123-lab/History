@@ -29,10 +29,10 @@ export function renderTimeline(env, timeline, { calm = false } = {}) {
         if (placed.length === timeline.events.length) finish();
     }
 
-    function finish() {
+    async function finish() {
         const best = record[timeline.key]?.best;
         record[timeline.key] = { done: true, best: best == null ? mistakes : Math.min(best, mistakes), at: Date.now() };
-        env.persist();
+        if (await env.persist() === false) return;
         poolCard.remove();
         body.append(h('div', { class: 'card center', style: 'margin-top:16px' },
             h('div', { class: 'stamp' }, h('span', { class: 'big' }, '⏳'), calm ? '연표 완성' : '연표 완성!'),

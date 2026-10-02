@@ -2,13 +2,14 @@
 import { h, shuffle, scrollTop } from '../dom.js';
 import { fillPicture, creditLine } from '../picture.js';
 import { retryChoice, feedbackBox, nextButton } from './common.js';
-import { speakButton } from '../tts.js';
+import { speakButton, stopSpeaking } from '../tts.js';
 import { tone } from '../tone.js';
 
 export function renderDetective(root, stage, ctx) {
     let index = 0;
 
     function showArtifact() {
+        stopSpeaking();
         const item = stage.artifacts[index];
         let cluesShown = 1;
         // 처음엔 9칸 중 3칸만 보이고, 단서를 볼 때마다 더 드러남
@@ -21,7 +22,7 @@ export function renderDetective(root, stage, ctx) {
         const openTiles = n => order.slice(0, n).forEach(i => tileEls[i].classList.add('off'));
         openTiles(opened);
 
-        const frame = fillPicture(h('div', { class: 'artifact-frame' }), item.art);
+        const frame = fillPicture(h('div', { class: 'artifact-frame' }), item.art, '단서를 보고 추리할 유물 그림');
         const credit = creditLine(item.art);
         frame.append(tiles);
 
@@ -55,7 +56,9 @@ export function renderDetective(root, stage, ctx) {
                 setTimeout(() => tiles.remove(), 600);
                 moreBtn.classList.add('hidden');
                 titleEl.textContent = `이 ${tone('item')}은 「${item.name}」!`;
+                frame.dataset.pictureLabel = item.name;
                 frame.querySelector('img')?.setAttribute('alt', item.name);
+                frame.querySelector('svg')?.setAttribute('aria-label', item.name);
                 const eraQ = retryChoice({
                     question: item.eraQ.q,
                     choices: item.eraQ.choices,
