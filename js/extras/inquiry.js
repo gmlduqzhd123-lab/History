@@ -60,7 +60,7 @@ export function inquiryView(saved, activity, author = '') {
         h('p', { class: 'inquiry-result-meta' },
             Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('ko-KR'),
             role ? ` · ${role.label}` : ''),
-        activity.pageRef ? h('p', { class: 'inquiry-page-ref' }, activity.pageRef) : null,
+        null, // 교과서 쪽수(pageRef)는 출판사마다 달라 학생 화면에 보이지 않음
         h('h4', { class: 'inquiry-result-label' }, '내가 고른 근거 자료'),
         h('ul', { class: 'inquiry-result-evidence' }, ...evidence.map(source => h('li', {}, source.title))),
         ...activity.prompts.map(prompt => h('section', { class: 'inquiry-result-answer' },
@@ -97,7 +97,7 @@ export function renderInquiry(env, unit, activityId) {
                     onclick: () => { if (canOpen(env, activity)) env.go({ screen: 'inquiry', unit, id: activity.id }); },
                 }, h('span', { class: 'inquiry-kind' }, kindLabel(activity)),
                 h('span', { class: 'inquiry-title' }, activity.title),
-                activity.pageRef ? h('span', { class: 'inquiry-page-ref' }, activity.pageRef) : null,
+                null,
                 !open ? h('span', { class: 'inquiry-lock' }, '🔒 관련 정거장을 먼저 마쳐 주세요.') : null,
                 store[activity.id] ? h('span', { class: 'inquiry-saved-badge' }, '📒 저장한 기록이 있어요') : null,
                 ownerDrafts.has(activity.id) ? h('span', { class: 'inquiry-hint' }, '✍️ 쓰던 내용이 있어요') : null);
@@ -317,7 +317,7 @@ export function renderInquiry(env, unit, activityId) {
     container.append(
         h('div', { class: 'card inquiry-intro' },
             h('p', { class: 'inquiry-kind' }, kindLabel(activity)), h('h2', {}, activity.title),
-            activity.pageRef ? h('p', { class: 'inquiry-page-ref' }, activity.pageRef) : null,
+            null, // 교과서 쪽수(pageRef)는 출판사마다 달라 학생 화면에 보이지 않음
             h('p', {}, activity.intro)), form);
     env.mount(env.topbar('🔎 자료 탐구 · 역사 일기', () => leave(listRoute), '← 활동 고르기'), container);
     scrollTop();
