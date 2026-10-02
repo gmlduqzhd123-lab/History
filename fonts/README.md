@@ -14,18 +14,18 @@ The CSS family name `Pretendard` refers to this variable font. Its native weight
 range is 45–920. The font is preloaded by `index.html` and included in the versioned
 service-worker cache. No external font service is needed at runtime.
 
-## Gaegu — introduction-page headings
+## Jua — introduction-page headings
 
-The introduction uses Gaegu Bold for friendly handwritten headings and buttons.
+The introduction uses Jua for thick, rounded headings and buttons.
 Long descriptions and learning screens continue to use Pretendard.
 
-- Designer: JIKJI SOFT
-- Official source: https://github.com/google/fonts/tree/088df5c822dacc8fad9dd64dbbe5649cd6830e99/ofl/gaegu
-- Original TTF SHA-256: `cc38a4af9506a45254d1ce07c589ec473d9e5f0be319e5a77b17c214903f8c1c`
-- Webfont SHA-256: `f3fcd4a32e9f56e17ca004f2154973208a7947ec934365e1cec979f7ce77bff1`
-- License: SIL Open Font License 1.1, included in [Gaegu-OFL.txt](Gaegu-OFL.txt).
+- Official source: https://github.com/google/fonts/tree/69d2493f8b919292a9c4b530081934877093c038/ofl/jua
+- Original TTF SHA-256: `769677aef240bfc3b9965f2b50748075bff885e6c6992fc591a3fb268279f898`
+- Webfont SHA-256: `cb995145eb03afc3ca5d714471d2183f58d56ed571001321e109170b421abcda`
+- License: SIL Open Font License 1.1, included in [Jua-OFL.txt](Jua-OFL.txt).
 
-`gaegu-bold.woff2` is a format conversion of the official TTF using fontTools and
-Brotli, without subsetting. All 2,594 glyphs, character mappings, outlines and
-horizontal metrics are identical to the original. It is included in the versioned
-service-worker cache and is requested only when the introduction needs it.
+`jua-regular.woff2` is a format conversion of the official TTF using fontTools and
+Brotli, without subsetting. All 2,520 glyphs, character mappings, outlines, hinting
+and horizontal metrics are identical to the original. Its regular weight (400)
+has naturally thick strokes; CSS does not add synthetic bold. It is included in
+the versioned service-worker cache and requested when the introduction needs it.
