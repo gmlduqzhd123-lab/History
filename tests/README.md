@@ -23,6 +23,7 @@ node --test tests/storage.test.mjs tests/grading.test.mjs tests/pwa.test.cjs
 python3 tests/storage_browser.py -v
 python3 tests/map-regressions.py -v
 python3 tests/browser-ui.py -v
+python3 tests/landing-page.py -v
 python3 tests/activity-save.py -v
 python3 tests/extras-flow.py -v
 python3 tests/inquiry-flow.py -v

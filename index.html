@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>역사 탐험 퀘스트</title>
-    <meta name="description" content="초등학교 5학년 2학기 사회(역사) 자기주도 학습 웹앱">
+    <meta name="description" content="유물을 추리하고, 역사를 체험하고, 내 생각을 기록하는 초등 5학년 2학기 사회 학습. 10개 역사 정거장과 자료 탐구·역사 일기를 회원 가입 없이 시작하세요.">
     <meta name="theme-color" content="#c2410c">
     <meta name="color-scheme" content="light">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="엽쌤스쿨">
     <meta property="og:title" content="역사 탐험 퀘스트">
-    <meta property="og:description" content="초등 5학년 2학기 사회(역사) 자기주도 학습 · 유물 탐정부터 한 줄 정리까지 퀘스트로">
+    <meta property="og:description" content="역사, 직접 만나면 더 오래 기억돼요. 10개 역사 정거장과 자료 탐구·역사 일기로 함께하는 초등 5학년 역사 탐험.">
     <meta property="og:url" content="https://gmlduqzhd123-lab.github.io/History/">
     <meta property="og:locale" content="ko_KR">
     <meta property="og:image" content="https://gmlduqzhd123-lab.github.io/History/og-image.jpg">
@@ -30,6 +30,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/inquiry.css">
+    <link rel="stylesheet" href="css/landing.css">
 </head>
 <body>
     <div id="app">
@@ -44,7 +45,7 @@
             if (!('noModule' in HTMLScriptElement.prototype) || !Element.prototype.replaceChildren) ok = false;
             function show(title) {
                 var app = document.getElementById('app');
-                if (!app || app.querySelector('.hero, .topbar')) return;
+                if (!app || app.querySelector('.hero, .topbar, .landing-header')) return;
                 app.innerHTML = '<div class="card" style="margin-top:40px"><h2>' + title + '</h2>'
                     + '<p style="margin-top:10px">이 기기의 브라우저가 오래되어 앱을 열지 못했을 수 있어요.</p>'
                     + '<div class="note-line">📱 <b>아이패드·아이폰</b>: 설정 → 일반 → 소프트웨어 업데이트 (iOS 14 이상)</div>'

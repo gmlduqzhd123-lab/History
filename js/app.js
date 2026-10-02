@@ -20,6 +20,7 @@ import { renderPlaces, placeCount, visitedCount } from './extras/places.js';
 import { renderWriting, writingView, writingFor } from './extras/writing.js';
 import { inquiries } from '../content/inquiries.js';
 import { renderInquiry, inquiryView } from './extras/inquiry.js';
+import { renderLanding, landingHeader } from './landing.js';
 
 const renderers = {
     detective: renderDetective,
@@ -142,6 +143,8 @@ function render() {
     clear(app);
     setCalm(false);
     if (!profile()) ui = ['welcome', 'register', 'code'].includes(ui.screen) ? ui : { screen: 'welcome' };
+    app.classList.toggle('landing-page', ui.screen === 'welcome');
+    document.body.classList.toggle('landing-home', ui.screen === 'welcome');
     ({ welcome: renderWelcome, register: renderRegister, code: renderCodeEntry, map: renderMap, quest: renderQuest, notes: renderNotes, timeline: renderTimelineScreen, review: () => renderReview(env, stations), people: () => renderPeople(env, stations), person: () => renderPerson(env, stations, ui.id), places: () => renderPlaces(env, stations, ui), writing: renderWritingScreen, inquiry: renderInquiryScreen }[ui.screen] || renderWelcome)();
 }
 
@@ -190,20 +193,24 @@ function renderWelcome() {
             h('button', { class: 'btn btn-block', type: 'button', onclick: () => go({ screen: 'code' }) }, '💾 이어하기 코드로 계속하기'),
             installButton('btn btn-block')),
     ];
-    mount(
-        h('div', { class: 'hero' },
-            h('div', { class: 'logo', 'aria-hidden': 'true' }, '🧭'),
-            h('h1', {}, '역사 탐험 퀘스트'),
-            h('p', { class: 'muted' }, '5학년 2학기 사회 · 유물과 이야기로 떠나는 시간 여행')),
-        h('div', { class: 'tabs', role: 'tablist', 'aria-label': '시작 화면' },
-            tabButton('start', '🚀 시작하기'),
-            tabButton('help', '📖 사용법')),
+    const controls = h('div', { class: 'landing-start-controls' },
+        h('div', { class: 'tabs', role: 'tablist', 'aria-label': '시작 화면' }, tabButton('start', '🚀 시작하기'), tabButton('help', '📖 사용법')),
         h('div', { id: 'welcome-panel', role: 'tabpanel', 'aria-labelledby': `tab-${tab}` },
-            ...(tab === 'help' ? helpPanel() : startPanel)),
-        h('p', { class: 'site-foot' },
-            '© 2026 엽쌤. All rights reserved. · ',
-            h('a', { href: 'https://gmlduqzhd123-lab.github.io/YScode/' }, '엽쌤의 다른 앱 보기 →')),
-    );
+            ...(tab === 'help' ? helpPanel() : startPanel)));
+    if (tab === 'help') {
+        mount(landingHeader(() => go({ screen: 'welcome' }), true),
+            h('main', { id: 'landing-content', class: 'landing-help-content', tabindex: '-1' },
+                h('h1', {}, '역사 탐험 사용법'), controls));
+    } else {
+        mount(...renderLanding({
+            start: () => go({ screen: 'register' }),
+            resume: profile() ? () => go({ screen: 'map' }) : null,
+            hasSaved: saved.length > 0,
+            code: () => go({ screen: 'code' }),
+            help: () => go({ screen: 'welcome', tab: 'help' }),
+            qr: showQr, startArea: controls, steps: GUIDE_STEPS,
+        }));
+    }
 }
 
 // 이 기기의 탐험가 목록. 공용 태블릿처럼 여러 명이면 이름·번호로 찾는 칸을 보여 줌
