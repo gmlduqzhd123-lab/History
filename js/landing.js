@@ -67,7 +67,7 @@ export function renderLanding({ start, resume, hasSaved, code, help, qr, startAr
             h('section', { class: 'landing-hero hero', 'aria-labelledby': 'landing-title' },
                 h('div', { class: 'landing-hero-copy' },
                     eyebrow('초등 5학년 2학기 사회 · 자기주도 역사 학습'),
-                    h('h1', { id: 'landing-title' }, '역사, 직접 만나면', h('br'), h('span', {}, '더 오래 기억돼요.')),
+                    h('h1', { id: 'landing-title' }, '역사를 만나고,', h('br'), h('span', {}, '내 이야기를', h('br'), '써 내려가요.')),
                     h('p', { class: 'landing-lead' }, '유물 속 단서를 찾고, 그 시대를 살아 보고,', h('br', { class: 'landing-desktop-break' }),
                         ' 내 생각을 기록하는 특별한 시간 여행.', h('br'), '교실에서도 집에서도, 나의 속도로 탐험해요.'),
                     h('div', { class: 'landing-hero-actions' }, button(resume ? '내 탐험 이어가기' : '탐험 시작하기', resume || start),

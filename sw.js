@@ -1,6 +1,6 @@
 // 한 버전의 앱 파일을 모두 저장한 뒤에만 사용함.
 // 업데이트는 이전 버전을 쓰는 탭이 모두 닫힐 때 적용하여 실행 중인 파일이 섞이지 않게 함.
-const CACHE = 'history-quest-v37';
+const CACHE = 'history-quest-v38';
 const RUNTIME_CACHE = `${CACHE}-runtime`;
 const FILES = [
     './',
@@ -17,7 +17,7 @@ const FILES = [
     'css/landing.css',
     'css/offline.css',
     'fonts/PretendardVariable.woff2',
-    'fonts/jua-regular.woff2',
+    'fonts/NotoSerifKRVariable.woff2',
     'js/app.js',
     'js/landing.js',
     'js/offline.js',

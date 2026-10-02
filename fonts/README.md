@@ -14,18 +14,30 @@ The CSS family name `Pretendard` refers to this variable font. Its native weight
 range is 45–920. The font is preloaded by `index.html` and included in the versioned
 service-worker cache. No external font service is needed at runtime.
 
-## Jua — introduction-page headings
+## Noto Serif KR — introduction-page typography
 
-The introduction uses Jua for thick, rounded headings and buttons.
-Long descriptions and learning screens continue to use Pretendard.
+The introduction uses Noto Serif KR for larger, traditional Korean lettering.
+Learning screens continue to use Pretendard.
 
-- Official source: https://github.com/google/fonts/tree/69d2493f8b919292a9c4b530081934877093c038/ofl/jua
-- Original TTF SHA-256: `769677aef240bfc3b9965f2b50748075bff885e6c6992fc591a3fb268279f898`
-- Webfont SHA-256: `cb995145eb03afc3ca5d714471d2183f58d56ed571001321e109170b421abcda`
-- License: SIL Open Font License 1.1, included in [Jua-OFL.txt](Jua-OFL.txt).
+- Official Google Fonts source: https://github.com/google/fonts/tree/9710da1eacb3be272583c3224dcb70f9da6eadbb/ofl/notoserifkr
+- Original TTF: https://raw.githubusercontent.com/google/fonts/9710da1eacb3be272583c3224dcb70f9da6eadbb/ofl/notoserifkr/NotoSerifKR%5Bwght%5D.ttf
+- Upstream: https://github.com/notofonts/noto-cjk/tree/985fa52c81c1d6692ccdd82bc3656e8fb932fd89
+- Version: `2.003-H1`
+- Original TTF SHA-256: `11f8d5de6f1b79195efba3828aaa2ec95c1178f5ae976fb23c8d53250a9938f3`
+- Webfont SHA-256: `e873199ed8f2a76e32c7239e877c6d0e89ed06d0df73bc4d718e3ddd05c2fa00`
+- Webfont size: 5,859,208 bytes.
+- License: SIL Open Font License 1.1; the original Google Fonts license is included verbatim in [NotoSerifKR-OFL.txt](NotoSerifKR-OFL.txt), and the embedded Adobe copyright notice is retained in the font.
 
-`jua-regular.woff2` is a format conversion of the official TTF using fontTools and
-Brotli, without subsetting. All 2,520 glyphs, character mappings, outlines, hinting
-and horizontal metrics are identical to the original. Its regular weight (400)
-has naturally thick strokes; CSS does not add synthetic bold. It is included in
-the versioned service-worker cache and requested when the introduction needs it.
+`NotoSerifKRVariable.woff2` is a format conversion of the official TTF using
+fontTools and Brotli, without subsetting. All 24,910 glyphs, including all 11,172
+modern Hangul syllables, are retained so student names are not limited to the
+initial page text. Character mappings, outlines, hinting, horizontal and vertical
+metrics, variation tables and layout tables are identical to the original. Only
+the format-dependent checksum and WOFF2 conversion flag in `head` differ; source
+timestamps and naming metadata are preserved. The conversion used fontTools
+4.61.1 and Brotli 1.2.0 with `TTFont(..., recalcTimestamp=False)`.
+
+The CSS family name is `Noto Serif KR`. Its native variable weight range is
+200–900, allowing substantial text weights without synthetic bold. It is served
+locally and included in the versioned service-worker cache; no external font
+service is needed at runtime.
