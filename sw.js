@@ -1,6 +1,6 @@
 // 한 버전의 앱 파일을 모두 저장한 뒤에만 사용함.
 // 업데이트는 이전 버전을 쓰는 탭이 모두 닫힐 때 적용하여 실행 중인 파일이 섞이지 않게 함.
-const CACHE = 'history-quest-v42';
+const CACHE = 'history-quest-v43';
 const RUNTIME_CACHE = `${CACHE}-runtime`;
 const FILES = [
     './',
@@ -183,8 +183,12 @@ self.addEventListener('fetch', event => {
         return;
     }
     if (sameOrigin && APP_FILES.has(appUrl.href)) {
-        event.respondWith(caches.open(CACHE).then(cache => cache.match(appUrl.href))
-            .then(cached => cached || Response.error()));
+        // 저장본이 있으면 그대로 사용. 브라우저가 저장 공간을 정리해 저장본이 사라졌으면
+        // 오류(ERR_FAILED)로 막지 말고 인터넷에서 받아 앱이 열리게 함. 저장본 복구는 '다시 준비하기'가 맡음.
+        event.respondWith(caches.open(CACHE)
+            .then(cache => cache.match(appUrl.href))
+            .catch(() => undefined)
+            .then(cached => cached || fetch(request)));
         return;
     }
 
@@ -198,7 +202,8 @@ self.addEventListener('fetch', event => {
             } catch (e) {
                 const cached = await cache.match(request, { ignoreSearch: true });
                 if (cached) return cached;
-                return request.mode === 'navigate' ? (await caches.open(CACHE)).match('./') : Response.error();
+                const home = request.mode === 'navigate' ? await (await caches.open(CACHE)).match('./') : undefined;
+                return home || Response.error();
             }
         })());
         return;
