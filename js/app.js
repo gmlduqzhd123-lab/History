@@ -252,7 +252,7 @@ function renderWelcome() {
             hasSaved: saved.length > 0,
             code: () => go({ screen: 'code' }),
             help: () => go({ screen: 'welcome', tab: 'help' }),
-            qr: showQr, startArea: controls, steps: GUIDE_STEPS,
+            qr: showQr, install: isStandalone() ? null : installApp, startArea: controls, steps: GUIDE_STEPS,
         }));
     }
 }

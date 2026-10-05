@@ -110,7 +110,7 @@ function videoGuide() {
                         h('div', {}, h('strong', {}, title), h('p', {}, description))))))));
 }
 
-export function renderLanding({ start, resume, hasSaved, code, help, qr, startArea, steps }) {
+export function renderLanding({ start, resume, hasSaved, code, help, qr, install, startArea, steps }) {
     const features = [
         ['01', '유물에서 시작하는 호기심', '단서를 따라 유물을 추리하고, 짧은 이야기로 그 시대 사람들의 삶을 만나요.', '⌕'],
         ['02', '내 속도로 완성하는 탐험', '힌트와 읽어 주기의 도움을 받아 도전해요. 정거장을 마칠 때마다 다음 여정이 열려요.', '↗'],
@@ -138,7 +138,8 @@ export function renderLanding({ start, resume, hasSaved, code, help, qr, startAr
                     h('p', { class: 'landing-lead' }, '유물 속 단서를 찾고, 그 시대를 살아 보고,', h('br', { class: 'landing-desktop-break' }),
                         ' 내 생각을 기록하는 특별한 시간 여행.', h('br'), '교실에서도 집에서도, 나의 속도로 탐험해요.'),
                     h('div', { class: 'landing-hero-actions' }, button(resume ? '내 탐험 이어가기' : '탐험 시작하기', resume || start),
-                        h('a', { class: 'landing-text-link', href: '#classroom' }, '선생님을 위한 안내', arrow())),
+                        h('a', { class: 'landing-text-link', href: '#classroom' }, '선생님을 위한 안내', arrow()),
+                        install ? h('button', { type: 'button', class: 'landing-install', onclick: install }, '📲 앱 설치') : null),
                     h('p', { class: 'landing-reassurance' }, h('span', { 'aria-hidden': 'true' }, '✓'), ' 회원 가입 없이 · PC와 태블릿, 휴대전화에서'),
                     h('div', { class: 'landing-resume-line' },
                         h('a', { href: '#video-guide' }, '사용법 영상 보기 →'),
