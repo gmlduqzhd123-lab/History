@@ -1,6 +1,6 @@
 // 한 버전의 앱 파일을 모두 저장한 뒤에만 사용함.
 // 업데이트는 이전 버전을 쓰는 탭이 모두 닫힐 때 적용하여 실행 중인 파일이 섞이지 않게 함.
-const CACHE = 'history-quest-v45';
+const CACHE = 'history-quest-v46';
 const RUNTIME_CACHE = `${CACHE}-runtime`;
 const FILES = [
     './',
@@ -176,12 +176,14 @@ main{max-width:560px;margin:40px auto;padding:0 16px}.card{background:#fff;borde
 h1{font-size:22px;margin:0 0 8px}li{margin:6px 0}button{margin-top:14px;width:100%;min-height:52px;border:0;border-radius:14px;background:#c2410c;color:#fff;font-size:18px;font-weight:700}
 .small{font-size:14px;color:#7a6250}</style></head><body><main><div class="card">
 <h1>🧭 역사 탐험 퀘스트에 지금 연결되지 않아요</h1>
-<p>이 기기에 저장된 앱 파일이 정리되었고, 지금은 사이트(gmlduqzhd123-lab.github.io)에 연결되지 않아요. 학습 기록은 그대로 있어요.</p>
+<p>이 기기에 저장된 앱 파일이 정리되었고, 지금은 사이트(gmlduqzhd123-lab.github.io)에 연결되지 않아요.</p>
 <ol><li>📶 와이파이나 데이터가 켜져 있는지 확인해요.</li>
 <li>🔄 아래 <b>다시 시도</b>를 눌러요. 인터넷이 돌아오면 저절로 다시 열려요.</li>
 <li>🏫 학교 인터넷에서만 안 되면, 선생님께 <b>gmlduqzhd123-lab.github.io</b> 접속이 막혀 있지 않은지 여쭤봐요.</li></ol>
 <button type="button" onclick="location.reload()">다시 시도</button>
-<p class="small">한 번 다시 연결되면 앱 파일을 다시 저장해, 그다음부터는 인터넷 없이도 열려요.</p>
+<p><b>앱이 다시 열리면 꼭 해 주세요</b></p>
+<ol><li>화면 위쪽 안내의 <b>다시 준비하기</b>를 누르고, <b>✓ 오프라인 준비 완료</b>가 보이는지 확인해요. 다시 연결되는 것만으로는 오프라인용 파일이 저장되지 않아요.</li>
+<li>내 탐험가와 기록이 남아 있는지 확인해요. 없다면 공책에 적어 둔 <b>이어하기 코드</b>로 진도를 되살려요.</li></ol>
 </div></main><script>addEventListener('online',function(){location.reload()})</script></body></html>`;
     return new Response(html, { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
 }
