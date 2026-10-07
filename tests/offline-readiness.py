@@ -25,6 +25,13 @@ class OfflineReadiness(unittest.TestCase):
         class Handler(SimpleHTTPRequestHandler):
             def do_GET(self):
                 target = self.path.split('?')[0]
+                if state.get('drop'):
+                    # 학교망 차단·와이파이 끊김처럼 사이트에 아예 닿지 않는 상황 (응답 없이 연결 끊기)
+                    self.close_connection = True
+                    return
+                if state.get('fail_app') and target == '/js/app.js':
+                    self.send_error(503, 'Synthetic app module failure')
+                    return
                 if target.endswith('/sw.js'):
                     self.send_response(200)
                     self.send_header('Content-Type', 'text/javascript')
@@ -130,19 +137,45 @@ class OfflineReadiness(unittest.TestCase):
             expect(page.locator('#offline-status')).to_have_attribute('data-state', 'ready')
             self.assertTrue(page.evaluate('navigator.serviceWorker.controller !== null'))
 
-    def test_missing_app_module_has_repair_guidance_and_recovers(self):
+    def test_missing_app_module_loads_online_and_offers_repair(self):
+        # 저장본에서 app.js 만 사라져도 인터넷이 되면 앱은 열리고, 저장본은 '다시 준비하기'로 고침
+        with self.app_fixture() as (_context, page, _state, _url):
+            self.erase_cached_file(page, _state['current'], 'js/app.js')
+            page.reload(wait_until='domcontentloaded')
+            expect(page.locator('.landing-hero h1')).to_be_visible()
+            status = page.locator('#offline-status')
+            expect(status).to_have_attribute('data-state', 'failed')
+            status.get_by_role('button', name='다시 준비하기').click()
+            expect(status).to_have_attribute('data-state', 'ready')
+
+    def test_missing_app_module_unreachable_shows_guidance_at_once_and_recovers(self):
         with self.app_fixture() as (_context, page, state, _url):
             self.erase_cached_file(page, state['current'], 'js/app.js')
+            state['fail_app'] = True
             page.reload(wait_until='domcontentloaded')
-            expect(page.get_by_role('heading', name='앱이 열리지 않고 있어요 😢')).to_be_visible(timeout=25000)
+            # 20초 타이머를 기다리지 않고 모듈을 못 받는 즉시 안내 (흰 화면 방지)
+            expect(page.get_by_role('heading', name='앱이 열리지 않고 있어요 😢')).to_be_visible(timeout=8000)
             expect(page.get_by_text('앱 파일을 읽지 못했어요.', exact=False)).to_be_visible()
             status = page.locator('#offline-status')
             expect(status).to_have_attribute('data-state', 'failed')
+            state['fail_app'] = False
             status.get_by_role('button', name='다시 준비하기').click()
             expect(status).to_have_attribute('data-state', 'ready')
             page.get_by_role('button', name='새로고침', exact=True).click()
             expect(page.locator('.landing-hero h1')).to_be_visible()
             expect(status).to_have_attribute('data-state', 'ready')
+
+    def test_unreachable_site_without_snapshot_shows_connection_guide(self):
+        # 저장본이 정리되고 사이트에도 닿지 않으면 크롬 '사이트에 연결할 수 없음' 대신 안내 페이지
+        with self.app_fixture() as (_context, page, state, url):
+            page.evaluate('async () => { for (const key of await caches.keys()) await caches.delete(key); }')
+            state['drop'] = True
+            page.goto(url, wait_until='domcontentloaded')
+            expect(page.get_by_role('heading', name='🧭 역사 탐험 퀘스트에 지금 연결되지 않아요')).to_be_visible()
+            expect(page.get_by_text('gmlduqzhd123-lab.github.io', exact=False).first).to_be_visible()
+            state['drop'] = False
+            page.get_by_role('button', name='다시 시도').click()
+            expect(page.locator('.landing-hero h1')).to_be_visible()
 
     def check_failure_and_retry(self, failed_path):
         state = {'fail': True}

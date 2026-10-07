@@ -1,6 +1,6 @@
 // 한 버전의 앱 파일을 모두 저장한 뒤에만 사용함.
 // 업데이트는 이전 버전을 쓰는 탭이 모두 닫힐 때 적용하여 실행 중인 파일이 섞이지 않게 함.
-const CACHE = 'history-quest-v44';
+const CACHE = 'history-quest-v45';
 const RUNTIME_CACHE = `${CACHE}-runtime`;
 const FILES = [
     './',
@@ -166,6 +166,26 @@ self.addEventListener('message', event => {
     })());
 });
 
+// 저장본도 없고 사이트에도 닿지 않을 때(저장 공간 정리 + 와이파이 끊김·학교망 차단) 크롬의
+// "사이트에 연결할 수 없음" 오류 화면 대신 보여 줄 안내 페이지. 다른 파일 없이 혼자 열려야 함.
+function unreachablePage() {
+    const html = `<!doctype html><html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>역사 탐험 퀘스트 · 연결 안내</title>
+<style>body{margin:0;font-family:system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:#fbf4e8;color:#3f2d20;line-height:1.6;word-break:keep-all}
+main{max-width:560px;margin:40px auto;padding:0 16px}.card{background:#fff;border:2px solid #ecdcc4;border-radius:20px;padding:22px}
+h1{font-size:22px;margin:0 0 8px}li{margin:6px 0}button{margin-top:14px;width:100%;min-height:52px;border:0;border-radius:14px;background:#c2410c;color:#fff;font-size:18px;font-weight:700}
+.small{font-size:14px;color:#7a6250}</style></head><body><main><div class="card">
+<h1>🧭 역사 탐험 퀘스트에 지금 연결되지 않아요</h1>
+<p>이 기기에 저장된 앱 파일이 정리되었고, 지금은 사이트(gmlduqzhd123-lab.github.io)에 연결되지 않아요. 학습 기록은 그대로 있어요.</p>
+<ol><li>📶 와이파이나 데이터가 켜져 있는지 확인해요.</li>
+<li>🔄 아래 <b>다시 시도</b>를 눌러요. 인터넷이 돌아오면 저절로 다시 열려요.</li>
+<li>🏫 학교 인터넷에서만 안 되면, 선생님께 <b>gmlduqzhd123-lab.github.io</b> 접속이 막혀 있지 않은지 여쭤봐요.</li></ol>
+<button type="button" onclick="location.reload()">다시 시도</button>
+<p class="small">한 번 다시 연결되면 앱 파일을 다시 저장해, 그다음부터는 인터넷 없이도 열려요.</p>
+</div></main><script>addEventListener('online',function(){location.reload()})</script></body></html>`;
+    return new Response(html, { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
+}
+
 // 앱 파일은 설치 때 완성한 저장본만 사용. 새 파일은 다음 서비스 워커 설치 때 받음.
 // 사진·글꼴 등 별도 자원은 앱 저장본을 바꾸지 않는 별도 캐시에 저장.
 self.addEventListener('fetch', event => {
@@ -188,7 +208,9 @@ self.addEventListener('fetch', event => {
         event.respondWith(caches.open(CACHE)
             .then(cache => cache.match(appUrl.href))
             .catch(() => undefined)
-            .then(cached => cached || fetch(request)));
+            .then(cached => cached || fetch(request))
+            // 첫 화면을 열다가 저장본도 네트워크도 없으면 오류 화면 대신 안내 페이지
+            .catch(error => { if (request.mode === 'navigate') return unreachablePage(); throw error; }));
         return;
     }
 
@@ -203,7 +225,8 @@ self.addEventListener('fetch', event => {
                 const cached = await cache.match(request, { ignoreSearch: true });
                 if (cached) return cached;
                 const home = request.mode === 'navigate' ? await (await caches.open(CACHE)).match('./') : undefined;
-                return home || Response.error();
+                if (home) return home;
+                return request.mode === 'navigate' ? unreachablePage() : Response.error();
             }
         })());
         return;
