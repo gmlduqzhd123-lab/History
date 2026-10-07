@@ -173,9 +173,21 @@ class OfflineReadiness(unittest.TestCase):
             page.goto(url, wait_until='domcontentloaded')
             expect(page.get_by_role('heading', name='🧭 역사 탐험 퀘스트에 지금 연결되지 않아요')).to_be_visible()
             expect(page.get_by_text('gmlduqzhd123-lab.github.io', exact=False).first).to_be_visible()
+            # 안내는 실제 복구 방법(다시 준비하기 → 오프라인 준비 완료)을 알려 주고, 기록이 남아 있다고 장담하지 않음
+            guide = page.locator('body').inner_text()
+            self.assertIn('다시 준비하기', guide)
+            self.assertIn('오프라인 준비 완료', guide)
+            self.assertIn('이어하기 코드', guide)
+            self.assertNotIn('그대로 있어요', guide)
             state['drop'] = False
             page.get_by_role('button', name='다시 시도').click()
             expect(page.locator('.landing-hero h1')).to_be_visible()
+            # 다시 연결되는 것만으로는 오프라인 파일이 채워지지 않음 → 다시 준비하기로 복구
+            status = page.locator('#offline-status')
+            expect(status).to_have_attribute('data-state', 'failed')
+            status.get_by_role('button', name='다시 준비하기').click()
+            expect(status).to_have_attribute('data-state', 'ready')
+            expect(status).to_contain_text('오프라인 준비 완료')
 
     def check_failure_and_retry(self, failed_path):
         state = {'fail': True}
