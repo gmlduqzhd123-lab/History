@@ -72,6 +72,8 @@ class OfflineReadiness(unittest.TestCase):
                     expect(page.locator('#offline-status')).to_have_attribute('data-state', 'ready')
                     page.reload(wait_until='domcontentloaded')
                     expect(page.locator('#offline-status')).to_have_attribute('data-state', 'ready')
+                    # 저절로 준비가 끝나면 화면에 안내를 띄우지 않음
+                    expect(page.locator('#offline-status')).to_be_hidden()
                     yield context, page, state, url
                 finally:
                     browser.close()
@@ -187,6 +189,8 @@ class OfflineReadiness(unittest.TestCase):
             expect(status).to_have_attribute('data-state', 'failed')
             status.get_by_role('button', name='다시 준비하기').click()
             expect(status).to_have_attribute('data-state', 'ready')
+            # 다시 준비하기를 누른 뒤에는 완료 안내를 보여 줘서 복구를 확인할 수 있음
+            expect(status).to_be_visible()
             expect(status).to_contain_text('오프라인 준비 완료')
 
     def check_failure_and_retry(self, failed_path):

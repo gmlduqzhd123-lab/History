@@ -30,8 +30,8 @@ export function remountOfflineStatus() {
 // 첫 설치가 실패해도 온라인 학습은 계속할 수 있음. 준비 상태는 화면 전환과 별도로 유지한다.
 export function prepareOffline(toast) {
     const message = h('span', { id: 'offline-message', role: 'status', 'aria-live': 'polite', 'aria-atomic': 'true' });
-    const retry = h('button', { class: 'btn', type: 'button', hidden: true, onclick: () => start() }, '다시 준비하기');
-    const status = h('aside', { id: 'offline-status', class: 'offline-status', 'aria-label': '오프라인 사용 준비' }, message, retry);
+    const retry = h('button', { class: 'btn', type: 'button', hidden: true, onclick: () => { manual = true; start(); } }, '다시 준비하기');
+    const status = h('aside', { id: 'offline-status', class: 'offline-status', 'aria-label': '오프라인 사용 준비', hidden: true }, message, retry);
     offlineStatus = status;
     remountOfflineStatus();
     let registration = null;
@@ -39,10 +39,13 @@ export function prepareOffline(toast) {
     let updateNotified = false;
     let needsRepair = false;
     let checking = 0;
+    // 저절로 끝나는 준비·완료 안내는 숨기고, '다시 준비하기'를 누른 뒤에만 결과를 보여 준다.
+    let manual = false;
     const registrations = new WeakSet();
 
     function show(state, text) {
         status.dataset.state = state;
+        status.hidden = !manual && (state === 'preparing' || state === 'ready');
         message.textContent = text;
         retry.hidden = state !== 'failed';
         retry.disabled = false;
