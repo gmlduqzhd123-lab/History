@@ -9,7 +9,7 @@ const button = (text, action, secondary = false) => h('button', {
     type: 'button', class: `landing-button${secondary ? ' landing-button-secondary' : ''}`, onclick: action,
 }, text, arrow());
 
-export function landingHeader(start, compact = false) {
+export function landingHeader(start, compact = false, { install = null, qr = null } = {}) {
     return h('header', { class: 'landing-header' },
         h('a', { class: 'landing-brand', href: '#landing-content' },
             h('img', { src: 'icons/icon.svg', width: '36', height: '36', alt: '' }),
@@ -19,6 +19,9 @@ export function landingHeader(start, compact = false) {
             h('a', { href: '#curriculum' }, '10개 정거장'),
             h('a', { href: '#video-guide' }, '사용법 영상'),
             h('a', { href: '#classroom' }, '선생님께')) : null,
+        !compact && (install || qr) ? h('div', { class: 'landing-header-actions' },
+            install ? h('button', { type: 'button', class: 'landing-chip landing-chip-primary', onclick: install }, '📲 앱 설치') : null,
+            qr ? h('button', { type: 'button', class: 'landing-chip', 'aria-label': 'QR 코드로 접속', onclick: qr }, '📱 QR') : null) : null,
         compact ? button('소개 화면으로', start, true) : null);
 }
 
@@ -88,7 +91,7 @@ function videoGuide() {
                         h('div', {}, h('strong', {}, title), h('p', {}, description))))))));
 }
 
-export function renderLanding({ resume, hasSaved, code, help, qr, startArea, steps }) {
+export function renderLanding({ resume, hasSaved, code, help, qr, install, startArea, steps }) {
     const unitArt = ['combPot', 'hunminBook', 'taegukgi'];
     const faqs = [
         ['회원 가입이 필요한가요?', '필요 없어요. 이름·번호·캐릭터를 고르면 바로 시작해요.'],
@@ -98,7 +101,7 @@ export function renderLanding({ resume, hasSaved, code, help, qr, startArea, ste
     ];
     return [
         h('a', { class: 'landing-skip', href: '#landing-content' }, '본문으로 건너뛰기'),
-        landingHeader(resume),
+        landingHeader(resume, false, { install, qr }),
         h('main', { id: 'landing-content', tabindex: '-1' },
             // 첫 화면: 왼쪽은 무엇인지 한 줄로, 오른쪽은 바로 시작하는 곳
             h('section', { class: 'landing-hero hero', 'aria-labelledby': 'landing-title' },
