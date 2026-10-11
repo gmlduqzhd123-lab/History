@@ -20,7 +20,7 @@ export function landingHeader(start, compact = false, { install = null, qr = nul
             h('a', { href: '#video-guide' }, '사용법 영상'),
             h('a', { href: '#classroom' }, '선생님께')) : null,
         !compact && (install || qr) ? h('div', { class: 'landing-header-actions' },
-            install ? h('button', { type: 'button', class: 'landing-chip landing-chip-primary', onclick: install }, '📲 앱 설치') : null,
+            install ? h('button', { type: 'button', class: 'landing-chip landing-chip-primary', onclick: install }, h('span', {}, '📲 ', h('span', { class: 'landing-chip-wide' }, '앱 '), '설치')) : null,
             qr ? h('button', { type: 'button', class: 'landing-chip', 'aria-label': 'QR 코드로 접속', onclick: qr }, '📱 QR') : null) : null,
         compact ? button('소개 화면으로', start, true) : null);
 }

@@ -191,8 +191,18 @@ body.landing-home { background: #f6f3ee; background-image: none; color: #1d2a31;
     .landing-button { width: 100%; }
     .landing-hero-actions .landing-button { width: 100%; }
 }
+/* 휴대폰: 앱 설치·QR을 앱 이름과 같은 맨 윗줄에 */
+@media (max-width: 520px) {
+    .landing-header { flex-wrap: wrap; column-gap: 8px; }
+    .landing-brand { gap: 8px; font-size: 17px; min-width: 0; }
+    .landing-brand img { width: 30px; height: 30px; }
+    .landing-brand small { letter-spacing: .12em; }
+    .landing-header-actions { gap: 5px; }
+    .landing-chip { min-height: 32px; padding: 0 9px; font-size: 12.5px; }
+    .landing-chip-wide { display: none; }
+}
 @media (max-width: 360px) {
-    .landing-brand { font-size: 18px; }
+    .landing-brand { font-size: 16px; }
     .landing-steps { grid-template-columns: minmax(0, 1fr); }
 }
 @media print { .landing-page .landing-header, .landing-page .landing-start, .landing-skip, .landing-video-player { display: none; } }
