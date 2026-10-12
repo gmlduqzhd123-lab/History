@@ -2,6 +2,7 @@
 import { h } from './dom.js';
 import { art } from './art.js';
 import { units, stations } from '../content/quests.js';
+import { bgmButton } from './bgm.js';
 
 const arrow = () => h('span', { 'aria-hidden': 'true' }, '↗');
 const eyebrow = text => h('p', { class: 'landing-eyebrow' }, text);
@@ -19,10 +20,12 @@ export function landingHeader(start, compact = false, { install = null, qr = nul
             h('a', { href: '#curriculum' }, '10개 정거장'),
             h('a', { href: '#video-guide' }, '사용법 영상'),
             h('a', { href: '#classroom' }, '선생님께')) : null,
-        !compact && (install || qr) ? h('div', { class: 'landing-header-actions' },
+        !compact ? h('div', { class: 'landing-header-actions' },
             install ? h('button', { type: 'button', class: 'landing-chip landing-chip-primary', onclick: install }, h('span', {}, '📲 ', h('span', { class: 'landing-chip-wide' }, '앱 '), '설치')) : null,
-            qr ? h('button', { type: 'button', class: 'landing-chip', 'aria-label': 'QR 코드로 접속', onclick: qr }, '📱 QR') : null) : null,
-        compact ? button('소개 화면으로', start, true) : null);
+            qr ? h('button', { type: 'button', class: 'landing-chip', 'aria-label': 'QR 코드로 접속', onclick: qr }, '📱 QR') : null,
+            bgmButton('landing-bgm')) : null,
+        compact ? button('소개 화면으로', start, true) : null,
+        compact ? bgmButton('landing-bgm') : null);
 }
 
 function videoGuide() {

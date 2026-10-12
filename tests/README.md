@@ -29,6 +29,7 @@ python3 tests/accessibility-navigation.py -v
 python3 tests/landing-page.py -v
 python3 tests/guide-video.py -v
 python3 tests/guide-video-offline.py -v
+python3 tests/bgm.py -v
 python3 tests/activity-save.py -v
 python3 tests/activity-navigation.py -v
 python3 tests/extras-flow.py -v

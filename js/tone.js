@@ -33,6 +33,7 @@ let calm = false;
 export function setCalm(value) {
     calm = !!value;
     document.body.classList.toggle('calm', calm);
+    document.dispatchEvent(new CustomEvent('history:calm', { detail: calm }));
 }
 
 export const tone = key => (calm ? CALM : NORMAL)[key];

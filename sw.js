@@ -1,6 +1,6 @@
 // 한 버전의 앱 파일을 모두 저장한 뒤에만 사용함.
 // 업데이트는 이전 버전을 쓰는 탭이 모두 닫힐 때 적용하여 실행 중인 파일이 섞이지 않게 함.
-const CACHE = 'history-quest-v50';
+const CACHE = 'history-quest-v51';
 const RUNTIME_CACHE = `${CACHE}-runtime`;
 const FILES = [
     './',
@@ -23,6 +23,7 @@ const FILES = [
     'js/app.js',
     'js/landing.js',
     'js/offline.js',
+    'js/bgm.js',
     'js/dom.js',
     'js/storage.js',
     'js/tts.js',
@@ -78,46 +79,47 @@ self.addEventListener('activate', event => {
 });
 
 const APP_FILES = new Set(FILES.map(file => new URL(file, self.location.href).href));
-const GUIDE_VIDEO = new URL('media/history-quest-guide.mp4', self.location.href).href;
-let guideDownload;
-
-// 소개 영상은 재생할 때만 저장한다. 영상 다운로드가 학습 앱의 설치를 막지 않게 한다.
+// 사용법 영상과 배경음악은 필요할 때만 받아 저장한다. 큰 파일이 학습 앱의 설치를 막지 않게 한다.
 // 브라우저가 보내는 부분 요청을 그대로 저장하면 Cache API가 206 응답을 거부하므로,
-// 이 영상만 완전한 파일로 받아 저장하고 재생·탐색에 필요한 범위를 만들어 돌려준다.
-async function guideFile(request) {
+// 완전한 파일로 받아 저장하고 재생·탐색에 필요한 범위를 만들어 돌려준다.
+const OPTIONAL_MEDIA = new Set(['media/history-quest-guide.mp4', 'media/history-quest-bgm.mp3']
+    .map(file => new URL(file, self.location.href).href));
+const downloads = new Map();
+
+async function mediaFile(request, url) {
     let cache;
     try {
         cache = await caches.open(RUNTIME_CACHE);
-        const cached = await cache.match(GUIDE_VIDEO);
+        const cached = await cache.match(url);
         if (cached?.status === 200) return cached;
     } catch {
-        // 저장 공간이 부족해도 온라인 영상은 계속 재생할 수 있다.
+        // 저장 공간이 부족해도 온라인 재생은 계속할 수 있다.
     }
-    if (!guideDownload) {
+    if (!downloads.has(url)) {
         const headers = new Headers(request.headers);
         headers.delete('range');
-        guideDownload = (async () => {
+        downloads.set(url, (async () => {
             const response = await fetch(new Request(request, { headers, cache: 'reload' }));
             if (response.status === 200 && cache) {
                 try {
-                    await cache.put(GUIDE_VIDEO, response.clone());
+                    await cache.put(url, response.clone());
                 } catch {
-                    // 선택 영상 저장 실패는 학습 앱의 오프라인 준비 상태와 무관하다.
+                    // 선택 파일 저장 실패는 학습 앱의 오프라인 준비 상태와 무관하다.
                 }
             }
             return response;
-        })();
+        })());
     }
-    const download = guideDownload;
+    const download = downloads.get(url);
     try {
         return (await download).clone();
     } finally {
-        if (guideDownload === download) guideDownload = null;
+        if (downloads.get(url) === download) downloads.delete(url);
     }
 }
 
-async function guideResponse(request) {
-    const response = await guideFile(request);
+async function mediaResponse(request, url) {
+    const response = await mediaFile(request, url);
     const range = request.headers.get('range');
     if (!range || response.status !== 200) return response;
     const body = await response.arrayBuffer();
@@ -200,8 +202,8 @@ self.addEventListener('fetch', event => {
 
     const appUrl = new URL(url);
     appUrl.search = '';
-    if (sameOrigin && appUrl.href === GUIDE_VIDEO) {
-        event.respondWith(guideResponse(request).catch(() => Response.error()));
+    if (sameOrigin && OPTIONAL_MEDIA.has(appUrl.href)) {
+        event.respondWith(mediaResponse(request, appUrl.href).catch(() => Response.error()));
         return;
     }
     if (sameOrigin && APP_FILES.has(appUrl.href)) {
