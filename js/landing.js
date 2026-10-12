@@ -2,6 +2,7 @@
 import { h } from './dom.js';
 import { art } from './art.js';
 import { units, stations } from '../content/quests.js';
+import { bgmButton } from './bgm.js';
 
 const arrow = () => h('span', { 'aria-hidden': 'true' }, '↗');
 const eyebrow = text => h('p', { class: 'landing-eyebrow' }, text);
@@ -19,7 +20,8 @@ export function landingHeader(start, compact = false) {
             h('a', { href: '#curriculum' }, '10개 정거장'),
             h('a', { href: '#video-guide' }, '사용법 영상'),
             h('a', { href: '#classroom' }, '선생님께')) : null,
-        compact ? button('소개 화면으로', start, true) : null);
+        compact ? button('소개 화면으로', start, true) : null,
+        bgmButton('landing-bgm'));
 }
 
 function videoGuide() {

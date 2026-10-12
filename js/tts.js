@@ -31,6 +31,7 @@ export function stopSpeaking() {
     if (!ttsSupported) return;
     narrationId++;
     window.speechSynthesis.cancel();
+    document.dispatchEvent(new CustomEvent('history:speaking', { detail: false }));
     if (activeButton) {
         activeButton.classList.remove('speaking');
         activeButton.setAttribute('aria-pressed', 'false');
@@ -56,6 +57,7 @@ export function speak(text, button) {
     }
     const sentences = splitSentences(cleanForSpeech(text));
     if (!sentences.length) return;
+    document.dispatchEvent(new CustomEvent('history:speaking', { detail: true }));
     if (button) {
         button.classList.add('speaking');
         button.setAttribute('aria-pressed', 'true');

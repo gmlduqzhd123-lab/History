@@ -22,6 +22,7 @@ import { inquiries } from '../content/inquiries.js';
 import { renderInquiry, inquiryView, discardInquiryDrafts } from './extras/inquiry.js';
 import { renderLanding, landingHeader } from './landing.js';
 import { prepareOffline, remountOfflineStatus } from './offline.js';
+import { initBgm, bgmButton } from './bgm.js';
 
 const renderers = {
     detective: renderDetective,
@@ -338,6 +339,7 @@ function helpPanel() {
                 '아이패드·아이폰은 7일 넘게 안 열면 기록이 지워질 수 있어요. **📲 앱 설치**를 해 두고, 수업 끝에 **💾 이어하기 코드**를 공책에 적게 해 주세요.',
                 '교과서 출판사와 관계없이 5학년 2학기 역사(선사 시대~6·25 전쟁)의 핵심 내용으로 만들었어요. 용어·연도는 쓰시는 교과서와 한 번 대조해 주세요.',
                 '인터넷으로 한 번 열어 두면 그다음부터는 인터넷 없이 탐험할 수 있어요. 준비하지 못하면 화면 위쪽에 안내가 나오니, 인터넷에 연결한 채로 **다시 준비하기**를 눌러 주세요. **iOS 14 이상**이나 최신 **크롬·웨일·삼성 인터넷·엣지**에서 열려요.',
+                '**배경음악**은 처음에 꺼져 있어요. 학생이 화면 위쪽 🔇 버튼을 누르면 켜지고, 그 기기에서는 다음에도 켜진 채로 기억해요. 6·25 전쟁처럼 무거운 내용에서는 저절로 멈춰요.',
                 '결석한 학생 등을 위해 모든 정거장을 한꺼번에 열려면 주소 끝에 **?open=all** 을 붙여요.',
                 '**"사이트에 연결할 수 없음"** 이 뜨면: 한 번 더 새로고침(앱은 껐다 켜기)해 보세요. 학교 인터넷에서만 안 되고 휴대폰 데이터로는 열린다면, 학교 인터넷이 **gmlduqzhd123-lab.github.io** 를 막고 있는 거예요. 정보 담당 선생님께 허용을 요청해 주세요.'])),
         h('button', { class: 'btn btn-primary btn-block', type: 'button', style: 'margin-top:16px', onclick: () => go({ screen: 'welcome', tab: 'start' }) }, '🚀 이제 시작하러 가기'),
@@ -473,6 +475,7 @@ function topbar(title, onBack, backLabel = '← 뒤로') {
         p ? h('button', { class: 'btn btn-small home-btn', type: 'button', onclick: () => go({ screen: 'welcome' }), 'aria-label': '홈으로', title: '홈으로' }, '🏠') : null,
         onBack ? h('button', { class: 'btn btn-small', type: 'button', onclick: onBack }, backLabel) : null,
         h('div', { class: 'title' }, title),
+        bgmButton(),
         p ? h('button', { class: 'chip', type: 'button', onclick: showMenu, 'aria-label': '탐험가 메뉴' }, p.avatar, h('span', { class: 'chip-name' }, whoName(p))) : null,
     );
 }
@@ -924,3 +927,4 @@ if (navigator.storage?.persist) navigator.storage.persisted().then(p => p || nav
 
 // 모든 필수 파일을 저장한 서비스 워커가 활성화되었을 때만 준비 완료를 안내한다.
 prepareOffline(toast);
+initBgm();

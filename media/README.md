@@ -43,3 +43,28 @@ ffmpeg -y -i media/history-quest-guide.mp4 -i /tmp/history-quest-guide-audio.wav
 자막의 시간과 글 안내를 확인하세요. 게시 전에 `ffprobe`로 형식·길이를,
 `ffmpeg -v error -i media/history-quest-guide.mp4 -f null -`로 디코딩을 확인하고,
 `tests/guide-video.py`, `tests/guide-video-offline.py`로 실제 재생을 검증하세요.
+
+# 배경음악
+
+`history-quest-bgm.mp3`는 Suno로 만든 3분 37초 연주곡입니다(만든 사람: hallyo11).
+원본(182kbps, 표지 그림 포함, 4.9MB)에서 앞의 0.5초 무음을 잘라 내고
+-26 LUFS로 작게 맞춘 뒤 1.5초 페이드인·3초 페이드아웃을 넣어
+80kbps 스테레오 MP3(약 2.2MB)로 만들었습니다. 반복 재생할 때 이음새가 부드럽습니다.
+
+- 처음에는 꺼져 있습니다. 교실에서 여러 기기가 동시에 울리지 않게 하기 위해서입니다.
+  학생이 화면 위쪽 🔇/🎵 버튼으로 켜면 이 기기에 설정을 기억합니다(`history-quest:bgm`).
+- 브라우저의 자동 재생 제한 때문에 켜 둔 기기도 첫 터치·키 입력 뒤에 재생합니다.
+- 6·25 전쟁처럼 차분한 화면(`body.calm`), 다른 앱으로 전환했을 때,
+  사용법 영상을 재생하는 동안에는 멈춥니다. 읽어 주기 목소리가 나오는 동안에는 작게 줄입니다.
+- 파일 자체를 작게 만든 이유는 iOS처럼 웹에서 음량을 바꿀 수 없는 기기에서도
+  조용하게 들리게 하기 위해서입니다.
+- 음악을 켠 기기만 파일을 받습니다. 사용법 영상과 같은 방식으로 받은 뒤 저장해
+  오프라인에서도 재생할 수 있고, 학습 앱의 필수 오프라인 설치에는 포함하지 않습니다.
+
+다른 곡으로 바꿀 때는 같은 경로에 새 파일을 반영하고 `sw.js`의 캐시 버전을 올리세요.
+
+```sh
+ffmpeg -y -ss 0.5 -i 원본.mp3 -map 0:a:0 -map_metadata -1 \
+  -af "loudnorm=I=-26:TP=-6:LRA=11,afade=t=in:d=1.5,areverse,afade=t=in:d=3,areverse" \
+  -c:a libmp3lame -b:a 80k -ar 44100 -ac 2 media/history-quest-bgm.mp3
+```
