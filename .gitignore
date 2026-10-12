@@ -3,3 +3,7 @@ __pycache__/
 *.py[cod]
 playwright-report/
 test-results/
+# 확인용 스크린샷·설치 파일은 저장소에 올리지 않음
+shots/
+recheck/
+*.whl
