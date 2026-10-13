@@ -224,7 +224,9 @@ function renderWelcome() {
     }
     // 첫 화면 정거장 지도: 마지막에 탐험한 학생의 진도를 보여 줌(없으면 첫 정거장부터)
     const p = profile();
-    const states = stations.map((station, i) => (p ? stationState(station, i) : i === 0 ? 'open' : 'locked'));
+    // 선생님용 ?open=all 처럼 여러 곳이 열려 있어도 '다음 정거장' 표시는 맨 앞 한 곳만
+    const states = stations.map((station, i) => (p ? stationState(station, i) : i === 0 ? 'open' : 'locked'))
+        .map((state, i, all) => (state === 'open' && all.indexOf('open') !== i ? 'ready' : state));
     const next = stations.find((station, i) => states[i] === 'open');
     mount(...renderLanding({
         resume: p ? {

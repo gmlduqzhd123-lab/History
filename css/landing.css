@@ -252,4 +252,4 @@ body.landing-home { background: #f6f3ee; background-image: none; color: #1d2a31;
     .landing-brand { font-size: 16px; }
     .landing-steps { grid-template-columns: minmax(0, 1fr); }
 }
-@media print { .landing-page .landing-header, .landing-page .landing-start, .landing-journey, .landing-skip, .landing-video-player { display: none; } .landing-hero.hero, .landing-hero h1 { background: none; box-shadow: none; color: #000; } }
+@media print { .landing-page .landing-header, .landing-page .landing-start, .landing-journey, .landing-skip, .landing-video-player { display: none; } .landing-hero.hero, .landing-hero h1, .landing-hero h1 > span, .landing-lead { background: none; box-shadow: none; color: #000; } }

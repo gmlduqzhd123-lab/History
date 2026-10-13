@@ -101,7 +101,7 @@ const STOPS = {
     q7: ['geojunggi', '조선 후기'], q8: ['streetcar', '개항'], q9: ['taegukgi', '독립운동'],
     q10: ['liberation', '광복·6·25'],
 };
-const STATE_TEXT = { done: '마침', open: '다음 정거장', locked: '' };
+const STATE_TEXT = { done: '마침', open: '다음 정거장', ready: '', locked: '', soon: '' };
 // 넓은 화면의 지그재그 길(%)
 const PATH = [[12, 10], [38, 15], [64, 10], [88, 24], [70, 44], [42, 46], [16, 54], [30, 80], [58, 84], [86, 80]];
 

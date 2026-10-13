@@ -198,6 +198,16 @@ class LandingPage(unittest.TestCase):
         expect(page.locator('.landing-journey .is-done')).to_have_count(10)
         self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), 320)
 
+    def test_teacher_open_all_marks_only_one_next_station(self):
+        page = self.page()
+        self.seed(page)
+        page.goto(BASE + '?open=all', wait_until='domcontentloaded')
+        expect(page.locator('.station')).to_have_count(10)
+        page.get_by_role('button', name='홈으로', exact=True).click()
+        expect(page.locator('.landing-journey .is-done')).to_have_count(1)
+        expect(page.locator('.landing-journey .is-open')).to_have_count(1)
+        expect(page.locator('.landing-journey .is-open')).to_contain_text('고조선')
+
     def test_resume_code_opens_map_and_preserves_existing_written_work(self):
         page = self.page()
         seeded = self.seed(page)
