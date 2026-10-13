@@ -10,6 +10,7 @@ import unittest
 
 from playwright.async_api import async_playwright
 from playwright.sync_api import expect, sync_playwright
+from landing_helpers import choose_explorer, explorer
 
 BASE = os.environ.get('HISTORY_TEST_BASE_URL', 'http://localhost:8000/').rstrip('/') + '/'
 KEY = 'history-quest:v1'
@@ -127,7 +128,7 @@ class StorageBrowserTests(unittest.TestCase):
 
     def test_rename_rejects_collision_but_allows_unique_name(self):
         self.seed({'1:하늘': profile('하늘'), '1:바다': profile('바다', stage=2)})
-        self.page.locator('.explorer-list button').filter(has_text='바다').click()
+        choose_explorer(self.page, '바다')
         self.rename('하늘')
         expect(self.page.get_by_role('dialog')).to_be_visible()
         expect(self.page.get_by_text('이 번호에 같은 이름의 탐험가가 있어요. 구별할 수 있는 이름을 써 주세요.', exact=True)).to_be_visible()
@@ -168,12 +169,12 @@ class StorageBrowserTests(unittest.TestCase):
 
     def test_external_switch_and_unrelated_save_preserve_activity(self):
         self.seed({'1:하늘': profile('하늘', stage=0), '2:바다': profile('바다', 2)})
-        self.page.locator('.explorer-list button').filter(has_text='하늘').click()
+        choose_explorer(self.page, '하늘')
         self.page.locator('.station').first.click()
         self.page.get_by_role('button', name='🔎 단서 더 보기', exact=False).click()
         expect(self.page.locator('.clues li')).to_have_count(2)
         other = self.new_page()
-        other.locator('.explorer-list button').filter(has_text='바다').click()
+        choose_explorer(other, '바다')
         self.rename('새바다', other)
         expect(self.page.locator('.clues li')).to_have_count(2)
         expect(self.page.get_by_label('탐험가 메뉴', exact=True)).to_contain_text('하늘')
@@ -319,7 +320,8 @@ class StorageBrowserTests(unittest.TestCase):
         self.assertEqual(saved['0']['name'], '하늘')
         self.assertEqual(saved['2:바다']['name'], '바다')
         self.page.reload(wait_until='domcontentloaded')
-        expect(self.page.locator('.explorer-list button').filter(has_text='바다')).to_be_visible()
+        expect(self.page.locator('.landing-resume')).to_contain_text('바다')
+        expect(explorer(self.page, '하늘')).to_be_visible()
 
     def test_malformed_extra_records_keep_notebook_and_map_usable(self):
         existing = profile('하늘', stage=5)
@@ -335,7 +337,7 @@ class StorageBrowserTests(unittest.TestCase):
         expect(self.page.locator('.np-head')).to_have_text('기존 신문')
         expect(self.page.get_by_text('남아 있는 편지', exact=True)).to_be_visible()
         self.page.get_by_label('홈으로', exact=True).click()
-        self.page.locator('.explorer-list button').filter(has_text='하늘').click()
+        choose_explorer(self.page, '하늘')
         self.page.get_by_role('button', name='문화유산 지도', exact=False).click()
         self.page.locator('.place-chip:not(.locked)').first.click()
         saved = self.read()['profiles']['1:하늘']['extras']
@@ -344,8 +346,8 @@ class StorageBrowserTests(unittest.TestCase):
 
     def test_invalid_current_key_returns_to_the_student_picker(self):
         self.seed({'1:하늘': profile('하늘')}, 'toString')
-        expect(self.page.locator('.explorer-list button').filter(has_text='하늘')).to_be_visible()
-        self.page.locator('.explorer-list button').filter(has_text='하늘').click()
+        expect(explorer(self.page, '하늘')).to_be_visible()
+        choose_explorer(self.page, '하늘')
         expect(self.page.get_by_label('탐험가 메뉴', exact=True)).to_contain_text('하늘')
 
     def test_one_malformed_profile_keeps_other_students_available(self):
@@ -353,8 +355,8 @@ class StorageBrowserTests(unittest.TestCase):
             'broken': {'number': {'toString': None}, 'quests': {}},
             '2:바다': profile('바다', number=2, stage=4),
         }, 'broken')
-        expect(self.page.locator('.explorer-list button').filter(has_text='바다')).to_be_visible()
-        self.page.locator('.explorer-list button').filter(has_text='바다').click()
+        expect(explorer(self.page, '바다')).to_be_visible()
+        choose_explorer(self.page, '바다')
         self.rename('새바다')
         saved = self.read()['profiles']['2:바다']
         self.assertEqual(saved['name'], '새바다')

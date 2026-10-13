@@ -4,6 +4,7 @@ import shutil
 import unittest
 
 from playwright.sync_api import expect, sync_playwright
+from landing_helpers import choose_explorer, explorer
 
 BASE = os.environ.get('HISTORY_TEST_BASE_URL', 'http://localhost:8000/').rstrip('/') + '/'
 KEY = 'history-quest:v1'
@@ -39,12 +40,13 @@ class DeleteSaveRaceTests(unittest.TestCase):
                 }}));
             }''')
             first.reload(wait_until='domcontentloaded')
-            first.locator('.explorer-list button').filter(has_text='하늘').click()
+            # 마지막 탐험가(하늘)는 첫 화면의 이어가기 카드로 들어감
+            first.locator('.landing-resume').filter(has_text='하늘').get_by_role('button', name='이어서 탐험하기', exact=True).click()
             first.wait_for_function('!document.getElementById("app").hasAttribute("aria-busy")')
             second = context.new_page()
             second.set_default_timeout(10000)
             second.goto(BASE, wait_until='domcontentloaded')
-            second.locator('.explorer-list button').filter(has_text='바다').click()
+            choose_explorer(second, '바다')
             second.wait_for_function('!document.getElementById("app").hasAttribute("aria-busy")')
 
             # Delay the first tab before acquiring the mutex; the other tab can save normally.

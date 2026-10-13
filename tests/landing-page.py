@@ -86,8 +86,12 @@ class LandingPage(unittest.TestCase):
                 expect(page.get_by_role('link', name='본문으로 건너뛰기', exact=True)).to_be_focused()
                 page.keyboard.press('Enter')
                 expect(page.locator('#landing-content')).to_be_focused()
-                expect(page.get_by_role('link', name='이 기기의 기록 찾기 →', exact=True)).to_have_count(0)
-                page.get_by_role('button', name='코드로 이어하기 →', exact=True).click()
+                # 첫 화면에서 바로 보이는 정거장 지도와 시작 단추
+                expect(page.locator('.landing-journey li')).to_have_count(10)
+                expect(page.locator('.landing-resume')).to_have_count(0)
+                start = page.get_by_role('button', name=NEW_EXPLORER, exact=True)
+                self.assertLessEqual(start.evaluate('el => el.getBoundingClientRect().bottom'), 800)
+                page.get_by_role('button', name=RESUME, exact=True).click()
                 expect(page.locator('#app.landing-page')).to_have_count(0)
                 expect(page.get_by_label('이어하기 코드', exact=True)).to_be_visible()
                 self.assertIsNone(self.saved(page), 'Opening the code form must not create a student record.')
@@ -106,7 +110,7 @@ class LandingPage(unittest.TestCase):
         expect(dialog).to_have_count(0)
         expect(opener).to_be_focused()
         page.get_by_role('button', name='자세한 사용법 보기', exact=True).click()
-        expect(page.get_by_role('tab', name='📖 사용법', exact=True)).to_have_attribute('aria-selected', 'true')
+        expect(page.get_by_role('heading', name='역사 탐험 사용법', exact=True)).to_be_visible()
         expect(page.get_by_role('heading', name='🙋 처음 시작할 때', exact=True)).to_be_visible()
         page.get_by_role('button', name='🚀 이제 시작하러 가기', exact=True).click()
         expect(page.locator('#app.landing-page')).to_be_visible()
@@ -129,10 +133,32 @@ class LandingPage(unittest.TestCase):
         self.assertEqual((profile['number'], profile['name'], profile['avatar']), (3, '새 탐험가', '🦊'))
         page.get_by_role('button', name='홈으로', exact=True).click()
         expect(page.locator('#app.landing-page')).to_be_visible()
-        page.locator('.explorer-list button').filter(has_text='새 탐험가').click()
+        expect(page.locator('.landing-resume')).to_contain_text('새 탐험가')
+        page.get_by_role('button', name='이어서 탐험하기', exact=True).click()
         expect(page.locator('.station')).to_have_count(10)
         expect(page.locator('#app.landing-page')).to_have_count(0)
         self.assertEqual(self.saved(page), before)
+
+    def test_shared_tablet_lists_other_explorers_under_the_last_one(self):
+        page = self.page(390)
+        page.evaluate('''async key => {
+            const {newProfile} = await import('./js/storage.js');
+            const {avatars} = await import('./content/quests.js');
+            const a = newProfile(3, avatars[0], '먼저 온 학생');
+            const b = newProfile(9, avatars[1], '다음 학생');
+            localStorage.setItem(key, JSON.stringify({current: 'a', profiles: {a, b}}));
+        }''', KEY)
+        page.reload(wait_until='domcontentloaded')
+        expect(page.locator('.landing-resume')).to_contain_text('먼저 온 학생')
+        expect(page.get_by_role('heading', name='내가 아니라면 내 이름을 골라요', exact=True)).to_be_visible()
+        others = page.locator('.explorer-list button')
+        expect(others).to_have_count(1)
+        others.filter(has_text='다음 학생').click()
+        expect(page.locator('.station')).to_have_count(10)
+        self.assertEqual(self.saved(page)['current'], 'b')
+        page.get_by_role('button', name='홈으로', exact=True).click()
+        expect(page.locator('.landing-resume')).to_contain_text('다음 학생')
+        self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), 390)
 
     def test_existing_single_student_reopens_map_and_keeps_notes_after_home_navigation(self):
         page = self.page()
@@ -142,18 +168,35 @@ class LandingPage(unittest.TestCase):
         expect(page.locator('#app.landing-page')).to_have_count(0)
         page.get_by_role('button', name='홈으로', exact=True).click()
         expect(page.locator('#app.landing-page')).to_be_visible()
-        page.get_by_role('button', name='내 탐험 이어가기', exact=True).click()
+        # 마지막 탐험가의 진도와 다음 정거장을 첫 화면에서 바로 보여 줌
+        resume = page.locator('.landing-resume')
+        expect(resume).to_contain_text('기록 지킴이')
+        expect(resume).to_contain_text('다음 정거장: 청동기 시대와 고조선')
+        expect(resume.get_by_role('progressbar')).to_have_attribute('aria-valuenow', '1')
+        expect(page.locator('.landing-journey .is-done')).to_have_count(1)
+        expect(page.locator('.landing-journey .is-open')).to_have_count(1)
+        expect(page.locator('.explorer-list')).to_have_count(0)
+        page.get_by_role('button', name='이어서 탐험하기', exact=True).click()
         expect(page.locator('.station.done')).to_have_count(1)
         expect(page.locator('#app.landing-page')).to_have_count(0)
         self.assertEqual(self.saved(page), seeded['data'])
-        page.get_by_role('button', name='홈으로', exact=True).click()
-        records_link = page.get_by_role('link', name='이 기기의 기록 찾기 →', exact=True)
-        expect(records_link).to_have_attribute('href', '#start')
-        records_link.click()
-        self.assertEqual(page.evaluate('location.hash'), '#start')
-        page.locator('.explorer-list button').filter(has_text='기록 지킴이').click()
         expect(page.locator('.station.done')).to_have_count(1)
         self.assertEqual(self.saved(page), seeded['data'])
+
+    def test_finished_explorer_fits_small_phone_and_marks_every_station(self):
+        page = self.page(320)
+        page.evaluate('''async key => {
+            const {newProfile} = await import('./js/storage.js');
+            const {avatars, questOrder} = await import('./content/quests.js');
+            const a = newProfile(5, avatars[3], '다 마친 학생');
+            questOrder.forEach(id => { a.quests[id] = {stage: 5, done: true, notes: [], mastery: {passed: true, score: 5}}; });
+            const b = newProfile(6, avatars[4], '친구');
+            localStorage.setItem(key, JSON.stringify({current: 'a', profiles: {a, b}}));
+        }''', KEY)
+        page.reload(wait_until='domcontentloaded')
+        expect(page.locator('.landing-resume')).to_contain_text('10개 정거장을 모두 탐험했어요')
+        expect(page.locator('.landing-journey .is-done')).to_have_count(10)
+        self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), 320)
 
     def test_resume_code_opens_map_and_preserves_existing_written_work(self):
         page = self.page()

@@ -147,7 +147,7 @@ function go(next, skipGuard = false) {
     // keepScroll: 같은 화면 안에서 고르기만 바뀔 때(문화유산 지도의 곳 고르기)는 보던 자리를 지킴
     if (next.keepScroll) window.scrollTo(0, y);
     else scrollTop();
-    // 시작하기·사용법 탭은 페이지 길이가 달라도 선택한 탭이 화면 안에 보이게 함.
+    // 화면 안의 특정 단추로 돌아갈 때 그 단추가 보이게 함.
     if (next.focusId) document.getElementById(next.focusId)?.scrollIntoView({ block: 'nearest' });
 }
 
@@ -216,57 +216,42 @@ function allDone() {
 // ---------- 시작 화면 ----------
 function renderWelcome() {
     const saved = Object.entries(data.profiles).sort(([, a], [, b]) => a.number - b.number || a.name.localeCompare(b.name, 'ko'));
-    const tab = ui.tab === 'help' ? 'help' : 'start';
-    const selectTab = id => {
-        if (tab !== id) go({ screen: 'welcome', tab: id, focusId: `tab-${id}` });
-        else document.getElementById(`tab-${id}`).focus();
-    };
-    const tabButton = (id, label) => h('button', {
-        type: 'button', role: 'tab', id: `tab-${id}`, 'aria-controls': 'welcome-panel',
-        'aria-selected': String(tab === id), tabindex: tab === id ? '0' : '-1', class: tab === id ? 'on' : '',
-        onclick: () => selectTab(id),
-        onkeydown: event => {
-            if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
-            event.preventDefault();
-            selectTab(event.key === 'Home' ? 'start' : event.key === 'End' ? 'help' : id === 'start' ? 'help' : 'start');
-        },
-    }, label);
-    const startPanel = [
-        saved.length ? explorerCard(saved) : null,
-        h('div', { class: 'card stack' },
-            h('button', { class: 'btn btn-primary btn-block', type: 'button', onclick: () => go({ screen: 'register' }) }, '🙋 새 탐험가로 시작하기'),
-            h('button', { class: 'btn btn-block', type: 'button', onclick: () => go({ screen: 'code' }) }, '💾 이어하기 코드로 계속하기'),
-            installButton('btn btn-block')),
-    ];
-    const controls = h('div', { class: 'landing-start-controls' },
-        h('div', { class: 'tabs', role: 'tablist', 'aria-label': '시작 화면' }, tabButton('start', '🚀 시작하기'), tabButton('help', '📖 사용법')),
-        h('div', { id: 'welcome-panel', role: 'tabpanel', 'aria-labelledby': `tab-${tab}` },
-            ...(tab === 'help' ? helpPanel() : startPanel)));
-    if (tab === 'help') {
+    if (ui.tab === 'help') {
         mount(landingHeader(() => go({ screen: 'welcome' }), true),
             h('main', { id: 'landing-content', class: 'landing-help-content', tabindex: '-1' },
-                h('h1', {}, '역사 탐험 사용법'), controls));
-    } else {
-        mount(...renderLanding({
-            start: () => go({ screen: 'register' }),
-            resume: profile() ? () => go({ screen: 'map' }) : null,
-            hasSaved: saved.length > 0,
-            code: () => go({ screen: 'code' }),
-            help: () => go({ screen: 'welcome', tab: 'help' }),
-            qr: showQr, install: isStandalone() ? null : installApp, startArea: controls, steps: GUIDE_STEPS,
-        }));
+                h('h1', {}, '역사 탐험 사용법'), ...helpPanel()));
+        return;
     }
+    // 첫 화면 정거장 지도: 마지막에 탐험한 학생의 진도를 보여 줌(없으면 첫 정거장부터)
+    const p = profile();
+    const states = stations.map((station, i) => (p ? stationState(station, i) : i === 0 ? 'open' : 'locked'));
+    const next = stations.find((station, i) => states[i] === 'open');
+    mount(...renderLanding({
+        resume: p ? {
+            avatar: p.avatar, name: whoName(p), number: p.name ? `${p.number}번` : '',
+            done: states.filter(state => state === 'done').length,
+            next: next ? next.name : null,
+            go: () => go({ screen: 'map' }),
+        } : null,
+        // 공용 태블릿: 마지막 학생이 아니면 자기 이름을 눌러 들어감
+        explorers: saved.length > 0 && !(p && saved.length === 1) ? explorerCard(saved.filter(([key]) => key !== data.current), !!p) : null,
+        states,
+        register: () => go({ screen: 'register' }),
+        code: () => go({ screen: 'code' }),
+        help: () => go({ screen: 'welcome', tab: 'help' }),
+        qr: showQr, install: isStandalone() ? null : installApp, steps: GUIDE_STEPS,
+    }));
 }
 
 // 이 기기의 탐험가 목록. 공용 태블릿처럼 여러 명이면 이름·번호로 찾는 칸을 보여 줌
-function explorerCard(saved) {
+function explorerCard(saved, others = false) {
     const list = h('div', { class: 'explorer-list' }, ...saved.map(([key, p]) => h('button', {
         type: 'button', 'data-find': `${p.name} ${p.number}번`,
         onclick: async () => { data.current = key; if (await persist()) go({ screen: 'map' }); },
     }, h('span', { class: 'av' }, p.avatar), whoName(p), p.name ? h('span', { class: 'small muted' }, `${p.number}번`) : null)));
     let search = null;
     if (saved.length > 8) {
-        const empty = h('p', { class: 'small muted hidden', style: 'margin-top:8px' }, '찾는 탐험가가 없어요. 처음이라면 아래 🙋 새 탐험가로 시작하기를 눌러요.');
+        const empty = h('p', { class: 'small muted hidden', style: 'margin-top:8px' }, '찾는 탐험가가 없어요. 처음이라면 🙋 새 탐험가로 시작하기를 눌러요.');
         search = h('div', {}, h('input', {
             class: 'name-input', type: 'search', placeholder: '🔎 내 이름이나 번호로 찾기', 'aria-label': '탐험가 찾기', autocomplete: 'off',
             oninput: e => {
@@ -281,13 +266,13 @@ function explorerCard(saved) {
             },
         }), empty);
     }
-    return h('div', { class: 'card' },
-        h('h2', { style: 'margin-bottom:12px' }, '이 기기의 탐험가'),
-        search ? h('div', { style: 'margin-bottom:12px' }, search) : null,
+    return h('div', { class: 'landing-explorers' },
+        h('h2', {}, others ? '내가 아니라면 내 이름을 골라요' : '이 기기의 탐험가'),
+        search,
         list);
 }
 
-// 정거장 하나의 다섯 단계 (사용법 탭과 "탐험 방법" 창에서 함께 씀)
+// 정거장 하나의 다섯 단계 (사용법 화면과 "탐험 방법" 창에서 함께 씀)
 const GUIDE_STEPS = [
     ['🔍', '유물 탐정', '가려진 유물을 단서로 추리해요.'],
     ['📖', '이야기 카드', '짧은 글을 읽고 확인 문제를 풀어요.'],
@@ -302,7 +287,7 @@ function helpPanel() {
     const list = items => h('ol', { class: 'help-list' }, ...items.map(t => h('li', {}, rich(t))));
     return [
         section('🙋 처음 시작할 때',
-            list(['**🚀 시작하기** 탭에서 **새 탐험가로 시작하기**를 눌러요.',
+            list(['첫 화면에서 **🙋 새 탐험가로 시작하기**를 눌러요.',
                 '**내 이름**을 쓰고, 우리 반 **번호**와 **캐릭터**를 골라요.',
                 '**🚀 탐험 시작!** 을 누르면 탐험 지도가 나와요.'])),
         section('🗺️ 탐험 지도',

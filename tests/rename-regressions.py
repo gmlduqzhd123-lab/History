@@ -4,6 +4,7 @@ import shutil
 import unittest
 
 from playwright.sync_api import expect, sync_playwright
+from landing_helpers import choose_explorer, explorer
 
 BASE = os.environ.get('HISTORY_TEST_BASE_URL', 'http://localhost:8000/')
 KEY = 'history-quest:v1'
@@ -32,7 +33,7 @@ class RenameRegressions(unittest.TestCase):
                 }));
             }''')
             page.reload(wait_until='domcontentloaded')
-            page.locator('.explorer-list button').filter(has_text='하늘').click()
+            choose_explorer(page, '하늘')
             expect(page.locator('.station')).to_have_count(10)
             before = page.evaluate('(key) => JSON.parse(localStorage.getItem(key))', KEY)
             page.evaluate('''() => {
@@ -61,11 +62,11 @@ class RenameRegressions(unittest.TestCase):
             page.evaluate('window.failRename = false')
             page.get_by_label('탐험가 메뉴', exact=True).click()
             page.get_by_role('button', name='🔄 다른 탐험가로 바꾸기', exact=True).click()
-            expect(page.locator('.explorer-list button').filter(has_text='하늘')).to_be_visible()
+            expect(explorer(page, '하늘')).to_be_visible()
             saved = page.evaluate('(key) => JSON.parse(localStorage.getItem(key))', KEY)
             self.assertEqual(saved['profiles']['rename-student'], before['profiles']['rename-student'])
 
-            page.locator('.explorer-list button').filter(has_text='하늘').click()
+            choose_explorer(page, '하늘')
             expect(page.locator('.station')).to_have_count(10)
             page.get_by_label('탐험가 메뉴', exact=True).click()
             page.get_by_role('button', name='✏️ 이름 바꾸기', exact=True).click()
