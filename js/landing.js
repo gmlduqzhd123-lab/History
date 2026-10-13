@@ -4,14 +4,14 @@ import { art } from './art.js';
 import { units, stations } from '../content/quests.js';
 import { bgmButton } from './bgm.js';
 
-const arrow = () => h('span', { 'aria-hidden': 'true' }, '↗');
+const arrow = (mark = '↗') => h('span', { 'aria-hidden': 'true' }, mark);
 const eyebrow = text => h('p', { class: 'landing-eyebrow' }, text);
 const button = (text, action, secondary = false) => h('button', {
     type: 'button', class: `landing-button${secondary ? ' landing-button-secondary' : ''}`, onclick: action,
 }, text, arrow());
 
 export function landingHeader(start, compact = false, { install = null, qr = null } = {}) {
-    return h('header', { class: 'landing-header' },
+    return h('header', { class: compact ? 'landing-header' : 'landing-header landing-header-dark' },
         h('a', { class: 'landing-brand', href: '#landing-content' },
             h('img', { src: 'icons/icon.svg', width: '36', height: '36', alt: '' }),
             h('span', {}, '역사 탐험 퀘스트', h('small', {}, 'HISTORY QUEST'))),
@@ -94,7 +94,47 @@ function videoGuide() {
                         h('div', {}, h('strong', {}, title), h('p', {}, description))))))));
 }
 
-export function renderLanding({ resume, hasSaved, code, help, qr, install, startArea, steps }) {
+// 정거장 지도의 유물 그림과 짧은 이름
+const STOPS = {
+    q1: ['handaxe', '선사 시대'], q2: ['bipaDagger', '고조선'], q3: ['goldCrown', '삼국·가야'],
+    q4: ['divineBell', '남북국'], q5: ['celadonVase', '고려'], q6: ['hunminBook', '조선'],
+    q7: ['geojunggi', '조선 후기'], q8: ['streetcar', '개항'], q9: ['taegukgi', '독립운동'],
+    q10: ['liberation', '광복·6·25'],
+};
+const STATE_TEXT = { done: '마침', open: '다음 정거장', ready: '', locked: '', soon: '' };
+// 넓은 화면의 지그재그 길(%)
+const PATH = [[12, 10], [38, 15], [64, 10], [88, 24], [70, 44], [42, 46], [16, 54], [30, 80], [58, 84], [86, 80]];
+
+function journeyMap(states) {
+    const stop = (station, i, style) => h('li', { class: `landing-stop is-${states[i]}`, style },
+        h('span', { class: 'landing-medal', html: art[STOPS[station.id][0]], 'aria-hidden': 'true' }),
+        h('span', { class: 'landing-stop-name' }, STOPS[station.id][1]),
+        STATE_TEXT[states[i]] ? h('span', { class: 'sr-only' }, ` (${STATE_TEXT[states[i]]})`) : null);
+    return h('div', { class: 'landing-journey' },
+        h('span', {
+            class: 'landing-journey-path', 'aria-hidden': 'true',
+            html: `<svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points="${PATH.map(point => point.join(',')).join(' ')}" vector-effect="non-scaling-stroke"/></svg>`,
+        }),
+        h('ol', { 'aria-label': `${stations.length}개 정거장` },
+            ...stations.map((station, i) => stop(station, i, `--x:${PATH[i][0]}%;--y:${PATH[i][1]}%`))));
+}
+
+function resumeCard(resume) {
+    const total = stations.length;
+    return h('div', { class: 'landing-resume' },
+        h('span', { class: 'landing-resume-avatar', 'aria-hidden': 'true' }, resume.avatar),
+        h('div', {},
+            h('h2', {}, resume.name, resume.number ? h('small', {}, ` · ${resume.number}`) : null),
+            h('p', {}, resume.next ? `다음 정거장: ${resume.next}` : `${total}개 정거장을 모두 탐험했어요`)),
+        h('div', {
+            class: 'landing-progress', role: 'progressbar', 'aria-label': '탐험한 정거장',
+            'aria-valuemin': '0', 'aria-valuemax': String(total), 'aria-valuenow': String(resume.done),
+            'aria-valuetext': `${total}개 중 ${resume.done}개`,
+        }, h('span', { style: `width:${(resume.done / total) * 100}%` })),
+        h('button', { type: 'button', class: 'landing-go', onclick: resume.go }, '이어서 탐험하기', arrow('→')));
+}
+
+export function renderLanding({ resume, explorers, states, register, code, help, qr, install, steps }) {
     const unitArt = ['combPot', 'hunminBook', 'taegukgi'];
     const faqs = [
         ['회원 가입이 필요한가요?', '필요 없어요. 이름·번호·캐릭터를 고르면 바로 시작해요.'],
@@ -102,27 +142,24 @@ export function renderLanding({ resume, hasSaved, code, help, qr, install, start
         ['인터넷이 없어도 되나요?', '인터넷으로 한 번 열어 두면 그다음부터는 인터넷 없이도 탐험할 수 있어요.'],
         ['어떤 기기에서 되나요?', '컴퓨터·태블릿·휴대전화 모두 돼요. iOS 14 이상 또는 최신 크롬·웨일·삼성 인터넷·엣지로 열어 주세요.'],
     ];
+    const pill = (label, onclick, primary = false) => h('button', { type: 'button', class: primary ? 'landing-go' : 'landing-pill', onclick }, label);
     return [
         h('a', { class: 'landing-skip', href: '#landing-content' }, '본문으로 건너뛰기'),
-        landingHeader(resume, false, { install, qr }),
+        landingHeader(null, false, { install, qr }),
         h('main', { id: 'landing-content', tabindex: '-1' },
-            // 첫 화면: 왼쪽은 무엇인지 한 줄로, 오른쪽은 바로 시작하는 곳
+            // 첫 화면: 짙은 바탕에 "무엇인지"(제목·정거장 지도)와 "바로 시작"(이어가기·탐험가)을 함께
             h('section', { class: 'landing-hero hero', 'aria-labelledby': 'landing-title' },
                 h('div', { class: 'landing-hero-copy' },
-                    eyebrow('초등 5학년 2학기 사회 · 역사'),
-                    h('h1', { id: 'landing-title', tabindex: '-1' }, '유물로 떠나는', h('br'), h('span', {}, '시간 여행')),
-                    h('p', { class: 'landing-lead' }, '선사 시대부터 6·25 전쟁까지,', h('br'), '10개 정거장을 내 속도로 탐험해요.'),
-                    resume ? h('div', { class: 'landing-hero-actions' }, button('내 탐험 이어가기', resume)) : null),
-                h('div', { class: 'landing-start', id: 'start' }, startArea),
-                // 휴대폰에서는 시작 카드 다음에 오도록 따로 둠 (넓은 화면에서는 제목 아래)
-                h('div', { class: 'landing-hero-meta' },
-                    h('ul', { class: 'landing-facts', 'aria-label': '이용 안내' },
-                        h('li', {}, '회원 가입 없이'), h('li', {}, '정거장마다 20분'), h('li', {}, '인터넷 없이도')),
-                    h('div', { class: 'landing-resume-line' },
-                        h('a', { href: '#video-guide' }, '사용법 영상 보기 →'),
-                        hasSaved ? h('a', { href: '#start' }, '이 기기의 기록 찾기 →') : null,
-                        h('button', { type: 'button', onclick: code }, '코드로 이어하기 →'))),
-                ),
+                    h('h1', { id: 'landing-title', tabindex: '-1' }, '10개 정거장으로 떠나는', h('br'), h('span', {}, '우리 역사 여행')),
+                    h('p', { class: 'landing-lead' }, '선사 시대부터 6·25 전쟁까지, 유물을 단서로 탐험해요.')),
+                journeyMap(states),
+                h('div', { class: 'landing-start', id: 'start' },
+                    resume ? resumeCard(resume) : null,
+                    explorers,
+                    h('div', { class: 'landing-pills' },
+                        pill('🙋 새 탐험가로 시작하기', register, !resume && !explorers),
+                        pill('💾 이어하기 코드로 계속하기', code),
+                        pill('▶ 사용법', help)))),
             h('section', { class: 'landing-section', id: 'learning', 'aria-labelledby': 'landing-learning-title' },
                 h('div', { class: 'landing-section-heading' },
                     h('div', {}, eyebrow('배움 방법'),

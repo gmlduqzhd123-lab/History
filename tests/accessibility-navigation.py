@@ -64,30 +64,25 @@ class AccessibilityNavigation(unittest.TestCase):
         page.keyboard.press('Enter')
         expect(page.locator('#landing-title')).to_be_focused()
 
-    def test_welcome_tabs_use_arrow_keys_wrap_and_one_tab_stop(self):
+    def test_welcome_start_buttons_follow_title_and_help_page_returns(self):
         page = self.page()
-        expect(page.locator('#tab-start')).to_have_attribute('tabindex', '0')
-        expect(page.locator('#tab-help')).to_have_attribute('tabindex', '-1')
-        page.locator('#tab-start').focus()
-        for key, selected in (
-            ('ArrowRight', 'help'), ('ArrowRight', 'start'),
-            ('ArrowLeft', 'help'), ('Home', 'start'), ('End', 'help'),
-        ):
-            with self.subTest(key=key, selected=selected):
-                page.keyboard.press(key)
-                expect(page.locator(f'#tab-{selected}')).to_be_focused()
-                expect(page.locator(f'#tab-{selected}')).to_have_attribute('aria-selected', 'true')
-                expect(page.locator('#welcome-panel')).to_have_attribute('aria-labelledby', f'tab-{selected}')
-                expect(page.locator('[role="tab"][tabindex="0"]')).to_have_count(1)
-                self.assertTrue(page.locator(f'#tab-{selected}').evaluate('''el => {
-                    const r = el.getBoundingClientRect(); return r.top >= -1 && r.bottom <= innerHeight + 1;
-                }'''))
-        page.keyboard.press('Tab')
-        self.assertTrue(page.locator('#welcome-panel').evaluate('(el) => el.contains(document.activeElement)'))
-        page.locator('#tab-start').click()
-        expect(page.locator('#tab-start')).to_be_focused()
+        # 정거장 지도는 그림이라 단추가 없고, 제목 다음 Tab은 바로 시작 단추로 감
+        expect(page.locator('.landing-journey button, .landing-journey a')).to_have_count(0)
+        expect(page.get_by_role('list', name='10개 정거장', exact=True).get_by_role('listitem')).to_have_count(10)
+        expect(page.locator('.landing-journey .is-open')).to_contain_text('(다음 정거장)')
+        page.locator('#landing-title').focus()
         page.keyboard.press('Tab')
         expect(page.get_by_role('button', name='🙋 새 탐험가로 시작하기', exact=True)).to_be_focused()
+        page.keyboard.press('Tab')
+        expect(page.get_by_role('button', name='💾 이어하기 코드로 계속하기', exact=True)).to_be_focused()
+        page.keyboard.press('Tab')
+        help_button = page.get_by_role('button', name='▶ 사용법', exact=True)
+        expect(help_button).to_be_focused()
+        page.keyboard.press('Enter')
+        expect(page.get_by_role('heading', name='역사 탐험 사용법', exact=True)).to_be_focused()
+        expect(page.locator('[role="tab"]')).to_have_count(0)
+        page.get_by_role('button', name='소개 화면으로', exact=True).click()
+        expect(page.locator('#landing-title')).to_be_focused()
 
     def test_avatar_selection_has_one_pressed_state(self):
         page = self.page()

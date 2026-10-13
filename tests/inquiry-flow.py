@@ -10,6 +10,7 @@ import shutil
 import unittest
 
 from playwright.sync_api import expect, sync_playwright
+from landing_helpers import choose_explorer
 
 BASE = os.environ.get('HISTORY_TEST_BASE_URL', 'http://localhost:8000/')
 KEY = 'history-quest:v1'
@@ -279,7 +280,7 @@ class InquiryFlow(unittest.TestCase):
         self.open_activity(self.inquiry)
         self.page.get_by_role('button', name='홈으로', exact=True).click()
         self.assertTrue(warns_on_unload(), 'Home must not remove the unsaved-draft unload warning.')
-        self.page.get_by_role('button', name=re.compile('자료 점검')).click()
+        choose_explorer(self.page, '자료 점검')
         # A different student's update refreshes the app's data object. It must
         # neither erase this draft nor make it visible to that other student.
         other = self.context.new_page()
@@ -299,7 +300,7 @@ class InquiryFlow(unittest.TestCase):
         self.map_from_list()
         self.page.get_by_role('button', name='탐험가 메뉴', exact=True).click()
         self.page.get_by_role('button', name='🔄 다른 탐험가로 바꾸기', exact=True).click()
-        self.page.get_by_role('button', name=re.compile('자료 점검')).click()
+        choose_explorer(self.page, '자료 점검')
         self.open_activity(self.inquiry)
         expect(self.page.get_by_label(prompt['label'], exact=True)).to_have_value(draft)
         other.close()

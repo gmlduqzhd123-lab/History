@@ -8,6 +8,7 @@ import shutil
 import unittest
 
 from playwright.sync_api import expect, sync_playwright
+from landing_helpers import choose_explorer
 
 BASE = os.environ.get('HISTORY_TEST_BASE_URL', 'http://localhost:8000/')
 KEY = 'history-quest:v1'
@@ -50,7 +51,7 @@ class WritingRegressions(unittest.TestCase):
             }));
         }''')
         self.page.reload(wait_until='domcontentloaded')
-        self.page.get_by_role('button', name=re.compile('신문 점검')).click()
+        choose_explorer(self.page, '신문 점검')
         # Choosing a student awaits storage before rendering the map. A DOM click
         # alone returns earlier and leaves the app's global save barrier active.
         expect(self.page.locator('.station')).to_have_count(10)
@@ -118,14 +119,14 @@ class WritingRegressions(unittest.TestCase):
         self.assertFalse(self.warns_on_unload())
         self.assertIn('나라를 지킨 노력이 인상적이에요.', self.saved_writing()['lines'][-1])
         self.page.reload(wait_until='domcontentloaded')
-        self.page.get_by_role('button', name=re.compile('신문 점검')).click()
+        choose_explorer(self.page, '신문 점검')
         self.page.get_by_role('button', name='📒 나의 역사 노트', exact=True).click()
         expect(self.page.locator('.newspaper')).to_contain_text('나라를 지킨 노력이 인상적이에요.')
 
     def test_failed_first_letter_save_does_not_leave_a_saved_record(self):
         self.page.get_by_role('button', name='탐험가 메뉴', exact=True).click()
         self.page.get_by_role('button', name='🔄 다른 탐험가로 바꾸기', exact=True).click()
-        self.page.get_by_role('button', name=re.compile('다른 학생')).click()
+        choose_explorer(self.page, '다른 학생')
         self.open_writing('장보고에게 편지 쓰기')
         self.fill_and_check(('청해진', '바다 도적을 물리치고 무역을 할', '안전한 바다길을 지켜 주셔서 고맙습니다.'))
         self.page.evaluate('''() => {
@@ -164,7 +165,7 @@ class WritingRegressions(unittest.TestCase):
         self.page.get_by_role('button', name='홈으로', exact=True).click()
         self.confirm_leave()
         self.assertTrue(self.warns_on_unload(), 'Home must keep drafts protected from reload/close.')
-        self.page.get_by_role('button', name=re.compile('신문 점검')).click()
+        choose_explorer(self.page, '신문 점검')
         self.open_writing()
         expect(self.page.locator('.blank').last).to_have_value(draft)
 
@@ -178,12 +179,12 @@ class WritingRegressions(unittest.TestCase):
         self.page.get_by_role('button', name='탐험가 메뉴', exact=True).click()
         self.page.get_by_role('button', name='🔄 다른 탐험가로 바꾸기', exact=True).click()
         self.confirm_leave()
-        self.page.get_by_role('button', name=re.compile('다른 학생')).click()
+        choose_explorer(self.page, '다른 학생')
         self.open_writing()
         expect(self.page.locator('.blank').last).to_have_value('')
         self.page.get_by_role('button', name='탐험가 메뉴', exact=True).click()
         self.page.get_by_role('button', name='🔄 다른 탐험가로 바꾸기', exact=True).click()
-        self.page.get_by_role('button', name=re.compile('신문 점검')).click()
+        choose_explorer(self.page, '신문 점검')
         self.open_writing()
         expect(self.page.locator('.blank').last).to_have_value(draft)
 

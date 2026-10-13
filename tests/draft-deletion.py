@@ -5,6 +5,7 @@ import shutil
 import unittest
 
 from playwright.sync_api import expect, sync_playwright
+from landing_helpers import choose_explorer
 
 BASE = os.environ.get('HISTORY_TEST_BASE_URL', 'http://localhost:8000/')
 FIRST = '첫 학생'
@@ -54,7 +55,7 @@ class DraftDeletion(unittest.TestCase):
             self.context.close()
 
     def choose_student(self, name):
-        self.page.get_by_role('button', name=re.compile(name)).click()
+        choose_explorer(self.page, name)
         expect(self.page.locator('.station')).to_have_count(10)
 
     def open_writing(self):
@@ -70,7 +71,7 @@ class DraftDeletion(unittest.TestCase):
         self.page.get_by_role('button', name='홈으로', exact=True).click()
         if self.page.get_by_role('heading', name='아직 글을 저장하지 않았어요', exact=True).count():
             self.page.get_by_role('button', name='활동 나가기', exact=True).click()
-        expect(self.page.locator('#tab-start')).to_be_visible()
+        expect(self.page.locator('#landing-title')).to_be_visible()
 
     def make_drafts(self, name):
         self.choose_student(name)
@@ -108,7 +109,7 @@ class DraftDeletion(unittest.TestCase):
         self.assertTrue(self.warns_on_unload())
         self.choose_student(FIRST)
         self.delete_current()
-        expect(self.page.locator('#tab-start')).to_be_visible()
+        expect(self.page.locator('#landing-title')).to_be_visible()
         self.assertFalse(self.warns_on_unload())
         self.assertFalse(self.page.evaluate("'draft-first' in JSON.parse(localStorage.getItem('history-quest:v1')).profiles"))
 
@@ -134,7 +135,7 @@ class DraftDeletion(unittest.TestCase):
         self.make_drafts(SECOND)
         self.choose_student(FIRST)
         self.delete_current()
-        expect(self.page.locator('#tab-start')).to_be_visible()
+        expect(self.page.locator('#landing-title')).to_be_visible()
         self.assertTrue(self.warns_on_unload())
         self.choose_student(SECOND)
         self.assert_drafts(SECOND)
