@@ -197,6 +197,9 @@ class LandingPage(unittest.TestCase):
         expect(page.locator('.landing-resume')).to_contain_text('10개 정거장을 모두 탐험했어요')
         expect(page.locator('.landing-journey .is-done')).to_have_count(10)
         self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), 320)
+        # 정거장 10곳이 스크롤 없이 모두 보임(키보드로 옆으로 넘길 일이 없게)
+        self.assertTrue(page.locator('.landing-journey ol').evaluate('el => el.scrollWidth <= el.clientWidth'))
+        expect(page.locator('.landing-journey li').last).to_be_in_viewport()
 
     def test_teacher_open_all_marks_only_one_next_station(self):
         page = self.page()

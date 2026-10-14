@@ -54,7 +54,7 @@ body.landing-home { background: #f6f3ee; background-image: none; color: #1d2a31;
 .landing-eyebrow { color: var(--lp-accent); font-size: 14px; letter-spacing: .06em; font-weight: 700; margin-bottom: 14px !important; }
 
 /* 첫 화면: 짙은 바탕(머리글과 이어짐)에 제목·정거장 지도·시작 */
-.landing-page { --lp-night: #1c3139; --lp-cream: #f8f1e6; --lp-gold: #e3a75d; --lp-go: #c8693a; --lp-night-muted: #a9bcc1; }
+.landing-page { --lp-night: #1c3139; --lp-cream: #f8f1e6; --lp-gold: #e3a75d; --lp-go: #b45a2e; --lp-go-ring: #d9773f; --lp-night-muted: #a9bcc1; }
 .landing-header-dark, .landing-hero.hero { background: var(--lp-night); box-shadow: 0 0 0 100vmax var(--lp-night); clip-path: inset(0 -100vmax); }
 .landing-header-dark .landing-brand { color: var(--lp-cream); }
 .landing-header-dark .landing-brand small, .landing-header-dark nav { color: var(--lp-night-muted); }
@@ -83,7 +83,7 @@ body.landing-home { background: #f6f3ee; background-image: none; color: #1d2a31;
 .landing-medal { display: grid; place-items: center; width: 70px; height: 70px; border-radius: 50%; background: var(--lp-cream); border: 3px solid transparent; box-shadow: 0 10px 24px -10px rgba(0, 0, 0, .6); }
 .landing-medal svg { width: 74%; height: 74%; }
 .landing-stop.is-done .landing-medal { border-color: var(--lp-gold); }
-.landing-stop.is-open .landing-medal { border-color: var(--lp-go); box-shadow: 0 0 0 6px rgba(200, 105, 58, .3); }
+.landing-stop.is-open .landing-medal { border-color: var(--lp-go-ring); box-shadow: 0 0 0 6px rgba(217, 119, 63, .32); }
 .landing-stop.is-locked .landing-medal { filter: grayscale(.6) brightness(.85); opacity: .8; }
 .landing-stop-name { font-size: 13px; font-weight: 700; text-align: center; line-height: 1.25; color: var(--lp-cream); }
 
@@ -97,7 +97,7 @@ body.landing-home { background: #f6f3ee; background-image: none; color: #1d2a31;
 .landing-progress { grid-column: 1 / -1; height: 6px; margin-top: 10px; border-radius: 9px; background: #e9dfd1; overflow: hidden; }
 .landing-progress span { display: block; height: 100%; background: var(--lp-go); }
 .landing-go { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; padding: 0 28px; border: 0; border-radius: 14px; background: var(--lp-go); color: #fff; font: inherit; font-size: 18px; font-weight: 800; cursor: pointer; }
-.landing-go:hover { background: #b55a2e; }
+.landing-go:hover { background: #9c4c25; }
 .landing-resume .landing-go { grid-column: 1 / -1; margin-top: 12px; }
 .landing-explorers { margin-bottom: 16px; }
 .landing-explorers h2 { font-family: var(--font-body); font-size: 14px; font-weight: 700; letter-spacing: 0; color: var(--lp-night-muted); margin-bottom: 10px; }
@@ -125,7 +125,7 @@ body.landing-home { background: #f6f3ee; background-image: none; color: #1d2a31;
 /* 한 정거장, 다섯 걸음 */
 .landing-steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; list-style: none; margin: 0; padding: 0; }
 .landing-steps li { position: relative; padding: 20px 18px 22px; border: 1px solid var(--lp-line); border-radius: 18px; background: var(--lp-paper); }
-.landing-step-no { position: absolute; top: 16px; right: 16px; font-size: 12px; font-weight: 700; color: #b3a99a; letter-spacing: .08em; }
+.landing-step-no { position: absolute; top: 16px; right: 16px; font-size: 12px; font-weight: 700; color: #776d60; letter-spacing: .08em; }
 .landing-step-emoji { display: block; font-size: 30px; margin-bottom: 10px; }
 .landing-steps strong { display: block; font-family: var(--font-title); font-size: 18px; color: var(--lp-ink); }
 .landing-steps p { margin-top: 6px !important; color: var(--lp-muted); font-size: 14px; line-height: 1.6; }
@@ -197,9 +197,9 @@ body.landing-home { background: #f6f3ee; background-image: none; color: #1d2a31;
     .landing-hero.hero { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'copy' 'map' 'start'; padding-top: 20px; }
     .landing-journey { height: auto; margin: 22px -32px 0; }
     .landing-journey-path { display: none; }
-    .landing-journey ol { display: flex; gap: 4px; overflow-x: auto; padding: 4px 32px 6px; scrollbar-width: none; }
-    .landing-journey ol::-webkit-scrollbar { display: none; }
-    .landing-stop { position: relative; left: auto; top: auto; transform: none; flex: none; width: 72px; }
+    /* 좁은 화면: 10개 정거장을 한눈에(스크롤 없이) 격자로 */
+    .landing-journey ol { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 10px 4px; padding: 4px 32px 6px; }
+    .landing-stop { position: relative; left: auto; top: auto; transform: none; width: auto; min-width: 0; }
     .landing-medal { width: 56px; height: 56px; }
     .landing-stop-name { font-size: 12px; }
     .landing-start { margin-top: 20px; max-width: 560px; }
@@ -220,9 +220,8 @@ body.landing-home { background: #f6f3ee; background-image: none; color: #1d2a31;
     .landing-hero h1 { font-size: clamp(30px, 8.6vw, 40px); }
     .landing-lead { font-size: 15px; margin-top: 8px !important; }
     .landing-journey { margin: 16px -16px 0; }
-    .landing-journey ol { padding: 4px 16px 6px; }
-    .landing-stop { width: 64px; }
-    .landing-medal { width: 50px; height: 50px; }
+    .landing-journey ol { grid-template-columns: repeat(5, minmax(0, 1fr)); padding: 4px 16px 6px; }
+    .landing-medal { width: 46px; height: 46px; border-width: 2px; }
     .landing-stop-name { font-size: 11px; }
     .landing-resume { padding: 16px; gap: 2px 14px; }
     .landing-resume-avatar { width: 54px; height: 54px; font-size: 32px; }
@@ -257,6 +256,7 @@ body.landing-home { background: #f6f3ee; background-image: none; color: #1d2a31;
 }
 @media (max-width: 360px) {
     .landing-brand { font-size: 16px; }
+    .landing-hero h1 { font-size: 27px; }
     .landing-steps { grid-template-columns: minmax(0, 1fr); }
 }
 @media print { .landing-page .landing-header, .landing-page .landing-start, .landing-journey, .landing-skip, .landing-video-player { display: none; } .landing-hero.hero, .landing-hero h1, .landing-hero h1 > span, .landing-lead { background: none; box-shadow: none; color: #000; } }

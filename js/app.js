@@ -283,7 +283,7 @@ const GUIDE_STEPS = [
     ['📝', '한 줄 정리', '배운 것을 내 말로 정리해요.'],
 ];
 
-// ---------- 시작 화면 "사용법" 탭 ----------
+// ---------- 사용법 화면 ----------
 function helpPanel() {
     const section = (title, ...body) => h('div', { class: 'card help-card' }, h('h2', {}, title), ...body);
     const list = items => h('ol', { class: 'help-list' }, ...items.map(t => h('li', {}, rich(t))));
