@@ -101,7 +101,8 @@ body.landing-home { background: #f6f3ee; background-image: none; color: #1d2a31;
 .landing-resume .landing-go { grid-column: 1 / -1; margin-top: 12px; }
 .landing-explorers { margin-bottom: 16px; }
 .landing-explorers h2 { font-family: var(--font-body); font-size: 14px; font-weight: 700; letter-spacing: 0; color: var(--lp-night-muted); margin-bottom: 10px; }
-.landing-explorers .name-input { font-size: 16px; margin-bottom: 10px; }
+.landing-explorers .name-input { font-size: 16px; margin-bottom: 10px; color: var(--lp-ink); background: #fff; }
+.landing-explorers .name-input::placeholder { color: #7a848a; }
 .landing-explorers .muted { color: var(--lp-night-muted); }
 .landing-start .explorer-list { display: flex; flex-wrap: wrap; gap: 8px; }
 .landing-start .explorer-list button { font-family: var(--font-body); display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 16px 0 10px; border: 1px solid rgba(255, 255, 255, .22); border-radius: 999px; background: rgba(255, 255, 255, .07); color: var(--lp-cream); font-size: 16px; font-weight: 700; box-shadow: none; }
@@ -236,6 +237,12 @@ body.landing-home { background: #f6f3ee; background-image: none; color: #1d2a31;
     .landing-unit-art { width: 60px; height: 60px; }
     .landing-classroom { padding: 28px 22px; border-radius: 22px; gap: 24px; }
     .landing-button { width: 100%; }
+}
+/* 가로로 눕힌 휴대폰: 화면이 낮으니 정거장 띠를 숨겨 시작 단추가 바로 보이게 */
+@media (max-width: 1000px) and (max-height: 500px) {
+    .landing-journey { display: none; }
+    .landing-hero.hero { padding-top: 8px; }
+    .landing-start { margin-top: 14px; }
 }
 /* 휴대폰: 앱 설치·QR을 앱 이름과 같은 맨 윗줄에 */
 @media (max-width: 520px) {

@@ -208,6 +208,32 @@ class LandingPage(unittest.TestCase):
         expect(page.locator('.landing-journey .is-open')).to_have_count(1)
         expect(page.locator('.landing-journey .is-open')).to_contain_text('고조선')
 
+    def test_many_explorers_search_is_readable_and_landscape_phone_shows_start(self):
+        page = self.page(390)
+        page.evaluate('''async key => {
+            const {newProfile} = await import('./js/storage.js');
+            const {avatars} = await import('./content/quests.js');
+            const profiles = {};
+            for (let i = 1; i <= 10; i++) profiles['p' + i] = newProfile(i, avatars[i % 10], '학생' + i);
+            localStorage.setItem(key, JSON.stringify({current: null, profiles}));
+        }''', KEY)
+        page.reload(wait_until='domcontentloaded')
+        search = page.get_by_label('탐험가 찾기', exact=True)
+        search.fill('학생7')
+        expect(page.locator('.explorer-list button:visible')).to_have_count(1)
+        # 짙은 바탕 위 흰 입력 칸: 입력한 글자가 배경과 충분히 달라야 함
+        self.assertNotEqual(*search.evaluate('el => [getComputedStyle(el).color, getComputedStyle(el).backgroundColor]'))
+        self.assertEqual(search.evaluate('el => getComputedStyle(el).backgroundColor'), 'rgb(255, 255, 255)')
+        # 가로로 눕힌 휴대폰(처음 방문): 시작 단추가 첫 화면 안에 보임
+        page.evaluate('key => localStorage.removeItem(key)', KEY)
+        page.set_viewport_size({'width': 844, 'height': 390})
+        page.reload(wait_until='domcontentloaded')
+        # 이 테스트는 서비스 워커를 막아 준비 실패 안내가 뜨므로, 준비를 마친 기기처럼 안내를 숨기고 잼
+        page.add_style_tag(content='#offline-status { display: none !important; }')
+        expect(page.locator('.landing-journey')).to_be_hidden()
+        start = page.get_by_role('button', name=NEW_EXPLORER, exact=True)
+        self.assertLessEqual(start.evaluate('el => el.getBoundingClientRect().bottom'), 390)
+
     def test_resume_code_opens_map_and_preserves_existing_written_work(self):
         page = self.page()
         seeded = self.seed(page)
