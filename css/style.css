@@ -230,7 +230,7 @@ p { margin: 0 0 12px; }
     transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .step.now {
-    border-color: var(--accent); color: var(--accent);
+    border-color: var(--accent); color: var(--accent-dark);
     background: var(--accent-soft); font-weight: 700;
     box-shadow: 0 2px 8px rgba(217, 72, 15, 0.18);
 }
