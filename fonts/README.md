@@ -41,3 +41,9 @@ The CSS family name is `Noto Serif KR`. Its native variable weight range is
 200–900, allowing substantial text weights without synthetic bold. It is served
 locally and included in the versioned service-worker cache; no external font
 service is needed at runtime.
+
+## 글꼴 줄이기 (2026-11)
+처음 열 때 받는 양을 줄이려고 두 글꼴을 **앱이 쓰는 글자 + 자주 쓰는 한글 2,350자 + 영문·숫자·문장부호**만 남겨 줄였다
+(Pretendard 1.96MB → 0.44MB, Noto Serif KR 5.59MB → 0.61MB, 글자 모양은 같음).
+화면에 새 한자·특수문자를 넣었는데 네모(□)로 보이면 원본 글꼴에서 다시 줄여야 한다:
+`pyftsubset 원본.woff2 --unicodes=... --flavor=woff2 --layout-features='*'` (엽쌤 웹앱 스킬의 subset.py 와 같은 방식)
